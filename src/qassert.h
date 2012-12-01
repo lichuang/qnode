@@ -5,6 +5,6 @@
 #ifndef __QASSERT_H__
 #define __QASSERT_H__
 
-#define qnode_assert(exp) (void(exp))
+#define qnode_assert(exp)
 
 #endif /*__QASSERT_H__ */
