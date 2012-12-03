@@ -14,10 +14,10 @@
 #define MAX_NEVENTS 4096
 #define MAX_EPOLL_TIMEOUT_MSEC (35*60*1000)
 
-static void *epoll_init (struct qnode_dispatcher_t *dispatcher);
+static void *epoll_init (struct qnode_engine_t *engine);
 static int epoll_add    (void *, struct qnode_event_t *);
 static int epoll_del    (void *, struct qnode_event_t *);
-static int epoll_dispatch(qnode_dispatcher_t *dispatcher, void *arg, struct timeval *tv);
+static int epoll_dispatch(qnode_engine_t *engine, void *arg, struct timeval *tv);
 
 const struct qnode_event_op_t epoll_ops = {
   "epoll",
@@ -40,7 +40,7 @@ struct epollop {
   int epfd;
 };
 
-static void* epoll_init(struct qnode_dispatcher_t *dispatcher) {
+static void* epoll_init(struct qnode_engine_t *engine) {
   int epfd;
   struct epollop *epollop;
 
@@ -143,7 +143,7 @@ static int epoll_del(void *arg, struct qnode_event_t *event) {
   return 1;
 }
 
-static int epoll_dispatch(qnode_dispatcher_t *dispatcher, void *arg, struct timeval *tv) {
+static int epoll_dispatch(qnode_engine_t *engine, void *arg, struct timeval *tv) {
     struct epollop *epollop = arg;
     struct epoll_event *events = epollop->events;
     struct evepoll *evep;

@@ -23,7 +23,7 @@
 #define QEVENT_SIGNAL       0x08
 #define QEVENT_PERSIST      0x10    /* Persistant event */
 
-struct qnode_dispatcher_t;
+struct qnode_engine_t;
 struct qnode_event_t;
 
 typedef int (*qnode_event_fun_t)(int fd, short flag, void *arg);
@@ -31,43 +31,46 @@ typedef int (*qnode_event_fun_t)(int fd, short flag, void *arg);
 typedef struct qnode_event_t {
   int fd;
   void *data;
-  struct qnode_dispatcher_t *dispatcher;
+  struct qnode_engine_t *engine;
   qnode_event_fun_t *callback;
   short events;
   int flags;
   int results;
   struct list_head active_entry;      /* for active list */
-  struct list_head event_entry;       /* for dispatcher event list */
+  struct list_head event_entry;       /* for engine event list */
   unsigned int heap_idx;        /* for timeout heap */
   struct timeval timeout;
+  int result;
 } qnode_event_t;
 
 typedef struct qnode_event_op_t {
   const char *name;
-  void *(*init)(struct qnode_dispatcher_t*);
+  void *(*init)(struct qnode_engine_t*);
   int (*add)(void *, struct qnode_event_t *);
   int (*del)(void *, struct qnode_event_t *);
-  int (*poll)(struct qnode_dispatcher_t *, void *, struct timeval *);
+  int (*poll)(struct qnode_engine_t *, void *, struct timeval *);
 } qnode_event_op_t;
 
-typedef struct qnode_dispatcher_t {
+typedef struct qnode_engine_t {
   const struct qnode_event_op_t *op;
   void *data;
   unsigned int event_count;
   unsigned int active_event_count;
   struct list_head active_list; /* for active events */
   struct list_head event_list; /* for manage events */
-  struct qnode_minheap_t timeheap;
-} qnode_dispatcher_t;
+  struct qnode_minheap_t timeheap;  /* for manage timeout event */
+  struct timeval time_cache;
+  struct timeval event_time;
+} qnode_engine_t;
 
-qnode_dispatcher_t* qnode_dispatcher_create();
+qnode_engine_t* qnode_engine_create();
 
-int qnode_dispatcher_run(qnode_dispatcher_t *disptacher);
+int qnode_engine_run(qnode_engine_t *disptacher);
 
 void qnode_event_init(qnode_event_t *event, int fd, short events,
                       qnode_event_fun_t *callback, void *data);
 
-int qnode_event_add(qnode_event_t *event, struct timeval time, qnode_dispatcher_t *dispatcher);
+int qnode_event_add(qnode_event_t *event, const struct timeval *time, qnode_engine_t *engine);
 
 void qnode_event_active(qnode_event_t *event, int result, short ncalls);
 

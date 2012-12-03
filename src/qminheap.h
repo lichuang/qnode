@@ -8,8 +8,8 @@
 struct qnode_event_t;
 
 typedef struct qnode_minheap_t {
-  struct qnode_event_t **top;
-  unsigned int n;
+  struct qnode_event_t **events;
+  unsigned int size;
   unsigned int a;
 } qnode_minheap_t;
 
