@@ -11,7 +11,6 @@ struct qnode_event_t;
 typedef struct qnode_server_t {
   int thread_num;
   struct qnode_engine_t *engine;
-  struct qnode_event_t *event;
 } qnode_server_t;
 
 qnode_server_t *qnode_server_create(struct qnode_config_t *config);

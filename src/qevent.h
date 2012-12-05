@@ -69,8 +69,7 @@ qnode_engine_t* qnode_engine_create();
 
 int qnode_engine_run(qnode_engine_t *disptacher);
 
-void qnode_event_init(qnode_event_t *event, int fd, short events,
-                      qnode_event_fun_t *callback, void *data);
+qnode_event_t* qnode_event_new(int fd, short events, qnode_event_fun_t *callback, void *data);
 
 int qnode_event_add(qnode_event_t *event, const struct timeval *time, qnode_engine_t *engine);
 

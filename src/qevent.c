@@ -11,51 +11,52 @@
 extern const struct qnode_event_op_t epoll_ops;
 
 qnode_engine_t* qnode_engine_create(int size) {
-  qnode_assert(size > 0);
-  qnode_engine_t *engine = qnode_alloc_type(qnode_engine_t);
-  engine->op = &epoll_ops;
-  engine->data = engine->op->init(engine);
-  INIT_LIST_HEAD(&(engine->event_list));
-  INIT_LIST_HEAD(&(engine->active_list));
-  qnode_minheap_ctor(&(engine->timeheap));
-  return engine;
+    qnode_assert(size > 0);
+    qnode_engine_t *engine = qnode_alloc_type(qnode_engine_t);
+    engine->op = &epoll_ops;
+    engine->data = engine->op->init(engine);
+    INIT_LIST_HEAD(&(engine->event_list));
+    INIT_LIST_HEAD(&(engine->active_list));
+    qnode_minheap_ctor(&(engine->timeheap));
+    return engine;
 }
 
-void qnode_event_init(qnode_event_t *event, int fd, short events,
-                      qnode_event_fun_t *callback, void *data) {
-  event->fd = fd;
-  event->callback = callback;
-  event->data = data;
-  event->events = events;
-  INIT_LIST_HEAD(&(event->active_entry));
-  INIT_LIST_HEAD(&(event->event_entry));
-  qnode_minheap_elem_init(event);
+qnode_event_t* qnode_event_new(int fd, short events, qnode_event_fun_t *callback, void *data) {
+    qnode_event_t *event = qnode_alloc_type(qnode_event_t);
+    event->fd = fd;
+    event->callback = callback;
+    event->data = data;
+    event->events = events;
+    INIT_LIST_HEAD(&(event->active_entry));
+    INIT_LIST_HEAD(&(event->event_entry));
+    qnode_minheap_elem_init(event);
+    return event;
 }
 
 static void event_queue_insert(qnode_engine_t *engine, qnode_event_t *event, int queue) {
-  if (event->flags & queue) {
-    if (queue & QEVENT_LIST_ACTIVE)
-      return;
-  }
+    if (event->flags & queue) {
+        if (queue & QEVENT_LIST_ACTIVE)
+            return;
+    }
 
-  if (~event->flags & QEVENT_LIST_INTERNAL) {
-    engine->event_count++;
-  }
-  event->flags |= queue;
-  switch (queue) {
+    if (~event->flags & QEVENT_LIST_INTERNAL) {
+        engine->event_count++;
+    }
+    event->flags |= queue;
+    switch (queue) {
     case QEVENT_LIST_INSERTED:
-      list_add_tail(&(event->event_entry), &(engine->event_list));
-      break;
+        list_add_tail(&(event->event_entry), &(engine->event_list));
+        break;
     case QEVENT_LIST_ACTIVE:
-      engine->active_event_count++;
-      list_add_tail(&(event->active_entry), &(engine->active_list));
-      break;
+        engine->active_event_count++;
+        list_add_tail(&(event->active_entry), &(engine->active_list));
+        break;
     case QEVENT_LIST_TIMEOUT:
-      qnode_minheap_push(&(engine->timeheap), event);
-      break;
+        qnode_minheap_push(&(engine->timeheap), event);
+        break;
     default:
-      break;
-  }
+        break;
+    }
 }
 
 static void event_queue_remove(qnode_engine_t *engine, qnode_event_t *event, int queue) {
@@ -221,45 +222,45 @@ static void process_active_event(qnode_engine_t *engine) {
 }
 
 int qnode_event_add(qnode_event_t *event, const struct timeval *time, qnode_engine_t *engine) {
-  event->engine = engine;
-  const qnode_event_op_t *ops = engine->op;
-  void *data = engine->data;
-  int result = 0;
+    event->engine = engine;
+    const qnode_event_op_t *ops = engine->op;
+    void *data = engine->data;
+    int result = 0;
 
-  qnode_assert(!(event->flags & ~QEVENT_LIST_ALL));
+    qnode_assert(!(event->flags & ~QEVENT_LIST_ALL));
 
-  if (time != NULL && !(event->flags & QEVENT_LIST_TIMEOUT)) {
-    if (qnode_minheap_reserve(&(engine->timeheap),
-                              1 + qnode_minheap_size(&engine->timeheap)) == -1) {
-      return -1;
-    }
-  }
-
-  if ((event->events & (QEVENT_READ|QEVENT_WRITE|QEVENT_SIGNAL)) &&
-      !(event->flags & (QEVENT_LIST_INSERTED|QEVENT_LIST_ACTIVE))) {
-    result = ops->add(data, event);
-    if (result != -1) {
-      event_queue_insert(engine, event, QEVENT_LIST_INSERTED);
-    }
-  }
-
-  if (result != -1 && time != NULL) {
-    struct timeval now;
-
-    if (event->flags & QEVENT_LIST_TIMEOUT) {
-      event_queue_remove(engine, event, QEVENT_LIST_TIMEOUT);
-    }
-    if ((event->flags & QEVENT_LIST_ACTIVE) && (event->result & QEVENT_TIMEOUT)) {
-      event_queue_remove(engine, event, QEVENT_LIST_ACTIVE);
+    if (time != NULL && !(event->flags & QEVENT_LIST_TIMEOUT)) {
+        if (qnode_minheap_reserve(&(engine->timeheap),
+                1 + qnode_minheap_size(&engine->timeheap)) == -1) {
+            return -1;
+        }
     }
 
-    get_time(engine, &now);
-    add_time(&now, time, &event->timeout);
+    if ((event->events & (QEVENT_READ|QEVENT_WRITE|QEVENT_SIGNAL)) &&
+        !(event->flags & (QEVENT_LIST_INSERTED|QEVENT_LIST_ACTIVE))) {
+        result = ops->add(data, event);
+        if (result != -1) {
+            event_queue_insert(engine, event, QEVENT_LIST_INSERTED);
+        }
+    }
 
-    event_queue_insert(engine, event, QEVENT_LIST_TIMEOUT);
-  }
+    if (result != -1 && time != NULL) {
+        struct timeval now;
 
-  return result;
+        if (event->flags & QEVENT_LIST_TIMEOUT) {
+            event_queue_remove(engine, event, QEVENT_LIST_TIMEOUT);
+        }
+        if ((event->flags & QEVENT_LIST_ACTIVE) && (event->result & QEVENT_TIMEOUT)) {
+            event_queue_remove(engine, event, QEVENT_LIST_ACTIVE);
+        }
+
+        get_time(engine, &now);
+        add_time(&now, time, &event->timeout);
+
+        event_queue_insert(engine, event, QEVENT_LIST_TIMEOUT);
+    }
+
+    return result;
 }
 
 int qnode_engine_run(qnode_engine_t *engine) {
@@ -311,14 +312,14 @@ int qnode_engine_run(qnode_engine_t *engine) {
 
 
 void qnode_event_active(qnode_event_t *event, int result, short ncalls) {
-  if (event->flags & QEVENT_LIST_ACTIVE) {
-    event->result |= result;
-    return;
-  }
+    if (event->flags & QEVENT_LIST_ACTIVE) {
+        event->result |= result;
+        return;
+    }
 
-  event->result = result;
-  event->ncalls = ncalls;
-  event_queue_insert(event->engine, event, QEVENT_LIST_ACTIVE);
+    event->result = result;
+    event->ncalls = ncalls;
+    event_queue_insert(event->engine, event, QEVENT_LIST_ACTIVE);
 }
 
 int qnode_event_del(qnode_event_t *event) {

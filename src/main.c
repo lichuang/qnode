@@ -3,7 +3,7 @@
  */
 
 #include "qconfig.h"
-#include "qevent.h"
+#include "qengine.h"
 #include "qserver.h"
 
 int main(int argc, char *argv[]) {
@@ -11,8 +11,7 @@ int main(int argc, char *argv[]) {
   config.thread_num = 10;
 
   qnode_server_t *server = qnode_server_create(&config);
-  while (qnode_engine_run(server->engine) > 0) {
-  }
+  qnode_engine_loop(server->engine);
 
   return 0;
 }

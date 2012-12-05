@@ -2,9 +2,9 @@
 CC=gcc
 CFLAGS=-g -Wall -Werror
 
-BINARY=qnserver
+BINARY=qserver
 
-ALL_O=main.o qepoll.o qevent.o qmalloc.o qnet.o qserver.o qminheap.o
+ALL_O=main.o qepoll.o qengine.o qmalloc.o qnet.o qserver.o qlog.o
 
 all:$(ALL_O) $(BINARY)
 
@@ -19,8 +19,10 @@ clean:
 
 main.o: main.c qevent.h qevent.c qserver.h qserver.c
 qepoll.o: qepoll.c
-qevent.o: qevent.c qevent.h qepoll.c qmalloc.h qmalloc.c
+#qevent.o: qevent.c qevent.h qepoll.c qmalloc.h qmalloc.c
+qengine.o: qengine.c qengine.h qepoll.c qmalloc.h qmalloc.c
+qlog.o: qlog.h qlog.c
 qmalloc.o: qmalloc.h qmalloc.c
 qnet.o: qnet.h qnet.c
 qserver.o: qserver.h qserver.c qevent.h qevent.c 
-qminheap.o: qminheap.c qminheap.h
+#qminheap.o: qminheap.c qminheap.h
