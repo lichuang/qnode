@@ -317,7 +317,7 @@ static inline void list_splice_tail_init(struct list_head *list,
  * @member:	the name of the list_struct within the struct.
  */
 #define list_entry(ptr, type, member) \
-	container_of(ptr, type, member)
+    ((type *)((char *)(ptr) - ((unsigned long)(&((type*)1)->member) - 1) ))
 
 /**
  * list_first_entry - get the first element from a list
@@ -336,8 +336,7 @@ static inline void list_splice_tail_init(struct list_head *list,
  * @head:	the head for your list.
  */
 #define list_for_each(pos, head) \
-	for (pos = (head)->next; prefetch(pos->next), pos != (head); \
-        	pos = pos->next)
+	for (pos = (head)->next; pos != (head); pos = pos->next)
 
 /**
  * __list_for_each	-	iterate over a list

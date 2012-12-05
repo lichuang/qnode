@@ -110,9 +110,13 @@ static void sub_time(const struct timeval *time1, const struct timeval *time2, s
 }
 
 static int is_time_big(const struct timeval *time1, const struct timeval *time2) {
-    time1->tv_sec == time2->tv_sec ?
-        time1->tv_usec >= time2->tv_usec :
-        time1->tv_sec  >= time2->tv_sec;
+    return (time1->tv_sec == time2->tv_sec) ?
+        (time1->tv_usec >= time2->tv_usec) :
+        (time1->tv_sec  >= time2->tv_sec);
+}
+
+int is_time_small(const struct timeval *time1, const struct timeval *time2) {
+    return is_time_big(time2, time1);
 }
 
 static void correct_timeout(qnode_engine_t *engine, struct timeval *time) {
@@ -130,10 +134,10 @@ static void correct_timeout(qnode_engine_t *engine, struct timeval *time) {
     event = engine->timeheap.events;
     size  = engine->timeheap.size;
     for (; size > 0; ++event, --size) {
-        struct timeval *event_timeout = &(*event).timeout;
+        struct timeval *event_timeout = &((*event)->timeout);
         sub_time(event_timeout, &off, event_timeout);
     }
-    engine->event_timeout = *time;
+    engine->event_time = *time;
 }
 
 static void clear_time(struct timeval *time) {
@@ -145,7 +149,7 @@ static int next_timeout(qnode_engine_t *engine, struct timeval **ptime) {
     qnode_event_t *event;
     struct timeval *time = *ptime;
 
-    if ((event == qnode_minheap_top(&(engine->timeheap))) == NULL) {
+    if ((event = qnode_minheap_top(&(engine->timeheap))) == NULL) {
         *ptime = NULL;
         return 0;
     }
@@ -168,7 +172,52 @@ static int next_timeout(qnode_engine_t *engine, struct timeval **ptime) {
 }
 
 static int has_events(qnode_engine_t *engine) {
-    return (engine->event_count > 0)
+    return (engine->event_count > 0);
+}
+
+static void process_timeout(qnode_engine_t *engine) {
+    struct timeval now;
+    qnode_event_t *event;
+
+    if (qnode_minheap_empty(&(engine->timeheap))) {
+        return;
+    }
+
+    get_time(engine, &now);
+
+    while ((event = qnode_minheap_top(&(engine->timeheap))) != NULL) {
+        if (is_time_small(&(event->timeout), &now)) {
+            break;
+        }
+
+        qnode_event_del(event);
+
+        qnode_event_active(event, QEVENT_TIMEOUT, 1);
+    }
+}
+
+static void process_active_event(qnode_engine_t *engine) {
+    qnode_event_t *event;
+    struct list_head *pos = NULL;
+    struct list_head *active_list = &(engine->active_list);
+    short ncalls;
+
+    list_for_each(pos, active_list) {
+        event = list_entry(pos, qnode_event_t, active_entry);
+        if (event->events & QEVENT_PERSIST) {
+            event_queue_remove(engine, event, QEVENT_LIST_ACTIVE);
+        } else {
+            qnode_event_del(event);
+        }
+
+        ncalls = event->ncalls;
+        event->pncalls = &ncalls;
+        while (ncalls) {
+            ncalls--;
+            event->ncalls = ncalls;
+            (*event->callback)(event->fd, event->result, event->data);
+        }
+    }
 }
 
 int qnode_event_add(qnode_event_t *event, const struct timeval *time, qnode_engine_t *engine) {
@@ -225,7 +274,7 @@ int qnode_engine_run(qnode_engine_t *engine) {
     while (!done) {
         correct_timeout(engine, &time);
         ptime = &time;
-        if (!engine->active_event_count && !(flags & QEVENTLOOP_NONBLOCK)) {
+        if (!engine->active_event_count) {
             next_timeout(engine, &ptime);
         } else {
             clear_time(&time);
@@ -239,7 +288,7 @@ int qnode_engine_run(qnode_engine_t *engine) {
 
         engine->time_cache.tv_sec = 0;
 
-        result = op->dispatch(engine, base, tv_p);
+        result = op->poll(engine, base, ptime);
 
         if (result == -1) {
             return -1;
@@ -247,14 +296,14 @@ int qnode_engine_run(qnode_engine_t *engine) {
 
         get_time(engine, &(engine->time_cache));
 
-        timeout_process(engine);
+        process_timeout(engine);
 
-        if (base->event_count_active) {
-            event_process_active(base);
-            if (!base->event_count_active && (flags & EVLOOP_ONCE))
+        if (engine->active_event_count) {
+            process_active_event(engine);
+            if (!engine->active_event_count) {
                 done = 1;
-        } else if (flags & EVLOOP_NONBLOCK)
-            done = 1;
+            }
+        }
     }
 
     return 0;
@@ -270,4 +319,8 @@ void qnode_event_active(qnode_event_t *event, int result, short ncalls) {
   event->result = result;
   event->ncalls = ncalls;
   event_queue_insert(event->engine, event, QEVENT_LIST_ACTIVE);
+}
+
+int qnode_event_del(qnode_event_t *event) {
+    return 0;
 }

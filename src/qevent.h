@@ -38,9 +38,11 @@ typedef struct qnode_event_t {
   int results;
   struct list_head active_entry;      /* for active list */
   struct list_head event_entry;       /* for engine event list */
-  unsigned int heap_idx;        /* for timeout heap */
+  unsigned int min_heap_idx;        /* for timeout heap */
   struct timeval timeout;
   int result;
+  short ncalls;
+  short *pncalls;
 } qnode_event_t;
 
 typedef struct qnode_event_op_t {
@@ -71,6 +73,8 @@ void qnode_event_init(qnode_event_t *event, int fd, short events,
                       qnode_event_fun_t *callback, void *data);
 
 int qnode_event_add(qnode_event_t *event, const struct timeval *time, qnode_engine_t *engine);
+
+int qnode_event_del(qnode_event_t *event);
 
 void qnode_event_active(qnode_event_t *event, int result, short ncalls);
 

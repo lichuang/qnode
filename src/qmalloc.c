@@ -23,9 +23,11 @@ void *qnode_malloc(size_t size) {
 }
 
 void *qnode_calloc(size_t size) {
+    return NULL;
 }
 
 void *qnode_realloc(void *ptr, size_t size) {
+    return NULL;
 }
 
 void qnode_free(void *ptr) {

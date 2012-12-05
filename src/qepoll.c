@@ -14,64 +14,62 @@
 #define MAX_NEVENTS 4096
 #define MAX_EPOLL_TIMEOUT_MSEC (35*60*1000)
 
-static void *epoll_init (struct qnode_engine_t *engine);
-static int epoll_add    (void *, struct qnode_event_t *);
-static int epoll_del    (void *, struct qnode_event_t *);
-static int epoll_dispatch(qnode_engine_t *engine, void *arg, struct timeval *tv);
+static void *epoll_init (qnode_engine_t *engine);
+static int epoll_add    (void *, qnode_event_t *);
+static int epoll_del    (void *, qnode_event_t *);
+static int epoll_dispatch(qnode_engine_t *engine, void *arg, struct timeval *time);
 
 const struct qnode_event_op_t epoll_ops = {
-  "epoll",
-  epoll_init,
-  epoll_add,
-  epoll_del,
-  epoll_dispatch,
+    "epoll",
+    epoll_init,
+    epoll_add,
+    epoll_del,
+    epoll_dispatch,
 };
 
 struct evepoll {
-  struct qnode_event_t *read_event;
-  struct qnode_event_t *write_event;
+    struct qnode_event_t *read_event;
+    struct qnode_event_t *write_event;
 };
 
 struct epollop {
-  struct evepoll *fds;
-  int nfds;
-  struct epoll_event *events;
-  int nevents;
-  int epfd;
+    struct evepoll *fds;
+    int nfds;
+    struct epoll_event *events;
+    int nevents;
+    int fd;
 };
 
 static void* epoll_init(struct qnode_engine_t *engine) {
-  int epfd;
-  struct epollop *epollop;
+    int fd;
+    struct epollop *epollop;
 
-  if ((epfd = epoll_create(32000)) == -1) {
-    return NULL;
-  }
+    if ((fd = epoll_create(32000)) == -1) {
+        return NULL;
+    }
 
-  //FD_CLOSEONEXEC(epfd);
+    if (!(epollop = qnode_alloc_type(struct epollop))) {
+        return NULL;
+    }
 
-  if (!(epollop = qnode_alloc_type(struct epollop))) {
-    return NULL;
-  }
+    epollop->fd = fd;
 
-  epollop->epfd = epfd;
+    epollop->events = qnode_alloc_array(struct epoll_event, INITIAL_NEVENTS * sizeof(struct epoll_event));
+    if (epollop->events == NULL) {
+        qnode_free(epollop);
+        return (NULL);
+    }
+    epollop->nevents = INITIAL_NEVENTS;
 
-  epollop->events = qnode_alloc_array(struct epoll_event, INITIAL_NEVENTS * sizeof(struct epoll_event));
-  if (epollop->events == NULL) {
-    qnode_free(epollop);
-    return (NULL);
-  }
-  epollop->nevents = INITIAL_NEVENTS;
+    epollop->fds = qnode_alloc_array(struct evepoll, INITIAL_NFILES * sizeof(struct evepoll));
+    if (epollop->fds == NULL) {
+        qnode_free(epollop->events);
+        qnode_free(epollop);
+        return (NULL);
+    }
+    epollop->nfds = INITIAL_NFILES;
 
-  epollop->fds = qnode_alloc_array(struct evepoll, INITIAL_NFILES * sizeof(struct evepoll));
-  if (epollop->fds == NULL) {
-    qnode_free(epollop->events);
-    qnode_free(epollop);
-    return (NULL);
-  }
-  epollop->nfds = INITIAL_NFILES;
-
-  return (epollop);
+    return (epollop);
 }
 
 static int epoll_recalc(void *arg, int max) {
@@ -104,9 +102,9 @@ static int epoll_add(void *arg, struct qnode_event_t *event) {
 
     fd = event->fd;
     if (fd >= epollop->nfds) {
-      if (epoll_recalc(epollop, fd) == -1) {
-        return (-1);
-      }
+        if (epoll_recalc(epollop, fd) == -1) {
+            return (-1);
+        }
     }
     evep = &(epollop->fds[fd]);
     op = EPOLL_CTL_ADD;
@@ -127,7 +125,7 @@ static int epoll_add(void *arg, struct qnode_event_t *event) {
     }
     epev.data.fd = fd;
     epev.events = events;
-    if (epoll_ctl(epollop->epfd, op, event->fd, &epev) == -1) {
+    if (epoll_ctl(epollop->fd, op, event->fd, &epev) == -1) {
         return -1;
     }
     if (event->events & QEVENT_READ) {
@@ -139,35 +137,82 @@ static int epoll_add(void *arg, struct qnode_event_t *event) {
     return 0;
 }
 
-static int epoll_del(void *arg, struct qnode_event_t *event) {
-  return 1;
+static int epoll_del(void *arg, qnode_event_t *event) {
+    struct epollop *epollop = (struct epollop*)arg;
+    struct epoll_event epoll_event = {0, {0}};
+    struct evepoll *evep;
+    int fd, events, op;
+    int needreaddelete = 1, needwritedelete = 1;
+
+    fd = event->fd;
+    if (fd >= epollop->nfds) {
+        return 0;
+    }
+    evep = &(epollop->fds[fd]);
+
+    op = EPOLL_CTL_DEL;
+    events = 0;
+
+    if (event->events & QEVENT_READ) {
+        events |= EPOLLIN;
+    }
+    if (event->events & QEVENT_WRITE) {
+        events |= EPOLLOUT;
+    }
+
+    if ((events & (EPOLLIN | EPOLLOUT)) != (EPOLLIN | EPOLLOUT)) {
+        if ((events & EPOLLIN) && evep->write_event != NULL) {
+            needwritedelete = 0;
+            events = EPOLLOUT;
+            op = EPOLL_CTL_MOD;
+        } else if ((events & EPOLLOUT) && evep->read_event != NULL) {
+            needreaddelete = 0;
+            events = EPOLLIN;
+            op = EPOLL_CTL_MOD;
+        }
+    }
+
+    epoll_event.events = events;
+    epoll_event.data.fd = fd;
+
+    if (needreaddelete) {
+        evep->read_event = NULL;
+    }
+    if (needwritedelete) {
+        evep->write_event = NULL;
+    }
+
+    if (epoll_ctl(epollop->fd, op, fd, &epoll_event) == -1) {
+        return -1;
+    }
+    return 0;
 }
 
-static int epoll_dispatch(qnode_engine_t *engine, void *arg, struct timeval *tv) {
-    struct epollop *epollop = arg;
+static int epoll_dispatch(qnode_engine_t *engine, void *arg, struct timeval *time) {
+    struct epollop *epollop = (struct epollop*)arg;
     struct epoll_event *events = epollop->events;
     struct evepoll *evep;
-    int i, res, timeout = -1;
+    int i, result, timeout = -1;
 
-    if (tv != NULL) {
-        timeout = tv->tv_sec * 1000 + (tv->tv_usec + 999) / 1000;
+    if (time != NULL) {
+        timeout = time->tv_sec * 1000 + (time->tv_usec + 999) / 1000;
     }
 
     if (timeout > MAX_EPOLL_TIMEOUT_MSEC) {
         timeout = MAX_EPOLL_TIMEOUT_MSEC;
     }
 
-    res = epoll_wait(epollop->epfd, events, epollop->nevents, timeout);
+    result = epoll_wait(epollop->fd, events, epollop->nevents, timeout);
 
-    if (res == -1) {
+    if (result == -1) {
         if (errno != EINTR) {
-            return (-1);
+            return -1;
         }
 
-        return (0);
+        return 0;
     }
 
-    for (i = 0; i < res; i++) {
+    for (i = 0; i < result; i++) {
         int what = events[i].events;
         struct qnode_event_t *read = NULL, *write = NULL;
         int fd = events[i].data.fd;
@@ -201,7 +246,7 @@ static int epoll_dispatch(qnode_engine_t *engine, void *arg, struct timeval *tv)
         }
     }
 
-    if (res == epollop->nevents && epollop->nevents < MAX_NEVENTS) {
+    if (result == epollop->nevents && epollop->nevents < MAX_NEVENTS) {
         int new_nevents = epollop->nevents * 2;
         struct epoll_event *new_events;
 
@@ -213,5 +258,5 @@ static int epoll_dispatch(qnode_engine_t *engine, void *arg, struct timeval *tv)
         }
     }
 
-    return (0);
+    return 0;
 }

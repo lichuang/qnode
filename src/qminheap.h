@@ -10,7 +10,7 @@ struct qnode_event_t;
 typedef struct qnode_minheap_t {
   struct qnode_event_t **events;
   unsigned int size;
-  unsigned int a;
+  unsigned int add;
 } qnode_minheap_t;
 
 void                    qnode_minheap_ctor(qnode_minheap_t* s);
