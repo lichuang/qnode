@@ -16,7 +16,7 @@ static void server_accept(int fd, int flags, void *data) {
 }
 
 static int init_server_event(struct qnode_server_t *server) {
-    int fd = qnode_net_create_listener(22222, "127.0.0.1");
+    int fd = qnode_net_tcp_server(22222, "127.0.0.1");
     if (fd < 0) {
         return -1;
     }

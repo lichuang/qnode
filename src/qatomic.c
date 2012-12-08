@@ -4,6 +4,10 @@
 
 #include "qatomic.h"
 
+void  qnode_atomic_ptr_set(void *ptr, void *val) {
+  ptr = val;
+}
+
 void* qnode_atomic_ptr_xchg(void *ptr, void *val) {
   void *old;
   __asm__ volatile (
