@@ -4,11 +4,27 @@
 
 #include <stdio.h>
 #include "qlog.h"
+static const char* err_levels[] = {
+    "",
+    "emerg",
+    "alert",
+    "crit",
+    "error",
+    "warn",
+    "notice",
+    "info",
+    "debug"
+};
 
-void _log(struct qnode_log_t* log, ...) {
-    va_start(log->ap, log);
-    char buf[256] = {0};
-    vfprintf(buf, log->fmt, log->ap);
-    printf("%s", buf);
-    va_end(log->ap);
+int __log_level = QNODE_LOG_DEBUG;
+
+void __log(struct qnode_log_t* log, const char *fmt,...) {
+    va_list  args;
+    int n;
+    char buff[100] = {' '};
+    n = sprintf(buff, "[%s] %s:%d ", err_levels[log->level], log->file, log->line);
+    va_start(args, fmt);
+    vsprintf(buff + n, fmt, args);
+    va_end(args);
+    printf("%s\n", buff);
 }

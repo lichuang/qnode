@@ -35,6 +35,7 @@ static int epoll_init(struct qnode_engine_t *engine) {
 
     epoll->fd = epoll_create(1024);
     if (epoll->fd == -1) {
+        qnode_error("epoll_create error: %s", strerror(errno));
         return -1;
     }
     engine->data = epoll;
@@ -59,6 +60,7 @@ static int epoll_add(struct qnode_engine_t *engine, int fd, int flags) {
     event.events = events;
     event.data.fd = fd;
     if (epoll_ctl(epoll->fd, op, fd, &event) == -1) {
+        qnode_error("epoll_ctl error: %s", strerror(errno));
         return -1;
     }
     return 0;

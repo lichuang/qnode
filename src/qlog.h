@@ -7,42 +7,32 @@
 
 #include <stdarg.h>
 
-enum qnode_log_priority_t {
-    QNODE_LOG_NONE      = 0,
-    QNODE_LOG_TRACE     = 1,
-    QNODE_LOG_DEBUF     = 2,
-    QNODE_LOG_INFO      = 3,
-    QNODE_LOG_NOTICE    = 4,
-    QNODE_LOG_WARNING   = 5,
-    QNODE_LOG_ERROR     = 6,
-    QNODE_LOG_CRITICAL  = 7,
-    QNODE_LOG_ALERT     = 8,
-    QNODE_LOG_EMERGENCY = 9,
-};
+#define QNODE_LOG_STDERR            0
+#define QNODE_LOG_EMERG             1
+#define QNODE_LOG_ALERT             2
+#define QNODE_LOG_CRIT              3
+#define QNODE_LOG_ERR               4
+#define QNODE_LOG_WARN              5
+#define QNODE_LOG_NOTICE            6
+#define QNODE_LOG_INFO              7
+#define QNODE_LOG_DEBUG             8
 
 typedef struct qnode_log_t {
-    //struct LogCategory* cat;
-    int priority;
-    char* file;
-    char* function;
+    int level;
+    const char* file;
     int line;
-    char *fmt;
-    va_list ap;
 } qnode_log_t;
 
-extern void _log(struct qnode_log_t* log, ...);
+extern int __log_level;
+extern void __log(struct qnode_log_t* log, const char*, ...);
 
-#define _LOG_ISENABLEDV(priority) (1)
+#define _LOG(level, fmt... )                                                    \
+    if(__log_level >= level) {   struct qnode_log_t log = {level, __FILE__, __LINE__};    \
+        __log(&log, fmt);    \
+    } 
 
-#define _LOG_PRE(priority, fmt) do {                                                \
-    if (_LOG_ISENABLEDV(priority)) {                                                \
-        struct qnode_log_t _log = {priority,__FILE__,__FUNCTION__,__LINE__, fmt};   \
-        _log_logEvent(&_log_ev
-
-#define _LOG_POST                                                                   \
-            );                                                                      \
-    } } while(0)
-
-#define QNODE_INFO(fmt, msg) _LOG_PRE(QNODE_LOG_INFO, fmt) ,msg _LOG_POST
+#define qnode_error(args...) _LOG(QNODE_LOG_ERR, args)
+#define qnode_info(args...)  _LOG(QNODE_LOG_INFO, args)
+#define qnode_debug(args...) _LOG(QNODE_LOG_DEBUG, args)
 
 #endif  /* __QLOG_H__ */

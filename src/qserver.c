@@ -12,10 +12,11 @@
 #include "qserver.h"
 
 static void server_accept(int fd, int flags, void *data) {
+    qnode_info("add a connection....")
 }
 
 static int init_server_event(struct qnode_server_t *server) {
-    int fd = qnode_net_create_listener(9999, "127.0.0.1");
+    int fd = qnode_net_create_listener(22222, "127.0.0.1");
     if (fd < 0) {
         return -1;
     }
@@ -28,7 +29,6 @@ static int init_server_event(struct qnode_server_t *server) {
 }
 
 qnode_server_t *qnode_server_create(struct qnode_config_t *config) {
-    QNODE_INFO("create qserver");
     qnode_assert(config);
     qnode_assert(config->thread_num > 0);
     qnode_server_t *server = qnode_alloc_type(qnode_server_t);
@@ -40,6 +40,7 @@ qnode_server_t *qnode_server_create(struct qnode_config_t *config) {
         return NULL;
     }
 
+    qnode_info("qserver started...");
     return server;
 }
 
