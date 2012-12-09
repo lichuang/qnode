@@ -4,8 +4,8 @@ CFLAGS=-g -O -Wall -Werror
 
 BINARY=qserver
 
-ALL_O=main.o qatomic.o qepoll.o qengine.o qmailbox.o qmalloc.o qnet.o qserver.o qlog.o \
-	  qpipe.o
+ALL_O=main.o qatomic.o qepoll.o qengine.o qmailbox.o qmalloc.o qnet.o qserver.o qthread.o \
+      qlog.o qpipe.o
 
 all:$(ALL_O) $(BINARY)
 
@@ -28,3 +28,4 @@ qmalloc.o: qmalloc.h qmalloc.c
 qnet.o: qnet.h qnet.c
 qpipe.o: qpipe.h qpipe.c qatomic.h qatomic.c qmalloc.h qmalloc.c
 qserver.o: qserver.h qserver.c
+qthread.o: qthread.h qthread.c
