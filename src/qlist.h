@@ -6,68 +6,91 @@
 #define __QLIST_H__
 
 typedef struct qnode_list_t {
-  struct qnode_list_t  *prev;
-  struct qnode_list_t  *next;
+  struct qnode_list_t *next;
+  struct qnode_list_t *prev;
 } qnode_list_t;
 
+static inline void qnode_list_entry_init(qnode_list_t *entry) {
+  entry->next = entry;
+  entry->prev = entry;
+}
 
-#define qnode_list_init(q) \
-  (q)->prev = q;           \
-  (q)->next = q
+static inline void __list_add(qnode_list_t *entry, qnode_list_t *prev, qnode_list_t *next) {
+  next->prev  = entry;
+  entry->next = next;
+  entry->prev = prev;
+  prev->next  = entry;
+}
 
-#define qnode_list_empty(h) \
-  (h == (h)->prev)
+static inline void qnode_list_add(qnode_list_t *entry, qnode_list_t *head) {
+  __list_add(entry, head, head->next);
+}
 
-#define qnode_list_insert_head(h, x)    \
-  (x)->next = (h)->next;                \
-  (x)->next->prev = x;                  \
-  (x)->prev = h;                        \
-  (h)->next = x
+static inline void qnode_list_add_tail(qnode_list_t *entry, qnode_list_t *head) {
+  __list_add(entry, head->prev, head);
+}
 
-#define qnode_list_insert_after   qnode_list_insert_head
+static inline void __list_del(qnode_list_t *prev, qnode_list_t *next) {
+  next->prev = prev;
+  prev->next = next;
+}
 
-#define qnode_list_insert_tail(h, x)    \
-  (x)->prev = (h)->prev;                \
-  (x)->prev->next = x;                  \
-  (x)->next = h;                        \
-  (h)->prev = x
+static inline void qnode_list_del(struct qnode_list_t *entry) {
+  __list_del(entry->prev, entry->next);
+}
 
-#define qnode_list_head(h)              \
-  (h)->next
+static inline void qnode_list_del_init(struct qnode_list_t *entry) {
+  __list_del(entry->prev, entry->next);
+  qnode_list_entry_init(entry); 
+}
 
-#define qnode_list_last(h)              \
-  (h)->prev
+static inline int qnode_list_empty(struct qnode_list_t *head) {
+  return (head->next == head);
+}
 
-#define qnode_list_sentinel(h)          \
-  (h)
+static inline void qnode_list_assign(qnode_list_t *dest, qnode_list_t* src) {
+  *dest = *src;
+  if(qnode_list_empty(src)) {
+    qnode_list_entry_init(dest);
+  } else {
+    src->next->prev = dest;
+    src->prev->next = dest;
+  } 
+}
 
-#define qnode_list_next(q)              \
-  (q)->next
+static inline void qnode_list_splice(qnode_list_t *list, qnode_list_t *head) {
+  qnode_list_t *first = list->next;
 
-#define qnode_list_prev(q)              \
-  (q)->prev
+  if (first != list) {
+    qnode_list_t *last = list->prev;
+    qnode_list_t *at = head->next;
 
-#define qnode_list_remove(x)            \
-  (x)->next->prev = (x)->prev;          \
-  (x)->prev->next = (x)->next;          \
-  (x)->prev = NULL;                     \
-  (x)->next = NULL
+    first->prev = head;
+    head->next = first;
 
-#define qnode_list_split(h, q, n)       \
-  (n)->prev = (h)->prev;                \
-  (n)->prev->next = n;                  \
-  (n)->next = q;                        \
-  (h)->prev = (q)->prev;                \
-  (h)->prev->next = h;                  \
-  (q)->prev = n;
+    last->next = at;
+    at->prev = last;
+  }
+}
 
-#define qnode_list_add(h, n)            \
-  (h)->prev->next = (n)->next;          \
-  (n)->next->prev = (h)->prev;          \
-  (h)->prev = (n)->prev;                \
-  (h)->prev->next = h;
+static inline void qnode_list_splice_tail(qnode_list_t *list, qnode_list_t *head) {
+  if(!qnode_list_empty(list)) {
+    qnode_list_t *first = list->next;
+    qnode_list_t *last = list->prev;
+    qnode_list_t *at = head->prev;
 
-#define qnode_list_data(q, type, link)  \
-  (type *) ((char *)q - offsetof(type, link))
+    at->next = first;
+    first->prev = at;
+
+    last->next = head;
+    head->prev = last;
+  }
+}
+
+#define qnode_list_entry(ptr, type, member) \
+  ((type *)((char *)(ptr) - ((unsigned long)(&((type*)1)->member) - 1)))
+
+#define qnode_list_for_each(pos, head) \
+  for (pos = (head)->next; pos != (head); pos = pos->next)
 
 #endif  /* __QLIST_H__ */

@@ -26,4 +26,3 @@ void* qnode_atomic_ptr_cas(void *ptr, void *cmp, void *val) {
       : "cc");
   return old;
 }
-

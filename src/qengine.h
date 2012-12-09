@@ -26,18 +26,18 @@ typedef void (qnode_event_func_t)(int fd, int flags, void *data);
 typedef void (qnode_timer_func_t)(void *data);
 
 typedef struct qnode_event_t {
-    int fd;
-    int flags;
-    qnode_event_func_t *read;
-    qnode_event_func_t *write;
-    void *data;
+  int fd;
+  int flags;
+  qnode_event_func_t *read;
+  qnode_event_func_t *write;
+  void *data;
 } qnode_event_t;
 
 typedef struct qnode_timer_t {
-    int flags;
-    qnode_timer_func_t *callback;
-    int min_heap_idx;
-    void *data;
+  int flags;
+  qnode_timer_func_t *callback;
+  int min_heap_idx;
+  void *data;
 } qnode_timer_t;
 
 typedef struct qnode_dispatcher_t {
@@ -49,11 +49,11 @@ typedef struct qnode_dispatcher_t {
 } qnode_dispatcher_t;
 
 typedef struct qnode_engine_t {
-    struct qnode_event_t *events;
-    struct qnode_event_t *active_events;
-    int max_fd;
-    const struct qnode_dispatcher_t *dispatcher;
-    void *data;
+  struct qnode_event_t *events;
+  struct qnode_event_t *active_events;
+  int max_fd;
+  const struct qnode_dispatcher_t *dispatcher;
+  void *data;
 } qnode_engine_t;
 
 qnode_engine_t* qnode_engine_new();
