@@ -39,7 +39,9 @@ qnode_server_t *qnode_server_create(struct qnode_config_t *config) {
         qnode_free(server);
         return NULL;
     }
-
+    int i;
+    for (i = 0; i < server->thread_num; ++i) {
+    }
     qnode_info("qserver started...");
     return server;
 }
