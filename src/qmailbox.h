@@ -9,7 +9,7 @@
 #include "qengine.h"
 #include "qlist.h"
 
-struct qnode_command_t;
+struct qnode_msg_t;
 struct signal_t;
 
 typedef struct qnode_mailbox_t {
@@ -25,7 +25,7 @@ typedef struct qnode_mailbox_t {
 qnode_mailbox_t* qnode_mailbox_new(qnode_event_func_t *callback, void *reader);
 void             qnode_mailbox_destroy(qnode_mailbox_t *box);
 int              qnode_mailbox_active(qnode_engine_t *engine, qnode_mailbox_t *box);
-void             qnode_mailbox_add(qnode_mailbox_t *box, struct qnode_command_t *cmd);
+void             qnode_mailbox_add(qnode_mailbox_t *box, struct qnode_msg_t *msg);
 int              qnode_mailbox_get(qnode_mailbox_t *box, struct qnode_list_t *list);
 
 #endif  /* __QMAILBOX_H__ */

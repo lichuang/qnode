@@ -8,7 +8,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include "qassert.h"
-#include "qcommand.h"
+#include "qmsg.h"
 #include "qmailbox.h"
 #include "qmalloc.h"
 
@@ -97,12 +97,12 @@ static int mailbox_active(qnode_mailbox_t *box, int active) {
   return qnode_atomic_cas(&(box->active), &cmp, &val);
 }
 
-void qnode_mailbox_add(qnode_mailbox_t *box, struct qnode_command_t *cmd) {
+void qnode_mailbox_add(qnode_mailbox_t *box, struct qnode_msg_t *msg) {
   /* save the write ptr first cause add_tail below
    * is-not atomic operation and the write ptr maybe changed 
    * */
   qnode_list_t *p = box->write;
-  qnode_list_add_tail(&(cmd->entry), p);
+  qnode_list_add_tail(&(msg->entry), p);
   if (mailbox_active(box, 1) == 0) {
     signaler_send(box->signal);
   }
