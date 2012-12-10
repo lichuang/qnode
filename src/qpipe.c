@@ -9,7 +9,7 @@
 #include "qpipe.h"
 
 typedef struct chunk_t {
-  qnode_ptr_t* values;
+  qptr_t* values;
   struct chunk_t *prev;
   struct chunk_t *next;
 } chunk_t;
@@ -26,12 +26,12 @@ typedef struct queue_t {
 } queue_t;
 
 static queue_t* queue_new(int size) {
-  queue_t *queue = qnode_alloc_type(queue_t);
-  qnode_alloc_assert(queue);
-  queue->begin_chunk = qnode_alloc_type(chunk_t);
-  qnode_alloc_assert(queue->begin_chunk);
-  queue->begin_chunk->values = (qnode_ptr_t*)qnode_malloc(size * sizeof(qnode_ptr_t));
-  qnode_alloc_assert(queue->begin_chunk->values);
+  queue_t *queue = qalloc_type(queue_t);
+  qalloc_assert(queue);
+  queue->begin_chunk = qalloc_type(chunk_t);
+  qalloc_assert(queue->begin_chunk);
+  queue->begin_chunk->values = (qptr_t*)qmalloc(size * sizeof(qptr_t));
+  qalloc_assert(queue->begin_chunk->values);
   queue->begin_pos = 0;
   queue->back_chunk = NULL;
   queue->back_pos = 0;
@@ -45,30 +45,30 @@ static queue_t* queue_new(int size) {
 static void queue_destory(queue_t *queue) {
   while (1) {
     if (queue->begin_chunk == queue->end_chunk) {
-      qnode_free (queue->begin_chunk);
+      qfree (queue->begin_chunk);
       break;
     } 
     chunk_t *o = queue->begin_chunk;
     queue->begin_chunk = queue->begin_chunk->next;
-    qnode_free (o);
+    qfree (o);
   }
 
-  chunk_t *sc = (chunk_t*)qnode_atomic_ptr_xchg(queue->spare_chunk, NULL);
+  chunk_t *sc = (chunk_t*)qatomic_ptr_xchg(queue->spare_chunk, NULL);
   if (sc) {
-    qnode_free (sc);
+    qfree (sc);
   }
-  qnode_free(queue);
+  qfree(queue);
 }
 
-static qnode_ptr_t* queue_front(queue_t *queue) {
+static qptr_t* queue_front(queue_t *queue) {
   return &(queue->begin_chunk->values[queue->begin_pos]);
 }
 
-static qnode_ptr_t* queue_back(queue_t *queue) {
+static qptr_t* queue_back(queue_t *queue) {
   return &(queue->back_chunk->values[queue->back_pos]);
 }
 
-static void queue_add(queue_t *queue, qnode_ptr_t value) {
+static void queue_add(queue_t *queue, qptr_t value) {
   queue->back_chunk->values[queue->back_pos] = value;
 }
 
@@ -80,13 +80,13 @@ static void queue_push(queue_t* queue) {
     return;
   }
 
-  chunk_t *sc = qnode_atomic_ptr_xchg(queue->spare_chunk, NULL);
+  chunk_t *sc = qatomic_ptr_xchg(queue->spare_chunk, NULL);
   if (sc) {
     queue->end_chunk->next = sc;
     sc->prev = queue->end_chunk;
   } else {
-    queue->end_chunk->next = qnode_alloc_type(chunk_t); 
-    qnode_alloc_assert(queue->end_chunk->next);
+    queue->end_chunk->next = qalloc_type(chunk_t); 
+    qalloc_assert(queue->end_chunk->next);
     queue->end_chunk->next->prev = queue->end_chunk;
   }
   queue->end_chunk = queue->end_chunk->next;
@@ -105,7 +105,7 @@ static void queue_unpush(queue_t *queue) {
   } else {
     queue->end_pos = queue->size - 1;
     queue->end_chunk = queue->end_chunk->prev;
-    qnode_free(queue->end_chunk->next);
+    qfree(queue->end_chunk->next);
     queue->end_chunk->next = NULL;
   }
 }
@@ -116,29 +116,29 @@ static void queue_pop(queue_t *queue) {
     queue->begin_chunk = queue->begin_chunk->next;
     queue->begin_chunk->prev = NULL;
     queue->begin_pos = 0;
-    chunk_t *cs = qnode_atomic_ptr_xchg(queue->spare_chunk, o);
+    chunk_t *cs = qatomic_ptr_xchg(queue->spare_chunk, o);
     if (cs) {
-      qnode_free (cs);
+      qfree (cs);
     }
   }
 }
 
-qnode_pipe_t* qnode_pipe_new(int size) {
-  qnode_pipe_t *pipe = qnode_alloc_type(qnode_pipe_t);
-  qnode_alloc_assert(pipe);
+qpipe_t* qpipe_new(int size) {
+  qpipe_t *pipe = qalloc_type(qpipe_t);
+  qalloc_assert(pipe);
   queue_t *queue = queue_new(size);
   queue_push(queue);
   pipe->r = pipe->w = pipe->f = queue_back(queue);
-  qnode_atomic_ptr_set(pipe->c, queue_back(queue));
+  qatomic_ptr_set(pipe->c, queue_back(queue));
   return pipe;
 }
 
-void qnode_pipe_destroy(qnode_pipe_t* pipe) {
+void qpipe_destroy(qpipe_t* pipe) {
   queue_destory(pipe->queue);
-  qnode_free(pipe);
+  qfree(pipe);
 }
 
-void qnode_pipe_write(qnode_pipe_t *pipe, qnode_ptr_t value, int incomplete) {
+void qpipe_write(qpipe_t *pipe, qptr_t value, int incomplete) {
   queue_t *queue = pipe->queue;
   queue_add(queue, value);
   queue_push(queue);
@@ -148,7 +148,7 @@ void qnode_pipe_write(qnode_pipe_t *pipe, qnode_ptr_t value, int incomplete) {
   }
 }
 
-int qnode_pipe_unwrite(qnode_pipe_t *pipe, qnode_ptr_t value) {
+int qpipe_unwrite(qpipe_t *pipe, qptr_t value) {
   queue_t *queue = pipe->queue;
   if (pipe->f == queue_back(queue)) {
     return 0;
@@ -158,14 +158,14 @@ int qnode_pipe_unwrite(qnode_pipe_t *pipe, qnode_ptr_t value) {
   return 1;
 }
 
-int qnode_pipe_flush(qnode_pipe_t *pipe) {
+int qpipe_flush(qpipe_t *pipe) {
   if (pipe->w == pipe->f) {
     return 1;
   }
 
-  qnode_ptr_t *ptr = qnode_atomic_ptr_cas(pipe->c, pipe->w, pipe->f);
+  qptr_t *ptr = qatomic_ptr_cas(pipe->c, pipe->w, pipe->f);
   if (ptr != pipe->w) {
-    qnode_atomic_ptr_set(pipe->c, pipe->f);
+    qatomic_ptr_set(pipe->c, pipe->f);
     pipe->w = pipe->f;
     return 0;
   }
@@ -173,21 +173,21 @@ int qnode_pipe_flush(qnode_pipe_t *pipe) {
   return 1;
 }
 
-int qnode_pipe_checkread(qnode_pipe_t *pipe) {
+int qpipe_checkread(qpipe_t *pipe) {
   queue_t *queue = pipe->queue;
   if (queue_front(queue) != pipe->r && pipe->r) {
     return 1;
   }
-  pipe->r = qnode_atomic_ptr_cas(pipe->c, queue_front(queue), NULL);
+  pipe->r = qatomic_ptr_cas(pipe->c, queue_front(queue), NULL);
   if (queue_front(queue) == pipe->r || !pipe->r) {
     return 0;
   }
   return 1;
 }
 
-int qnode_pipe_read(qnode_pipe_t *pipe, qnode_ptr_t value) {
+int qpipe_read(qpipe_t *pipe, qptr_t value) {
   queue_t *queue = pipe->queue;
-  if (!qnode_pipe_checkread(pipe)) {
+  if (!qpipe_checkread(pipe)) {
     return 0;
   }
   value = *(queue_front(queue));

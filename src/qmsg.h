@@ -8,10 +8,10 @@
 #include "qlist.h"
 
 /* define messages between worker-thread and main-thread */
-typedef struct qnode_msg_t {
-  qnode_list_t entry;
-} qnode_msg_t;
+typedef struct qmsg_t {
+  qlist_t entry;
+} qmsg_t;
 
-qnode_msg_t* qnode_msg_new();
+qmsg_t* qmsg_new();
 
 #endif  /* __QMSG_H__ */

@@ -4,11 +4,11 @@
 
 #include "qatomic.h"
 
-void  qnode_atomic_ptr_set(void *ptr, void *val) {
+void  qatomic_ptr_set(void *ptr, void *val) {
   ptr = val;
 }
 
-void* qnode_atomic_ptr_xchg(void *ptr, void *val) {
+void* qatomic_ptr_xchg(void *ptr, void *val) {
   void *old;
   __asm__ volatile (
       "lock; xchg %0, %2"
@@ -17,7 +17,7 @@ void* qnode_atomic_ptr_xchg(void *ptr, void *val) {
   return old;
 }
 
-void* qnode_atomic_ptr_cas(void *ptr, void *cmp, void *val) {
+void* qatomic_ptr_cas(void *ptr, void *cmp, void *val) {
   void *old;
   __asm__ volatile (
       "lock; cmpxchg %2, %3"

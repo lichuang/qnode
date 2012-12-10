@@ -12,24 +12,24 @@ static void malloc_default_oom(size_t size) {
   abort();
 }
 
-static void (*qnode_malloc_oom_handler)(size_t) = malloc_default_oom;
+static void (*qmalloc_oom_handler)(size_t) = malloc_default_oom;
 
-void *qnode_malloc(size_t size) {
+void *qmalloc(size_t size) {
   void *ptr = malloc(size);
   if (!ptr) {
-    qnode_malloc_oom_handler(size);
+    qmalloc_oom_handler(size);
   }
   return ptr;
 }
 
-void *qnode_calloc(size_t size) {
+void *qcalloc(size_t size) {
     return NULL;
 }
 
-void *qnode_realloc(void *ptr, size_t size) {
+void *qrealloc(void *ptr, size_t size) {
     return NULL;
 }
 
-void qnode_free(void *ptr) {
+void qfree(void *ptr) {
   free(ptr);
 }

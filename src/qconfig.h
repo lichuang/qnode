@@ -5,8 +5,8 @@
 #ifndef __QCONFIG_H__
 #define __QCONFIG_H__
 
-typedef struct qnode_config_t {
+typedef struct qconfig_t {
   int thread_num;
-} qnode_config_t;
+} qconfig_t;
 
 #endif  /* __QCONFIG_H__ */

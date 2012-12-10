@@ -6,64 +6,65 @@
 #define __QENGINE_H__
 
 #include <sys/time.h>
-#define QNODE_MAX_EVENTS  (1024 * 10)
+
+#define QMAX_EVENTS  (1024 * 10)
 
 /* for events */
-#define QNODE_EVENT_NONE    0
-#define QNODE_EVENT_READ    1
-#define QNODE_EVENT_WRITE   2
+#define QEVENT_NONE    0
+#define QEVENT_READ    1
+#define QEVENT_WRITE   2
 
 /* for timers */
-#define QNODE_TIMER_NONE    0
-#define QNODE_TIMER_ONCE    1
-#define QNODE_TIMER_PERSIST 2
+#define QTIMER_NONE    0
+#define QTIMER_ONCE    1
+#define QTIMER_PERSIST 2
 
-struct qnode_engine_t;
-struct qnode_event_t;
-struct qnode_dispatcher_t;
+struct qengine_t;
+struct qevent_t;
+struct qdispatcher_t;
 
-typedef void (qnode_event_func_t)(int fd, int flags, void *data);
-typedef void (qnode_timer_func_t)(void *data);
+typedef void (qevent_func_t)(int fd, int flags, void *data);
+typedef void (qtimer_func_t)(void *data);
 
-typedef struct qnode_event_t {
+typedef struct qevent_t {
   int fd;
   int flags;
-  qnode_event_func_t *read;
-  qnode_event_func_t *write;
+  qevent_func_t *read;
+  qevent_func_t *write;
   void *data;
-} qnode_event_t;
+} qevent_t;
 
-typedef struct qnode_timer_t {
+typedef struct qtimer_t {
   int flags;
-  qnode_timer_func_t *callback;
+  qtimer_func_t *callback;
   int min_heap_idx;
   void *data;
-} qnode_timer_t;
+} qtimer_t;
 
-typedef struct qnode_dispatcher_t {
+typedef struct qdispatcher_t {
   const char *name;
-  int (*init)(struct qnode_engine_t*);
-  int (*add)(struct qnode_engine_t *engine, int fd, int flags);
-  int (*del)(struct qnode_engine_t *engine, int fd, int flags);
-  int (*poll)(struct qnode_engine_t *, struct timeval *time);
-} qnode_dispatcher_t;
+  int (*init)(struct qengine_t*);
+  int (*add)(struct qengine_t *engine, int fd, int flags);
+  int (*del)(struct qengine_t *engine, int fd, int flags);
+  int (*poll)(struct qengine_t *, struct timeval *time);
+} qdispatcher_t;
 
-typedef struct qnode_engine_t {
-  struct qnode_event_t *events;
-  struct qnode_event_t *active_events;
+typedef struct qengine_t {
+  struct qevent_t *events;
+  struct qevent_t *active_events;
   int max_fd;
-  const struct qnode_dispatcher_t *dispatcher;
+  const struct qdispatcher_t *dispatcher;
   void *data;
-} qnode_engine_t;
+} qengine_t;
 
-qnode_engine_t* qnode_engine_new();
-int qnode_engine_loop(qnode_engine_t* engine);
-void qnode_engine_destroy(qnode_engine_t *engine);
+qengine_t* qengine_new();
+int qengine_loop(qengine_t* engine);
+void qengine_destroy(qengine_t *engine);
 
-int qnode_engine_add_event(qnode_engine_t* engine, int fd, int flags, qnode_event_func_t *callback, void *data);
-int qnode_engine_del_event(qnode_engine_t* engine, int fd, int flags);
+int qengine_add_event(qengine_t* engine, int fd, int flags, qevent_func_t *callback, void *data);
+int qengine_del_event(qengine_t* engine, int fd, int flags);
 
-int qnode_engine_add_timer(qnode_engine_t* engine, struct timeval *time, int flags);
-int qnode_engine_del_timer(qnode_engine_t* engine, int id);
+int qengine_add_timer(qengine_t* engine, struct timeval *time, int flags);
+int qengine_del_timer(qengine_t* engine, int id);
 
 #endif  /* __QENGINE_H__ */

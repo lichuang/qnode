@@ -14,26 +14,26 @@
 static void thread_box(int fd, int flags, void *data) {
 }
 
-qnode_thread_t* qnode_thread_new(struct qnode_server_t *server, int tid) {
-  qnode_thread_t *thread = qnode_alloc_type(qnode_thread_t);
+qthread_t* qthread_new(struct qserver_t *server, int tid) {
+  qthread_t *thread = qalloc_type(qthread_t);
   if (thread == NULL) {
-    qnode_error("create thread error");
+    qerror("create thread error");
     return NULL;
   }
-  thread->engine = qnode_engine_new();
+  thread->engine = qengine_new();
   if (thread->engine == NULL) {
-    qnode_error("create thread engine error");
-    qnode_free(thread);
+    qerror("create thread engine error");
+    qfree(thread);
     return NULL;
   }
   thread->server = server;
   thread->tid = tid;
-  thread->server_box = qnode_server_get_box(server, tid);
-  thread->box = qnode_mailbox_new(thread_box, thread);
-  qnode_assert(thread->box);
+  thread->server_box = qserver_get_box(server, tid);
+  thread->box = qmailbox_new(thread_box, thread);
+  qassert(thread->box);
   return thread;
 }
 
-struct qnode_mailbox_t* qnode_thread_mailbox(qnode_thread_t *thread) {
+struct qmailbox_t* qthread_mailbox(qthread_t *thread) {
   return thread->box;
 }

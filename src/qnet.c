@@ -16,12 +16,12 @@
 static int create_socket() {
     int fd, on = 1;
     if ((fd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
-        qnode_error("creating socket: %s", strerror(errno));
+        qerror("creating socket: %s", strerror(errno));
         return -1;
     }
 
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) == -1) {
-        qnode_error("setsockopt SO_REUSEADDR: %s", strerror(errno));
+        qerror("setsockopt SO_REUSEADDR: %s", strerror(errno));
         return -1;
     }
     return fd;
@@ -29,13 +29,13 @@ static int create_socket() {
 
 static int net_listen(int fd, struct sockaddr *sa, socklen_t len) {
     if (bind(fd, sa, len) < 0) {
-        qnode_error("bind error: %s", strerror(errno))
+        qerror("bind error: %s", strerror(errno))
         close(fd);
         return -1;
     }
 
     if (listen(fd, 511) == -1) {
-        qnode_error("listen: %s", strerror(errno));
+        qerror("listen: %s", strerror(errno));
         close(fd);
         return -1;
     }
@@ -47,17 +47,17 @@ int set_nonblocking(fd) {
     int flags;
 
     if ((flags = fcntl(fd, F_GETFL)) == -1) {
-        qnode_error("fcntl(F_GETFL): %s", strerror(errno));
+        qerror("fcntl(F_GETFL): %s", strerror(errno));
         return -1;
     }
     if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) {
-        qnode_error("fcntl(F_SETFL,O_NONBLOCK): %s", strerror(errno));
+        qerror("fcntl(F_SETFL,O_NONBLOCK): %s", strerror(errno));
         return -1;
     }
     return 0;
 }
 
-int qnode_net_tcp_server(int port, const char *bindaddr) {
+int qnet_tcp_server(int port, const char *bindaddr) {
     int fd;
     struct sockaddr_in sa;
 
@@ -74,7 +74,7 @@ int qnode_net_tcp_server(int port, const char *bindaddr) {
     sa.sin_port = htons(port);
     sa.sin_addr.s_addr = htonl(INADDR_ANY);
     if (bindaddr && inet_aton(bindaddr, &sa.sin_addr) == 0) {
-        qnode_error("invalid bind address");
+        qerror("invalid bind address");
         close(fd);
         return -1;
     }

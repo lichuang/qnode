@@ -5,21 +5,21 @@
 #ifndef __QSERVER_H__
 #define __QSERVER_H__
 
-struct qnode_config_t;
-struct qnode_engine_t;
-struct qnode_event_t;
-struct qnode_thread_t;
-struct qnode_mailbox_t;
+struct qconfig_t;
+struct qengine_t;
+struct qevent_t;
+struct qthread_t;
+struct qmailbox_t;
 
-typedef struct qnode_server_t {
+typedef struct qserver_t {
   int thread_num;
-  struct qnode_engine_t *engine;
-  struct qnode_thread_t  **threads;
-  struct qnode_mailbox_t **boxs;
-  struct qnode_mailbox_t **thread_boxs;
-} qnode_server_t;
+  struct qengine_t *engine;
+  struct qthread_t  **threads;
+  struct qmailbox_t **boxs;
+  struct qmailbox_t **thread_boxs;
+} qserver_t;
 
-qnode_server_t *qnode_server_create(struct qnode_config_t *config);
-struct qnode_mailbox_t *qnode_server_get_box(qnode_server_t *server, int tid);
+qserver_t* qserver_create(struct qconfig_t *config);
+struct qmailbox_t *qserver_get_box(qserver_t *server, int tid);
 
 #endif  /* __QSERVER_H__ */

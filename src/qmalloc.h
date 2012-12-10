@@ -4,12 +4,12 @@
 #ifndef __QMALLOC_H__
 #define __QMALLOC_H__
 
-#define qnode_alloc_type(T)        (T*)qnode_malloc(sizeof(T))
-#define qnode_alloc_array(T, size) (T*)qnode_malloc(sizeof(T) * size)
+#define qalloc_type(T)        (T*)qmalloc(sizeof(T))
+#define qalloc_array(T, size) (T*)qmalloc(sizeof(T) * size)
 
-void *qnode_malloc(size_t size);
-void *qnode_calloc(size_t size);
-void *qnode_realloc(void *ptr, size_t size);
-void qnode_free(void *ptr);
+void *qmalloc(size_t size);
+void *qcalloc(size_t size);
+void *qrealloc(void *ptr, size_t size);
+void qfree(void *ptr);
 
 #endif  /* __QMALLOC_H__ */

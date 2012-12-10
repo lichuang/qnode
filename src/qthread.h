@@ -5,20 +5,20 @@
 #ifndef __QTHREAD_H__
 #define __QTHREAD_H__
 
-struct qnode_engine_t;
-struct qnode_mailbox_t;
-struct qnode_server_t;
+struct qengine_t;
+struct qmailbox_t;
+struct qserver_t;
 
-typedef struct qnode_thread_t {
+typedef struct qthread_t {
   int tid;
-  struct qnode_engine_t *engine;
-  struct qnode_mailbox_t *box;        /* server send to thread */
-  struct qnode_mailbox_t *server_box; /* thread send to server */
-  struct qnode_server_t  *server;
-} qnode_thread_t;
+  struct qengine_t *engine;
+  struct qmailbox_t *box;        /* server send to thread */
+  struct qmailbox_t *server_box; /* thread send to server */
+  struct qserver_t  *server;
+} qthread_t;
 
-qnode_thread_t* qnode_thread_new(struct qnode_server_t *server, int tid);
-void qnode_thread_destroy(qnode_thread_t *thread);
-struct qnode_mailbox_t* qnode_thread_mailbox(qnode_thread_t *thread);
+qthread_t* qthread_new(struct qserver_t *server, int tid);
+void qthread_destroy(qthread_t *thread);
+struct qmailbox_t* qthread_mailbox(qthread_t *thread);
 
 #endif  /* __QTHREAD_H__ */

@@ -7,11 +7,11 @@
 #include "qserver.h"
 
 int main(int argc, char *argv[]) {
-  qnode_config_t config;
+  struct qconfig_t config;
   config.thread_num = 10;
 
-  qnode_server_t *server = qnode_server_create(&config);
-  qnode_engine_loop(server->engine);
+  qserver_t* server = qserver_create(&config);
+  qengine_loop(server->engine);
 
   return 0;
 }
