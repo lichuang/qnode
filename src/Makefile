@@ -1,6 +1,6 @@
 
 CC=gcc
-CFLAGS=-g -O -Wall -Werror
+CFLAGS=-g -O -Wall -Werror -pthread
 
 BINARY=qserver
 

@@ -14,6 +14,12 @@
 static void thread_box(int fd, int flags, void *data) {
 }
 
+static void* main_loop(void *arg) {
+  qthread_t *thread = (qthread_t*)arg;
+  qengine_loop(thread->engine);
+  return NULL;
+}
+
 qthread_t* qthread_new(struct qserver_t *server, int tid) {
   qthread_t *thread = qalloc_type(qthread_t);
   if (thread == NULL) {
@@ -31,6 +37,9 @@ qthread_t* qthread_new(struct qserver_t *server, int tid) {
   thread->server_box = qserver_get_box(server, tid);
   thread->box = qmailbox_new(thread_box, thread);
   qassert(thread->box);
+  int result;
+  result = pthread_create(&thread->id, NULL, main_loop, thread);
+  qcheck(result == 0);
   return thread;
 }
 
