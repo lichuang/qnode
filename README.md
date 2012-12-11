@@ -1,4 +1,4 @@
 qnode
 =====
 
-C + Lua + Actor Model = Erlang-like system
+qnode(cute node) - C + Lua + Actor Model = Erlang-like system
