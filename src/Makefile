@@ -1,10 +1,10 @@
 
 CC=gcc
-CFLAGS=-g -O -Wall -Werror -pthread
+CFLAGS=-g -O -Wall -Werror
 
 BINARY=qserver
 
-ALL_O=main.o qatomic.o qepoll.o qengine.o qmailbox.o qmalloc.o qnet.o qserver.o qthread.o \
+ALL_O=main.o qatomic.o qepoll.o qengine.o qhash.o qmailbox.o qmalloc.o qnet.o qserver.o qthread.o \
       qlog.o qpipe.o
 
 all:$(ALL_O) $(BINARY)
@@ -22,6 +22,7 @@ main.o: main.c qserver.h qserver.c
 qatomic.o:qatomic.c qatomic.h
 qepoll.o: qepoll.c
 qengine.o: qengine.c qengine.h qepoll.c qmalloc.h qmalloc.c
+qhash.o: qhash.c qhash.h
 qlog.o: qlog.h qlog.c
 qmailbox.o: qmailbox.h qmailbox.c qlist.h
 qmalloc.o: qmalloc.h qmalloc.c
