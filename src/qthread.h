@@ -6,6 +6,7 @@
 #define __QTHREAD_H__
 
 #include <pthread.h>
+#include "qlist.h"
 
 struct qengine_t;
 struct qmailbox_t;
@@ -18,6 +19,7 @@ typedef struct qthread_t {
   struct qmailbox_t *box;        /* server send to thread */
   struct qmailbox_t *server_box; /* thread send to server */
   struct qserver_t  *server;
+  qlist_t actor_list;
 } qthread_t;
 
 qthread_t* qthread_new(struct qserver_t *server, int tid);

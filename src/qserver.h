@@ -12,7 +12,7 @@ struct qthread_t;
 struct qmailbox_t;
 
 typedef struct qserver_t {
-  int thread_num;
+  struct qconfig_t *config;
   struct qengine_t *engine;
   struct qthread_t  **threads;
   struct qmailbox_t **boxs;

@@ -94,7 +94,7 @@ int qmailbox_active(qengine_t *engine, qmailbox_t *box) {
 static int mailbox_active(qmailbox_t *box, int active) {
   qatomic_t cmp = !active;
   qatomic_t val = active;
-  return qatomic_cas(&(box->active), &cmp, &val);
+  return qatomic_cas(&(box->active), cmp, val);
 }
 
 void qmailbox_add(qmailbox_t *box, struct qmsg_t *msg) {
@@ -108,15 +108,16 @@ void qmailbox_add(qmailbox_t *box, struct qmsg_t *msg) {
   }
 }
 
-int qmailbox_get(qmailbox_t *box, struct qlist_t *list) {
+int qmailbox_get(qmailbox_t *box, qlist_t **list) {
+  *list = NULL;
   /* first save the read ptr */
   qlist_t *read = box->read;
   /* second change the read ptr to the write ptr */
-  qatomic_ptr_xchg(box->read, box->write);
+  qatomic_ptr_xchg(&(box->read), box->write);
   /* last change the write ptr to the read ptr saved before and return to list */
-  list = qatomic_ptr_xchg(box->write, read);
+  *list = qatomic_ptr_xchg(&(box->write), read);
   if (mailbox_active(box, 0) == 1) {
     signaler_recv(box->signal);
   }
-  return (qlist_empty(list));
+  return qlist_empty(*list);
 }

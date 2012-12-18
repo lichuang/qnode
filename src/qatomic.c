@@ -10,10 +10,11 @@ void  qatomic_ptr_set(void *ptr, void *val) {
 
 void* qatomic_ptr_xchg(void *ptr, void *val) {
   void *old;
+  void **p = (void**)ptr;
   __asm__ volatile (
       "lock; xchg %0, %2"
-      : "=r" (old), "=m" (ptr)
-      : "m" (ptr), "0" (val));
+      : "=r" (old), "=m" (*p)
+      : "m" (*p), "0" (val));
   return old;
 }
 

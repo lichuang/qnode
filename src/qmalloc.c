@@ -2,34 +2,27 @@
  * See Copyright Notice in qnode.h
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "qmalloc.h"
+#ifndef __QPIPE_H__
+#define __QPIPE_H__
 
-static void malloc_default_oom(size_t size) {
-  fprintf(stderr, "malloc: Out of memory trying to allocate %zu bytes\n", size);
-  fflush(stderr);
-  abort();
-}
+#include "qtype.h"
 
-static void (*qmalloc_oom_handler)(size_t) = malloc_default_oom;
+struct queue_t;
 
-void *qmalloc(size_t size) {
-  void *ptr = malloc(size);
-  if (!ptr) {
-    qmalloc_oom_handler(size);
-  }
-  return ptr;
-}
+typedef struct qpipe_t{
+  struct queue_t *queue;
+  qptr_t* w;
+  qptr_t* r;
+  qptr_t* f;
+  qptr_t* c;
+} qpipe_t;
 
-void *qcalloc(size_t size) {
-    return NULL;
-}
+qpipe_t* qpipe_new(int size);
+void          qpipe_destroy(qpipe_t* pipe);
+void          qpipe_write(qpipe_t *pipe, qptr_t value, int incomplete);
+int           qpipe_unwrite(qpipe_t *pipe, qptr_t value);
+int           qpipe_flush(qpipe_t *pipe);
+int           qpipe_checkread(qpipe_t *pipe);
+int           qpipe_read(qpipe_t *pipe, qptr_t value);
 
-void *qrealloc(void *ptr, size_t size) {
-    return NULL;
-}
-
-void qfree(void *ptr) {
-  free(ptr);
-}
+#endif  /* __QPIPE_H__ */
