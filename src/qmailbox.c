@@ -99,7 +99,7 @@ static int mailbox_active(qmailbox_t *box, int active) {
 }
 
 void qmailbox_add(qmailbox_t *box, struct qmsg_t *msg) {
-  qinfo("qmailbox_add");
+  qinfo("qmailbox_add %p, write: %p", box, box->write);
   /* save the write ptr first cause add_tail below
    * is-not atomic operation and the write ptr maybe changed 
    * */
@@ -107,11 +107,13 @@ void qmailbox_add(qmailbox_t *box, struct qmsg_t *msg) {
   qlist_add_tail(&(msg->entry), p);
   if (mailbox_active(box, 1) == 0) {
     signaler_send(box->signal);
-    qinfo("signaler_send");
+    qinfo("signaler_send %d", box->active);
   }
+  qinfo("empty: %d", qlist_empty(p));
 }
 
 int qmailbox_get(qmailbox_t *box, qlist_t **list) {
+  qinfo("qmailbox_get %p, active: %d, write: %p", box, box->active, box->write);
   *list = NULL;
   /* first save the read ptr */
   qlist_t *read = box->read;
@@ -122,5 +124,7 @@ int qmailbox_get(qmailbox_t *box, qlist_t **list) {
   if (mailbox_active(box, 0) == 1) {
     signaler_recv(box->signal);
   }
+  qinfo("qmailbox_get %p, active: %d, write: %p", box, box->active, *list);
+  qinfo("empty: %d", qlist_empty(*list));
   return qlist_empty(*list);
 }

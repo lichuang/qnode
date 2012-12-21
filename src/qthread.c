@@ -18,6 +18,7 @@
 extern smsg_handler smsg_handlers[];
 
 static void thread_box(int fd, int flags, void *data) {
+  qinfo("thread box");
   qlist_t *list;
   qthread_t *thread = (qthread_t*)data;
   qmailbox_get(thread->box, &list);
@@ -25,7 +26,9 @@ static void thread_box(int fd, int flags, void *data) {
   for (pos = list->next; pos != list; ) {
     qmsg_t *msg = qlist_entry(pos, qmsg_t, entry);
     next = pos->next;
+    qlist_del_init(&(msg->entry));
     if (msg == NULL) {
+      qinfo("msg NULL");
       goto next;
     }
     qinfo("handle %d msg", msg->type);
@@ -41,7 +44,6 @@ static void thread_box(int fd, int flags, void *data) {
     (smsg_handlers[msg->type])(thread, msg);
 
 next:
-    qlist_del_init(&(msg->entry));
     if (!qmsg_undelete(msg)) {
       qfree(msg);
     }

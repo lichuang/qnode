@@ -47,6 +47,7 @@ static void server_box(int fd, int flags, void *data) {
   for (pos = list->next; pos != list; ) {
     qmsg_t *msg = qlist_entry(pos, qmsg_t, entry);
     next = pos->next;
+    qlist_del_init(&(msg->entry));
     if (msg == NULL) {
       goto next;
     }
@@ -62,7 +63,6 @@ static void server_box(int fd, int flags, void *data) {
     (wmsg_handlers[msg->type])(g_server, msg);
 
 next:
-    qlist_del_init(&(msg->entry));
     if (!qmsg_undelete(msg)) {
       qfree(msg);
     }
