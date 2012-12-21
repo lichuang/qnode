@@ -7,4 +7,7 @@
 
 typedef char* qptr_t;
 
+typedef unsigned int qaid_t;
+typedef unsigned int qtid_t;
+
 #endif  /* __QTYPE_H__ */

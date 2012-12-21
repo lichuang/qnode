@@ -5,10 +5,12 @@
 #ifndef __QLIST_H__
 #define __QLIST_H__
 
-typedef struct qlist_t {
-  struct qlist_t *next;
-  struct qlist_t *prev;
-} qlist_t;
+typedef struct qlist_t qlist_t;
+
+struct qlist_t {
+  qlist_t *next;
+  qlist_t *prev;
+};
 
 static inline void qlist_entry_init(qlist_t *entry) {
   entry->next = entry;
@@ -48,13 +50,13 @@ static inline int qlist_empty(struct qlist_t *head) {
   return (head->next == head);
 }
 
-static inline void qlist_assign(qlist_t *dest, qlist_t* src) {
-  *dest = *src;
+static inline void qlist_assign(qlist_t *dst, qlist_t* src) {
+  *dst = *src;
   if(qlist_empty(src)) {
-    qlist_entry_init(dest);
+    qlist_entry_init(dst);
   } else {
-    src->next->prev = dest;
-    src->prev->next = dest;
+    src->next->prev = dst;
+    src->prev->next = dst;
   } 
 }
 

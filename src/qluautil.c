@@ -9,12 +9,19 @@
 #include "qactor.h"
 #include "qconfig.h"
 #include "qluautil.h"
+#include "qlog.h"
 #include "qserver.h"
 #include "qstring.h"
 #include "qthread.h"
 
+static int my_panic(lua_State *state) {
+  qerror("PANIC: unprotected error in call to Lua API (%s)\n", lua_tostring(state, -1));
+  return 0;
+}
+
 lua_State* qlua_new_state() {
   lua_State *state = lua_open();
+  lua_atpanic(state, my_panic);
   luaL_openlibs(state);
   return state;
 }
@@ -59,7 +66,7 @@ int qlua_get_table_number(lua_State *state, const char *key, int *number) {
 } 
 
 static void lua_init_filename(struct qactor_t *actor, const char *filename, qstring_t *full_name) {
-  qserver_t *server = actor->thread->server;
+  qserver_t *server = g_server;
   qstring_init(full_name);
   qstring_assign(full_name, server->config->script_path.data);
   qstring_append(full_name, "/");
@@ -84,12 +91,11 @@ int qlua_dofile(struct qactor_t *actor, const char *filename) {
 
 int qlua_init_path(struct qactor_t *actor) {
   lua_State *state = actor->state;
-  qserver_t *server = actor->thread->server;
+  qserver_t *server = g_server;
   const char *path = server->config->script_path.data;
   lua_getglobal(state, "package" );
   lua_getfield(state, -1, "path" );
   const char* cur_path = lua_tostring( state, -1 );
-  printf("path: %s\n", cur_path);
   qstring_t full_path;
   qstring_init(&full_path);
   qstring_assign(&full_path, cur_path);
@@ -97,8 +103,7 @@ int qlua_init_path(struct qactor_t *actor) {
   qstring_append(&full_path, path);
   qstring_append(&full_path, "/?.lua");
   lua_pop(state, 1);
-  //lua_pushstring(state, full_path.data);
-  lua_pushstring(state, "/home/lichuang/source/qnode/script/");
+  lua_pushstring(state, full_path.data);
   lua_setfield(state, -2, "path");
   lua_pop(state, 1);
   qstring_destroy(&full_path);

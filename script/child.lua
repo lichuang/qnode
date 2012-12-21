@@ -1,8 +1,7 @@
-local server = {}
---function test(_tbl)
-server.test = function ()
-  --print("id: %d", _tbl[id])
-  print("id: %d", 1000)
+local child = {}
+
+child.test = function (_args)
+  print("in child, id:" .. _args["id"])
 end
 
-_G["child"] = server
+_G["child"] = child

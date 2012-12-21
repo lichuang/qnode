@@ -15,41 +15,37 @@
 #include "qserver.h"
 #include "qthread.h"
 
-typedef int (*msg_handler)(qthread_t *thread, qmsg_t *msg);
-
-static int thread_handle_start_msg(qthread_t *thread, qmsg_t *msg) {
-  qinfo("handle start msg");
-  qactor_t *actor = msg->args.start.actor;
-
-  qlua_init_path(actor);
-  if (luaL_dofile(actor->state, "server.lua") != 0 ) {
-    qerror("do file error");
-  }
-  /*
-  if (qlua_dofile(actor, "server.lua") != 0) {
-    qerror("load server start script error");
-    return -1; 
-  }
-  */
-  lua_State *state = actor->state;
-  lua_getglobal(state, "server");
-  lua_getfield(state, -1, "start");
-  lua_call(state, 0, 0);
-  return 0;
-}
-
-msg_handler handlers[] = {
-  &thread_handle_start_msg,
-};
+extern smsg_handler smsg_handlers[];
 
 static void thread_box(int fd, int flags, void *data) {
   qlist_t *list;
   qthread_t *thread = (qthread_t*)data;
   qmailbox_get(thread->box, &list);
-  qlist_t *pos;
-  qlist_for_each(pos, list) {
+  qlist_t *pos, *next;
+  for (pos = list->next; pos != list; ) {
     qmsg_t *msg = qlist_entry(pos, qmsg_t, entry);
-    (handlers[msg->type])(thread, msg);
+    next = pos->next;
+    if (msg == NULL) {
+      goto next;
+    }
+    qinfo("handle %d msg", msg->type);
+    if (!qmsg_is_smsg(msg)) {
+      qerror("msg %d , flag %d is not server msg", msg->type, msg->flag);
+      goto next;
+    }
+    if (qmsg_invalid_type(msg->type)) {
+      qerror("msg %d is not valid msg type", msg->type);
+      goto next;
+    }
+    qinfo("handle %d msg", msg->type);
+    (smsg_handlers[msg->type])(thread, msg);
+
+next:
+    qlist_del_init(&(msg->entry));
+    if (!qmsg_undelete(msg)) {
+      qfree(msg);
+    }
+    pos = next;
   }
 }
 
@@ -59,7 +55,7 @@ static void* main_loop(void *arg) {
   return NULL;
 }
 
-qthread_t* qthread_new(struct qserver_t *server, int tid) {
+qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
   qthread_t *thread = qalloc_type(qthread_t);
   if (thread == NULL) {
     qerror("create thread error");
@@ -71,9 +67,7 @@ qthread_t* qthread_new(struct qserver_t *server, int tid) {
     qfree(thread);
     return NULL;
   }
-  thread->server = server;
   thread->tid = tid;
-  thread->server_box = qserver_get_box(server, tid);
   thread->box = qmailbox_new(thread_box, thread);
   qassert(thread->box);
   qlist_entry_init(&(thread->actor_list));

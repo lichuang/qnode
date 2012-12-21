@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include "qactor.h"
+#include "qaidmap.h"
 #include "qassert.h"
 #include "qconfig.h"
 #include "qengine.h"
@@ -15,11 +16,16 @@
 #include "qserver.h"
 #include "qthread.h"
 
+extern wmsg_handler wmsg_handlers[];
+
+struct qserver_t *g_server;
+
 static void server_accept(int fd, int flags, void *data) {
   qinfo("add a connection....")
 }
 
 static int init_server_event(struct qserver_t *server) {
+  return 0;
   int fd = qnet_tcp_server(22222, "127.0.0.1");
   if (fd < 0) {
     return -1;
@@ -32,62 +38,104 @@ static int init_server_event(struct qserver_t *server) {
   return 0;
 }
 
-static int get_actor_id() {
-  return 1;
+static void server_box(int fd, int flags, void *data) {
+  qinfo("handle server msg");
+  qlist_t *list;
+  qmailbox_t *box = (qmailbox_t*)data;
+  qmailbox_get(box, &list);
+  qlist_t *pos, *next;
+  for (pos = list->next; pos != list; ) {
+    qmsg_t *msg = qlist_entry(pos, qmsg_t, entry);
+    next = pos->next;
+    if (msg == NULL) {
+      goto next;
+    }
+    if (!qmsg_is_wmsg(msg)) {
+      qerror("msg %d is not worker msg", msg->type);
+      goto next;
+    }
+    if (qmsg_invalid_type(msg->type)) {
+      qerror("msg %d is not valid msg type", msg->type);
+      goto next;
+    }
+    qinfo("handle %d msg", msg->type);
+    (wmsg_handlers[msg->type])(g_server, msg);
+
+next:
+    qlist_del_init(&(msg->entry));
+    if (!qmsg_undelete(msg)) {
+      qfree(msg);
+    }
+    pos = next;
+  }
 }
 
-static void server_box(int fd, int flags, void *data) {
+void qserver_send_mail(struct qmsg_t *msg) {
+  qmailbox_add(g_server->thread_box[1], msg);
+}
+
+int qserver_add_mail(qtid_t tid, struct qmsg_t *msg) {
+  qmailbox_add(g_server->box[tid], msg);
+  return 0;
 }
 
 static void server_start(qserver_t *server) {
-  qactor_t *actor = qactor_new(server);
+  qaid_t aid = qaid_new();
+  qassert(aid != QAID_INVALID);
+  qactor_t *actor = qactor_new(aid);
   qmsg_t *msg = qmsg_new();
   if (msg == NULL) {
     return;
   }
-  qmsg_init_start(msg, actor);
-  actor->aid = get_actor_id();
-  actor->thread = server->threads[1];
-  qmailbox_add(server->thread_boxs[1], msg);
-  qinfo("add a msg....")
+  qmsg_init_sstart(msg, actor);
+  qserver_send_mail(msg);
+  qinfo("add a msg, type: %d, flag: %d", msg->type, msg->flag);
 }
 
-qserver_t *qserver_create(struct qconfig_t *config) {
+static int server_init(struct qconfig_t *config) {
   qassert(config);
   qassert(config->thread_num > 0);
+  qassert(g_server == NULL);
   qserver_t *server = qalloc_type(qserver_t);
   server->config = config;
   server->engine = qengine_new();
   if (init_server_event(server) < 0) {
     qengine_destroy(server->engine);
     qfree(server);
-    return NULL;
+    return -1;
   }
-  /* alloc threads and mailboxs */
+  /* alloc threads and mailbox */
   server->threads = (qthread_t**)qmalloc(config->thread_num * sizeof(qthread_t*));
   qalloc_assert(server->threads);
   server->threads[0] = NULL;
-  server->boxs = (qmailbox_t**)qmalloc(config->thread_num * sizeof(qmailbox_t*));
-  qalloc_assert(server->boxs);
-  server->boxs[0] = NULL;
-  server->thread_boxs = (qmailbox_t**)qmalloc(config->thread_num * sizeof(qmailbox_t*));
-  qalloc_assert(server->thread_boxs);
-  server->thread_boxs[0] = NULL;
+  server->box = (qmailbox_t**)qmalloc(config->thread_num * sizeof(qmailbox_t*));
+  qalloc_assert(server->box);
+  server->box[0] = NULL;
+  server->thread_box = (qmailbox_t**)qmalloc(config->thread_num * sizeof(qmailbox_t*));
+  qalloc_assert(server->thread_box);
+  server->thread_box[0] = NULL;
   int i;
   for (i = 1; i <= config->thread_num; ++i) {
-    server->boxs[i] = qmailbox_new(server_box, server);
-    qassert(server->boxs[i]);
-    qmailbox_active(server->engine, server->boxs[i]);
+    server->box[i] = qmailbox_new(server_box, NULL);
+    server->box[i]->reader = server->box[i];
+    qassert(server->box[i]);
+    qmailbox_active(server->engine, server->box[i]);
     server->threads[i] = qthread_new(server, i); 
     qassert(server->threads[i]);
-    server->thread_boxs[i] = qthread_mailbox(server->threads[i]);
+    server->thread_box[i] = qthread_mailbox(server->threads[i]);
   }
+  qaidmap_init();
   qinfo("qserver started...");
+  g_server = server;
 
   server_start(server);
-  return server;
+  return 0;
 }
 
-qmailbox_t *qserver_get_box(qserver_t *server, int tid) {
-  return server->boxs[tid];
+int qserver_run(struct qconfig_t *config) {
+  if (server_init(config) != 0) {
+    return -1;
+  }
+  qengine_loop(g_server->engine);
+  return 0;
 }

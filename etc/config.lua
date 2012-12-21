@@ -10,7 +10,7 @@ qnode_config = {
 
   -- script config
   script = {
-    path = "../script",
+    path = "./script",
   },
 
   -- server config

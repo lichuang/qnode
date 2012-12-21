@@ -12,5 +12,7 @@ qmsg_t* qmsg_new() {
   if (msg == NULL) {
     return NULL;
   }
+  qlist_entry_init(&(msg->entry));
+  msg->flag = msg->type = msg->mask = 0;
   return msg;
 }

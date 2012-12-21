@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include "qassert.h"
+#include "qlog.h"
 #include "qmsg.h"
 #include "qmailbox.h"
 #include "qmalloc.h"
@@ -98,6 +99,7 @@ static int mailbox_active(qmailbox_t *box, int active) {
 }
 
 void qmailbox_add(qmailbox_t *box, struct qmsg_t *msg) {
+  qinfo("qmailbox_add");
   /* save the write ptr first cause add_tail below
    * is-not atomic operation and the write ptr maybe changed 
    * */
@@ -105,6 +107,7 @@ void qmailbox_add(qmailbox_t *box, struct qmsg_t *msg) {
   qlist_add_tail(&(msg->entry), p);
   if (mailbox_active(box, 1) == 0) {
     signaler_send(box->signal);
+    qinfo("signaler_send");
   }
 }
 

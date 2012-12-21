@@ -16,8 +16,7 @@ int main(int argc, char *argv[]) {
     qconfig_init(&config, NULL);
   }
 
-  qserver_t* server = qserver_create(&config);
-  qengine_loop(server->engine);
+  qserver_run(&config);
 
   return 0;
 }

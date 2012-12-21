@@ -28,7 +28,7 @@ static int string_reserve(qstring_t *string, size_t len, int need_copy) {
     }
     if (string->len > 0) {
       if (need_copy) {
-        strcpy(data, string->data);
+        strncpy(data, string->data, string->len);
       }
       if (string->data) {
         qfree(string->data);
@@ -47,7 +47,7 @@ int qstring_assign(qstring_t *string, const char *str) {
   if (string_reserve(string, len, 0) < 0) {
     return -1;
   }
-  strcpy(string->data, str);
+  strncpy(string->data, str, len);
   string->len = len - 1;
   return 0;
 }
@@ -56,10 +56,10 @@ int qstring_append(qstring_t *string, const char *str) {
   qassert(string);
   qassert(str);
   size_t len = strlen(str) + 1;
-  if (string_reserve(string, len + string->len, 1) < 0) {
+  if (string_reserve(string, len, 1) < 0) {
     return -1;
   }
-  strcpy(string->data + string->len, str);
+  strncpy(string->data + string->len, str, len);
   string->len += len - 1;
   return 0;
 }
