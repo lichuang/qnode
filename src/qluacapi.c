@@ -17,7 +17,7 @@ static qactor_t* get_actor(lua_State *state) {
 /*
  * spawn an actor, return the actor ID
  * */
-static int c_spawn(lua_State *state) {
+static int spawn(lua_State *state) {
   qactor_t *actor = get_actor(state);
   const char *mod = lua_tostring(state, 1);
   const char *fun = lua_tostring(state, 2);
@@ -77,7 +77,7 @@ static struct {
   const char *name;
   lua_CFunction func;
 } apis[] = {
-  {"c_spawn", c_spawn},
+  {"spawn", spawn},
   {NULL, NULL},
 };
 

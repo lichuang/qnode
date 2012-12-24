@@ -19,10 +19,14 @@ void qluac_register(lua_State *state, struct qactor_t *);
 /*
  *  Lua C API:
  *
- *  1) c_spawn: spawn an actor
- *               [IN]mod, fun, args table, [OUT]actor id
+ *  1) actor 
+ *
+ *  spawn: spawn an actor
+ *      [IN]mod, fun, args table
+ *      [OUT]actor id
  *
  *
+ *  2) timer
  *
  */
 #endif  /* __QLUACAPI_H__ */
