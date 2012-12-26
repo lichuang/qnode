@@ -12,7 +12,7 @@
 struct qactor_t;
 
 /*
- * register all C APIs to Lua
+ * regist all C APIs to Lua
  * */
 void qluac_register(lua_State *state, struct qactor_t *);
 

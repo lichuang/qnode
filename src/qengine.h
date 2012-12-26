@@ -24,7 +24,6 @@ struct qevent_t;
 struct qdispatcher_t;
 
 typedef void (qevent_func_t)(int fd, int flags, void *data);
-typedef void (qtimer_func_t)(void *data);
 
 typedef struct qevent_t {
   int fd;
@@ -33,13 +32,6 @@ typedef struct qevent_t {
   qevent_func_t *write;
   void *data;
 } qevent_t;
-
-typedef struct qtimer_t {
-  int flags;
-  qtimer_func_t *callback;
-  int min_heap_idx;
-  void *data;
-} qtimer_t;
 
 typedef struct qdispatcher_t {
   const char *name;
