@@ -7,6 +7,7 @@
 #include "qengine.h"
 #include "qlog.h"
 #include "qmalloc.h"
+#include "qtimeutil.h"
 
 #define qRETIRED_FD -1
 
@@ -36,6 +37,7 @@ qengine_t* qengine_new() {
     event = &(engine->active_events[i]);
     init_qevent(event);
   }
+  qtimer_heap_init(&engine->timer_heap);
   return engine;
 }
 
@@ -91,9 +93,21 @@ int qengine_loop(qengine_t* engine) {
   int done = 0;
   int num, i;
   struct timeval time;
+  struct timeval *nearest_time;
+  qtime_t timeout_ms;
   while (!done) {
-    time.tv_sec = time.tv_usec = 0;
-    num = engine->dispatcher->poll(engine, NULL);
+    gettimeofday(&time, NULL);
+    nearest_time = qtimer_nearest(&engine->timer_heap);
+    if (nearest_time == NULL) {
+      timeout_ms = -1;
+    } else {
+      timeout_ms = qtime_minus(nearest_time, &time);
+    }
+    if (timeout_ms < 0) {
+      num = engine->dispatcher->poll(engine, -1);
+    } else {
+      num = engine->dispatcher->poll(engine, timeout_ms);
+    }
     for (i = 0; i < num; i++) {
       qevent_t *event = &(engine->events[engine->active_events[i].fd]);
       int flags = engine->active_events[i].flags;
@@ -110,6 +124,7 @@ int qengine_loop(qengine_t* engine) {
         }
       }
     }
+    qtimer_process(&engine->timer_heap, &time);
   }
   return 0;
 }
@@ -117,10 +132,10 @@ int qengine_loop(qengine_t* engine) {
 void qengine_destroy(qengine_t *engine) {
 }
 
-int qengine_add_timer(qengine_t* engine, struct timeval *time, int flags) {
-  return 0;
+qid_t qengine_add_timer(qengine_t* engine, qtime_t timeout_ms, qtimer_func_t *func, int type, void *data) {
+  return qtimer_add(&engine->timer_heap, timeout_ms, func, type, data);
 }
 
-int qengine_del_timer(qengine_t* engine, int id) {
-  return 0;
+int qengine_del_timer(qengine_t* engine, qid_t id) {
+  return qtimer_del(&engine->timer_heap, id);
 }

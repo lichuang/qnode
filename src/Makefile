@@ -5,7 +5,7 @@ CFLAGS=-g -Wall -Werror
 BINARY=qserver
 
 ALL_O=main.o qassert.o qactor.o qidmap.o qatomic.o qconfig.o qepoll.o qengine.o qhash.o qluacapi.o qluautil.o qmailbox.o qmalloc.o \
-			qsmsg_handler.o qwmsg_handler.o qmsg.o qmutex.o qnet.o qserver.o qstring.o qthread.o qtimer_heap.o qlog.o qpipe.o
+			qsmsg_handler.o qwmsg_handler.o qmsg.o qmutex.o qnet.o qserver.o qstring.o qthread.o qtimer_heap.o qtimeutil.o qlog.o qpipe.o
 
 all:$(ALL_O) $(BINARY)
 
@@ -28,6 +28,7 @@ qepoll.o: qepoll.c
 qengine.o: qengine.c qengine.h qepoll.c qmalloc.h qmalloc.c
 qhash.o: qhash.c qhash.h
 qtimer_heap.o: qtimer_heap.c qtimer_heap.h
+qtimeutil.o: qtimeutil.c qtimeutil.h
 qlog.o: qlog.h qlog.c
 qluacapi.o: qluacapi.h qluacapi.c
 qluautil.o: qluautil.h qluautil.c

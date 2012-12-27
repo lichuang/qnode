@@ -6,12 +6,30 @@
 #include "qmalloc.h"
 #include "qtimer_heap.h"
 
-static inline int min_heap_elem_greater(qtimer_t *timer1, qtimer_t *timer2) {
-  struct timeval *time1 = &(timer1->timeout);
-  struct timeval *time2 = &(timer2->timeout);
+static int is_time_greater(const struct timeval *time1, const struct timeval *time2) {
   return time1->tv_sec == time2->tv_sec ?
           time1->tv_usec > time2->tv_usec :
           time1->tv_sec  > time2->tv_sec;
+}
+
+static void calc_timeout(struct timeval *timeout, qtime_t timeout_ms) {
+  qtime_t sec, ms;
+  gettimeofday(timeout, NULL);
+  sec = timeout_ms / 1000;
+  ms  = timeout_ms % 1000;
+  if (ms >= 1000) {
+    sec++;
+    ms -= 1000;
+  }
+
+  timeout->tv_sec  += sec;
+  timeout->tv_usec += ms * 1000;
+}
+
+static inline int min_heap_elem_greater(qtimer_t *timer1, qtimer_t *timer2) {
+  struct timeval *time1 = &(timer1->timeout);
+  struct timeval *time2 = &(timer2->timeout);
+  return is_time_greater(time1, time2);
 }
 
 static void min_heap_shift_up(qtimer_heap_t* heap, unsigned hole_index, qtimer_t* timer) {
@@ -63,10 +81,16 @@ void  qtimer_heap_init(qtimer_heap_t *heap) {
     heap->timer_heap[i] = NULL;
   }
   qidmap_init(&heap->id_map);
-  heap->size = 0;
+  heap->size = heap->num = 0;
 }
 
-qid_t qtimer_add(qtimer_heap_t *heap, struct timeval timeout, qtimer_func_t *func, int type, void *data) {
+static void min_heap_push(qtimer_heap_t *heap, qtimer_t *timer) {
+  calc_timeout(&timer->timeout, timer->ms);
+  heap->num += 1;
+  min_heap_shift_up(heap, heap->size++, timer);
+}
+
+qid_t qtimer_add(qtimer_heap_t *heap, qtime_t timeout_ms, qtimer_func_t *func, int type, void *data) {
   qid_t id = qid_new(&heap->id_map);
   if (id == QID_INVALID) {
     return QID_INVALID;
@@ -83,9 +107,8 @@ qid_t qtimer_add(qtimer_heap_t *heap, struct timeval timeout, qtimer_func_t *fun
   timer->min_heap_idx = -1;
   timer->id = id;
   timer->data = data;
-  timer->timeout = timeout;
-
-  min_heap_shift_up(heap, heap->size++, timer);
+  timer->ms = timeout_ms;
+  min_heap_push(heap, timer);
   return id;
 }
 
@@ -94,13 +117,41 @@ int qtimer_del(qtimer_heap_t *heap, qid_t id) {
   if (timer == NULL) {
     return -1;
   }
+  heap->num -= 1;
   qid_free(&heap->id_map, id);
-  return min_heap_erase(heap, timer);
+  int ret = min_heap_erase(heap, timer);
+  if (timer->type == QTIMER_ONCE) {
+    qfree(timer);
+  }
+  return ret;
 }
 
-long qtimer_nearest(qtimer_heap_t *heap) {
-  return 0;
+struct timeval* qtimer_nearest(qtimer_heap_t *heap) {
+  if (heap->num == 0) {
+    return NULL;
+  }
+  qtimer_t *timer = heap->timer_heap[0];
+  return &(timer->timeout);
 }
 
-void  qtimer_process(qtimer_heap_t *heap) {
+static inline qtimer_t* min_heap_top(qtimer_heap_t *heap) {
+  if (heap->num == 0) {
+    return NULL;
+  }
+  return heap->timer_heap[0];
+}
+
+void qtimer_process(qtimer_heap_t *heap, const struct timeval *time) {
+  qtimer_t *timer;
+  while ((timer = min_heap_top(heap)) != NULL) {
+    if (is_time_greater(&timer->timeout, time)) {
+      break;
+    }
+
+    timer->callback(timer->data);
+    qtimer_del(heap, timer->id);
+    if (timer->type == QTIMER_REPEAT) {
+      min_heap_push(heap, timer);
+    }
+  }
 }
