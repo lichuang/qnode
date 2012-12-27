@@ -19,7 +19,7 @@ static int server_handle_wrong_msg(qserver_t *server, qmsg_t *msg) {
 }
 
 static int server_handle_spawn_msg(qserver_t *server, qmsg_t *msg) {
-  qaid_t aid = msg->args.spawn.aid;
+  qid_t aid = msg->args.spawn.aid;
   qactor_t *actor = qactor_new(aid);
   actor->parent = msg->args.spawn.parent;
   msg->args.spawn.actor = actor;

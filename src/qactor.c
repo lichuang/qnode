@@ -20,7 +20,7 @@ qid_t qactor_new_id() {
   return id;
 }
 
-qactor_t *qactor_new(qaid_t aid) {
+qactor_t *qactor_new(qid_t aid) {
   qassert(server);
   qactor_t *actor = qalloc_type(qactor_t);
   if (actor == NULL) {
@@ -41,19 +41,19 @@ void qactor_destroy(qactor_t *actor) {
   qfree(actor);
 }
 
-qaid_t qactor_spawn(qactor_t *actor, lua_State *state) {
+qid_t qactor_spawn(qactor_t *actor, lua_State *state) {
   qassert(actor);
   qassert(actor->thread);
   qmsg_t *msg = qmsg_new();
   if (msg == NULL) {
     return QID_INVALID;
   }
-  qaid_t aid = qactor_new_id();
+  qid_t aid = qactor_new_id();
   if (aid == QID_INVALID) {
     qfree(msg);
     return aid;
   }
-  qaid_t parent = actor->aid;
+  qid_t parent = actor->aid;
   qmsg_init_spawn(msg, aid, parent, state);
   qserver_add_mail(actor->thread->tid, msg);
   return aid;

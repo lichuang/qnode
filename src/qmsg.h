@@ -40,8 +40,8 @@ typedef struct qmsg_t {
     } s_start;
 
     struct {
-      qaid_t aid;
-      qaid_t parent;
+      qid_t aid;
+      qid_t parent;
       lua_State *state;
       qactor_t *actor;
     } spawn;

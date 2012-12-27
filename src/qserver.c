@@ -79,7 +79,7 @@ int qserver_add_mail(qtid_t tid, struct qmsg_t *msg) {
 }
 
 static void server_start(qserver_t *server) {
-  qaid_t aid = qactor_new_id();
+  qid_t aid = qactor_new_id();
   qassert(aid != QAID_INVALID);
   qactor_t *actor = qactor_new(aid);
   qmsg_t *msg = qmsg_new();
