@@ -4,7 +4,6 @@
 
 #include <stdio.h>
 #include "qactor.h"
-#include "qaidmap.h"
 #include "qassert.h"
 #include "qconfig.h"
 #include "qengine.h"
@@ -80,7 +79,7 @@ int qserver_add_mail(qtid_t tid, struct qmsg_t *msg) {
 }
 
 static void server_start(qserver_t *server) {
-  qaid_t aid = qaid_new();
+  qaid_t aid = qactor_new_id();
   qassert(aid != QAID_INVALID);
   qactor_t *actor = qactor_new(aid);
   qmsg_t *msg = qmsg_new();
@@ -124,7 +123,8 @@ static int server_init(struct qconfig_t *config) {
     qassert(server->threads[i]);
     server->thread_box[i] = qthread_mailbox(server->threads[i]);
   }
-  qaidmap_init();
+  qidmap_init(&server->id_map);
+  qmutex_init(&server->id_map_mutex);
   qinfo("qserver started...");
   g_server = server;
 

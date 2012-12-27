@@ -4,7 +4,7 @@ CFLAGS=-g -Wall -Werror
 
 BINARY=qserver
 
-ALL_O=main.o qassert.o qactor.o qaidmap.o qatomic.o qconfig.o qepoll.o qengine.o qhash.o qluacapi.o qluautil.o qmailbox.o qmalloc.o \
+ALL_O=main.o qassert.o qactor.o qidmap.o qatomic.o qconfig.o qepoll.o qengine.o qhash.o qluacapi.o qluautil.o qmailbox.o qmalloc.o \
 			qsmsg_handler.o qwmsg_handler.o qmsg.o qmutex.o qnet.o qserver.o qstring.o qthread.o qlog.o qpipe.o
 
 all:$(ALL_O) $(BINARY)
@@ -20,7 +20,7 @@ clean:
 
 main.o: main.c qserver.h qserver.c
 qactor.o:qactor.c qactor.h
-qaidmap.o:qaidmap.c qaidmap.h
+qidmap.o:qidmap.c qidmap.h
 qassert.o:qassert.c qassert.h
 qatomic.o:qatomic.c qatomic.h
 qconfig.o:qconfig.c qconfig.h

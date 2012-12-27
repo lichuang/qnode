@@ -22,6 +22,7 @@ typedef struct qactor_t {
   qlist_t entry;
 } qactor_t;
 
+qid_t qactor_new_id();
 qactor_t *qactor_new(qaid_t aid);
 void qactor_destroy(qactor_t *actor);
 

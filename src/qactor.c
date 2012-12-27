@@ -3,15 +3,22 @@
  */
 
 #include "qactor.h"
-#include "qaidmap.h"
 #include "qassert.h"
 #include "qluacapi.h"
 #include "qluautil.h"
+#include "qidmap.h"
 #include "qmailbox.h"
 #include "qmalloc.h"
 #include "qmsg.h"
 #include "qserver.h"
 #include "qthread.h"
+
+qid_t qactor_new_id() {
+  qmutex_lock(&g_server->id_map_mutex);
+  qid_t id = qid_new(&g_server->id_map);
+  qmutex_unlock(&g_server->id_map_mutex);
+  return id;
+}
 
 qactor_t *qactor_new(qaid_t aid) {
   qassert(server);
@@ -24,7 +31,7 @@ qactor_t *qactor_new(qaid_t aid) {
   actor->state = state;
   qlist_entry_init(&(actor->entry));
   actor->aid = aid;
-  actor->parent = QAID_INVALID;
+  actor->parent = QID_INVALID;
   return actor;
 }
 
@@ -39,10 +46,10 @@ qaid_t qactor_spawn(qactor_t *actor, lua_State *state) {
   qassert(actor->thread);
   qmsg_t *msg = qmsg_new();
   if (msg == NULL) {
-    return QAID_INVALID;
+    return QID_INVALID;
   }
-  qaid_t aid = qaid_new();
-  if (aid == QAID_INVALID) {
+  qaid_t aid = qactor_new_id();
+  if (aid == QID_INVALID) {
     qfree(msg);
     return aid;
   }

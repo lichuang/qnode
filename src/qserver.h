@@ -5,6 +5,8 @@
 #ifndef __QSERVER_H__
 #define __QSERVER_H__
 
+#include "qidmap.h"
+#include "qmutex.h"
 #include "qtype.h"
 
 struct qactor_t;
@@ -22,6 +24,8 @@ typedef struct qserver_t {
   struct qmailbox_t **box;
   struct qmailbox_t **thread_box;
   struct qactor_t **actors;
+  qidmap_t id_map;
+  qmutex_t  id_map_mutex;
 } qserver_t;
 
 int qserver_run(struct qconfig_t *config);
