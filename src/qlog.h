@@ -17,18 +17,24 @@
 #define QLOG_INFO              7
 #define QLOG_DEBUG             8
 
+#define QMAX_LOG_SIZE    1000
+#define QMAX_FORMAT_SIZE 100
+#define QMAX_FILE_SIZE 100
+
 typedef struct qlog_t {
-    int level;
-    const char* file;
-    int line;
+  int level;
+  char file[QMAX_FILE_SIZE];
+  int line;
+  char buff[QMAX_LOG_SIZE];
+  char format[QMAX_FORMAT_SIZE];
+  va_list args;
 } qlog_t;
 
-extern int __log_level;
-extern void __log(struct qlog_t* log, const char*, ...);
+extern int g_log_level;
 extern void qlog(int level, const char* file, long line, const char *format, ...);
 
-#define qerror(args...) qlog(QLOG_ERR, __FILE__, __LINE__, args)
-#define qinfo(args...) qlog(QLOG_INFO, __FILE__, __LINE__, args)
-#define qdebug(args...) qlog(QLOG_DEBUG, __FILE__, __LINE__, args)
+#define qerror(format, args...) qlog(QLOG_ERR, __FILE__, __LINE__, format, #args)
+#define qinfo(format, args...) qlog(QLOG_ERR, __FILE__, __LINE__, format, #args)
+#define qdebug(format, args...) qlog(QLOG_ERR, __FILE__, __LINE__, format, #args)
 
 #endif  /* __QLOG_H__ */
