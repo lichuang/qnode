@@ -22,12 +22,8 @@ void *qmalloc(size_t size) {
   return ptr;
 }
 
-void *qcalloc(size_t size) {
-    return NULL;
-}
-
 void *qrealloc(void *ptr, size_t size) {
-    return NULL;
+    return realloc(ptr, size);
 }
 
 void qfree(void *ptr) {

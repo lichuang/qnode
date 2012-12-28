@@ -20,7 +20,7 @@ extern wmsg_handler wmsg_handlers[];
 struct qserver_t *g_server;
 
 static void server_accept(int fd, int flags, void *data) {
-  qinfo("add a connection....")
+  qinfo("add a connection....");
 }
 
 static int init_server_event(struct qserver_t *server) {

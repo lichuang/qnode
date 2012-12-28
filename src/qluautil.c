@@ -65,7 +65,7 @@ int qlua_get_table_number(lua_State *state, const char *key, int *number) {
   return 0;
 } 
 
-static void lua_init_filename(struct qactor_t *actor, const char *filename, qstring_t *full_name) {
+static void lua_init_filename(const char *filename, qstring_t *full_name) {
   qserver_t *server = g_server;
   qstring_init(full_name);
   qstring_assign(full_name, server->config->script_path.data);
@@ -75,7 +75,7 @@ static void lua_init_filename(struct qactor_t *actor, const char *filename, qstr
 
 int qlua_loadfile(struct qactor_t *actor, const char *filename) {
   qstring_t full_name;
-  lua_init_filename(actor, filename, &full_name);
+  lua_init_filename(filename, &full_name);
   int ret = luaL_loadfile(actor->state, full_name.data);
   qstring_destroy(&full_name);
   return ret;
@@ -83,7 +83,7 @@ int qlua_loadfile(struct qactor_t *actor, const char *filename) {
 
 int qlua_dofile(struct qactor_t *actor, const char *filename) {
   qstring_t full_name;
-  lua_init_filename(actor, filename, &full_name);
+  lua_init_filename(filename, &full_name);
   int ret = luaL_dofile(actor->state, full_name.data);
   qstring_destroy(&full_name);
   return ret;

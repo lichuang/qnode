@@ -7,14 +7,13 @@
 #include "qengine.h"
 #include "qlog.h"
 #include "qmalloc.h"
-#include "qtimeutil.h"
 
-#define qRETIRED_FD -1
+#define QRETIRED_FD -1
 
 extern const struct qdispatcher_t epoll_dispatcher;
 
 static void init_qevent(qevent_t *event) {
-  event->fd = qRETIRED_FD;
+  event->fd = QRETIRED_FD;
   event->flags = 0;
   event->read = event->write = NULL;
   event->data = NULL;
@@ -89,6 +88,12 @@ int qengine_del_event(qengine_t* engine, int fd, int flags) {
   return 0;
 }
 
+static qtime_t time_minus(struct timeval *time1, struct timeval *time2) {
+  qtime_t sec  = time1->tv_sec  - time2->tv_sec;
+  qtime_t usec = time1->tv_usec - time2->tv_usec;
+  return (sec / 1000 + usec * 1000);
+}
+
 int qengine_loop(qengine_t* engine) {
   int done = 0;
   int num, i;
@@ -101,7 +106,7 @@ int qengine_loop(qengine_t* engine) {
     if (nearest_time == NULL) {
       timeout_ms = -1;
     } else {
-      timeout_ms = qtime_minus(nearest_time, &time);
+      timeout_ms = time_minus(nearest_time, &time);
     }
     if (timeout_ms < 0) {
       num = engine->dispatcher->poll(engine, -1);
@@ -130,6 +135,7 @@ int qengine_loop(qengine_t* engine) {
 }
 
 void qengine_destroy(qengine_t *engine) {
+  qfree(engine);
 }
 
 qid_t qengine_add_timer(qengine_t* engine, qtime_t timeout_ms, qtimer_func_t *func, int type, void *data) {

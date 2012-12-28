@@ -43,7 +43,7 @@ static int net_listen(int fd, struct sockaddr *sa, socklen_t len) {
     return 0;
 }
 
-int set_nonblocking(fd) {
+int set_nonblocking(int fd) {
     int flags;
 
     if ((flags = fcntl(fd, F_GETFL)) == -1) {

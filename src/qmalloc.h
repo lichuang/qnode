@@ -8,7 +8,6 @@
 #define qalloc_array(T, size) (T*)qmalloc(sizeof(T) * size)
 
 void *qmalloc(size_t size);
-void *qcalloc(size_t size);
 void *qrealloc(void *ptr, size_t size);
 void qfree(void *ptr);
 
