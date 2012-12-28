@@ -22,7 +22,7 @@ int __log_level = QLOG_DEBUG;
 void __log(struct qlog_t* log, const char *fmt,...) {
   va_list  args;
   int n;
-  char buff[100] = {' '};
+  char buff[500] = {' '};
   n = sprintf(buff, "[%s] %s:%d ", err_levels[log->level], log->file, log->line);
   va_start(args, fmt);
   vsprintf(buff + n, fmt, args);

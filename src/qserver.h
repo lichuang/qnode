@@ -24,6 +24,7 @@ typedef struct qserver_t {
   struct qmailbox_t **box;
   struct qmailbox_t **thread_box;
   struct qactor_t **actors;
+  unsigned int num_actor;
   qidmap_t id_map;
   qmutex_t  id_map_mutex;
 } qserver_t;
@@ -35,6 +36,8 @@ int qserver_add_mail(qtid_t tid, struct qmsg_t *msg);
 
 /* server thread send mail to worker thread */
 void qserver_send_mail(struct qmsg_t *msg);
+
+void qserver_new_actor(struct qactor_t *actor);
 
 /* the GLOBAL server in the system */
 extern struct qserver_t *g_server;

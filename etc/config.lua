@@ -5,7 +5,10 @@ qnode_config = {
   },
 
   -- log congfig
-  log    = {
+  log = {
+    path = "./log",
+    level = "debug",
+    handler = "file",
   },
 
   -- script config

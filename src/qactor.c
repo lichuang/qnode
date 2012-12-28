@@ -32,6 +32,7 @@ qactor_t *qactor_new(qid_t aid) {
   qlist_entry_init(&(actor->entry));
   actor->aid = aid;
   actor->parent = QID_INVALID;
+  qserver_new_actor(actor);
   return actor;
 }
 

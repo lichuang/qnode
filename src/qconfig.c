@@ -9,6 +9,14 @@
 #include "qconfig.h"
 #include "qluautil.h"
 
+static void config_init_log(qconfig_t *config, lua_State *L) {
+  qlua_get_table(L, -1, "log");
+  qlua_get_table_string(L, "path", &(config->log_path));
+  qlua_get_table_string(L, "level", &(config->log_level));
+  qlua_get_table_string(L, "handler", &(config->log_handler));
+  lua_pop(L, 1);
+}
+
 static void config_init_thread(qconfig_t *config, lua_State *L) {
   qlua_get_table(L, -1, "thread");
   qlua_get_table_number(L, "num", &(config->thread_num));

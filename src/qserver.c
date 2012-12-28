@@ -103,6 +103,12 @@ static int server_init(struct qconfig_t *config) {
     qfree(server);
     return -1;
   }
+  server->actors = (qactor_t**)qmalloc(QID_MAX * sizeof(qthread_t*));
+  if (server->actors == NULL) {
+    qengine_destroy(server->engine);
+    qfree(server);
+    return -1;
+  }
   /* alloc threads and mailbox */
   server->threads = (qthread_t**)qmalloc(config->thread_num * sizeof(qthread_t*));
   qalloc_assert(server->threads);
@@ -138,4 +144,10 @@ int qserver_run(struct qconfig_t *config) {
   }
   qengine_loop(g_server->engine);
   return 0;
+}
+
+void qserver_new_actor(struct qactor_t *actor) {
+  qassert(g_server->actors[actor->aid] == NULL);
+  g_server->actors[actor->aid] = actor;
+  g_server->num_actor++;
 }
