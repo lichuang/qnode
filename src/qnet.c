@@ -29,7 +29,7 @@ static int create_socket() {
 
 static int net_listen(int fd, struct sockaddr *sa, socklen_t len) {
     if (bind(fd, sa, len) < 0) {
-        qerror("bind error: %s", strerror(errno))
+        qerror("bind error: %s", strerror(errno));
         close(fd);
         return -1;
     }

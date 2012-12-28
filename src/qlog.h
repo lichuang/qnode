@@ -25,14 +25,10 @@ typedef struct qlog_t {
 
 extern int __log_level;
 extern void __log(struct qlog_t* log, const char*, ...);
+extern void qlog(int level, const char* file, long line, const char *format, ...);
 
-#define _LOG(level, fmt... )                                                    \
-    if(__log_level >= level) {   struct qlog_t log = {level, __FILE__, __LINE__};    \
-        __log(&log, fmt);    \
-    } 
-
-#define qerror(args...) _LOG(QLOG_ERR, args)
-#define qinfo(args...)  _LOG(QLOG_INFO, args)
-#define qdebug(args...) _LOG(QLOG_DEBUG, args)
+#define qerror(args...) qlog(QLOG_ERR, __FILE__, __LINE__, args)
+#define qinfo(args...) qlog(QLOG_INFO, __FILE__, __LINE__, args)
+#define qdebug(args...) qlog(QLOG_DEBUG, __FILE__, __LINE__, args)
 
 #endif  /* __QLOG_H__ */

@@ -1,4 +1,5 @@
-DIR=$(shell pwd)
+#DIR=$(shell pwd)
+DIR=.
 BIN_DIR=$(DIR)/bin
 LIB_DIR=$(DIR)/lib
 SRC_DIR=$(DIR)/src
