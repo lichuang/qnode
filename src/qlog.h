@@ -6,6 +6,7 @@
 #define __QLOG_H__
 
 #include <stdarg.h>
+#include "qlist.h"
 
 #define QLOG_STDERR            0
 #define QLOG_EMERG             1
@@ -22,6 +23,7 @@
 #define QMAX_FILE_SIZE 100
 
 typedef struct qlog_t {
+  qlist_t list;
   int level;
   char file[QMAX_FILE_SIZE];
   int line;
