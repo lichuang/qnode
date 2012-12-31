@@ -98,6 +98,7 @@ static int server_init(struct qconfig_t *config) {
   qassert(g_server == NULL);
   qlog_thread_new(config->thread_num + 1);
   qserver_t *server = qalloc_type(qserver_t);
+  g_server = server;
   server->config = config;
   server->engine = qengine_new();
   if (init_server_event(server) < 0) {
@@ -135,9 +136,8 @@ static int server_init(struct qconfig_t *config) {
   }
   qidmap_init(&server->id_map);
   qmutex_init(&server->id_map_mutex);
-  g_server = server;
 
-  server->thread_log[0] = qthread_log_init(server->engine);
+  server->thread_log[0] = qthread_log_init(server->engine, 0);
   server_start(server);
   qinfo("qserver started...");
   return 0;

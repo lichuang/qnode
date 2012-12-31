@@ -31,6 +31,7 @@ typedef struct qlog_t {
   int line;
   char buff[QMAX_LOG_SIZE];
   int n;
+  int idx;
   char format[QMAX_FORMAT_SIZE];
   size_t fmt_len;
   va_list args;

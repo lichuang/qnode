@@ -13,12 +13,11 @@ struct qsignal_t;
 typedef struct qlog_thread_t {
   pthread_t id;
   struct qengine_t *engine;
-  struct qsignal_t *signal;
-  struct qlist_t **lists;
+  struct qsignal_t **signals;
 } qlog_thread_t;
 
 int qlog_thread_new(int thread_num);
-void qlog_thread_active();
+void qlog_thread_active(int idx);
 
 extern qlog_thread_t *g_log_thread;
 

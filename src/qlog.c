@@ -49,6 +49,6 @@ void qlog(int level, const char* file, long line, const char *format, ...) {
   vsprintf(log->buff + log->n, log->format, log->args);
   printf("%s\n", log->buff);
 #else
-  qlog_thread_active();
+  qlog_thread_active(log->idx);
 #endif
 }

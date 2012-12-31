@@ -16,9 +16,10 @@ typedef struct qthread_log_t {
   struct qlist_t *write;
   struct qlist_t *read;
   struct qengine_t *engine;
+  int idx;
 } qthread_log_t;
 
-qthread_log_t* qthread_log_init(struct qengine_t* engine);
+qthread_log_t* qthread_log_init(struct qengine_t* engine, int idx);
 struct qlog_t* qthread_log_get();
 void qthread_log_fetch(qthread_log_t *log, qlist_t **list);
 

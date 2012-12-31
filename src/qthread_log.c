@@ -16,7 +16,7 @@ static pthread_key_t qthread_log_key;
 void qthread_log_destroy(void *value) {
 }
 
-qthread_log_t* qthread_log_init(struct qengine_t* engine) {
+qthread_log_t* qthread_log_init(struct qengine_t* engine, int idx) {
   if (pthread_key_create(&qthread_log_key, qthread_log_destroy) < 0) {
     return NULL;
   }
@@ -34,6 +34,7 @@ qthread_log_t* qthread_log_init(struct qengine_t* engine) {
     return NULL;
   }
   qassert(pthread_getspecific(qthread_log_key) != NULL);
+  thread_log->idx = idx;
   return thread_log;
 }
 
@@ -48,8 +49,12 @@ struct qlog_t* qthread_log_get() {
   if (log == NULL) {
     return NULL;
   }
+  log->idx = thread_log->idx;
+  /*
   log->n = strlen(thread_log->engine->time_buff);
   strcpy(log->buff, thread_log->engine->time_buff);
+  */
+  log->n = sprintf(log->buff, "%s %d", thread_log->engine->time_buff, log->idx);
   qlist_add_tail(&log->entry, thread_log->write);
   return log;
 }
