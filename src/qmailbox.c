@@ -23,14 +23,14 @@ qmailbox_t* qmailbox_new(qevent_func_t *callback, void *reader) {
   box->read   = &(box->lists[1]);
   box->callback = callback;
   box->reader = reader;
-  qsignal_t *signal = qsignaler_new();
+  qsignal_t *signal = qsignal_new();
   qalloc_assert(signal);
   box->signal = signal;
   return box;
 }
 
 void qmailbox_destroy(qmailbox_t *box) {
-  qsignaler_destroy(box->signal);
+  qsignal_destroy(box->signal);
   qfree(box);
 }
 

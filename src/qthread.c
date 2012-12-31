@@ -54,7 +54,7 @@ next:
 
 static void* main_loop(void *arg) {
   qthread_t *thread = (qthread_t*)arg;
-  qthread_log_init(thread->engine);
+  g_server->thread_log[thread->tid] = qthread_log_init(thread->engine);
   qengine_loop(thread->engine);
   return NULL;
 }

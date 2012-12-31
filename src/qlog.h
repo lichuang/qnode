@@ -24,7 +24,7 @@
 #define QMAX_FILE_SIZE 100
 
 typedef struct qlog_t {
-  qlist_t list;
+  qlist_t entry;
   int level;
   char file[QMAX_FILE_SIZE];
   size_t file_len;
@@ -37,7 +37,7 @@ typedef struct qlog_t {
 } qlog_t;
 
 extern int g_log_level;
-extern void qlog(int level, const char* file, long line, const char *format, ...);
+void qlog(int level, const char* file, long line, const char *format, ...);
 
 #define qerror(format, args...) qlog(QLOG_ERR, __FILE__, __LINE__, format, #args)
 #define qinfo(format, args...) qlog(QLOG_ERR, __FILE__, __LINE__, format, #args)

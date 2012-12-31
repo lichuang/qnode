@@ -19,14 +19,14 @@ static void signal_make_pair(int *rfd, int *wfd) {
   *rfd = fds[1];
 }
 
-qsignal_t* qsignaler_new() {
+qsignal_t* qsignal_new() {
   qsignal_t *signal = qalloc_type(qsignal_t);
   signal_make_pair(&(signal->rfd), &(signal->wfd));
   signal->active = 0;
   return signal;
 }
 
-void qsignaler_destroy(qsignal_t *signal) {
+void qsignal_destroy(qsignal_t *signal) {
   close(signal->rfd);
   close(signal->wfd);
   qfree(signal);

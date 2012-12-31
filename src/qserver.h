@@ -23,6 +23,7 @@ typedef struct qserver_t {
   struct qthread_t  **threads;
   struct qmailbox_t **box;
   struct qmailbox_t **thread_box;
+  struct qthread_log_t **thread_log;
   struct qactor_t **actors;
   unsigned int num_actor;
   qidmap_t id_map;

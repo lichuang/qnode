@@ -96,6 +96,7 @@ static int server_init(struct qconfig_t *config) {
   qassert(config);
   qassert(config->thread_num > 0);
   qassert(g_server == NULL);
+  qlog_thread_new(config->thread_num + 1);
   qserver_t *server = qalloc_type(qserver_t);
   server->config = config;
   server->engine = qengine_new();
@@ -117,6 +118,8 @@ static int server_init(struct qconfig_t *config) {
   server->box = (qmailbox_t**)qmalloc(config->thread_num * sizeof(qmailbox_t*));
   qalloc_assert(server->box);
   server->box[0] = NULL;
+  server->thread_log = (qthread_log_t**)qmalloc(config->thread_num * sizeof(qthread_t*));
+  qalloc_assert(server->thread_log);
   server->thread_box = (qmailbox_t**)qmalloc(config->thread_num * sizeof(qmailbox_t*));
   qalloc_assert(server->thread_box);
   server->thread_box[0] = NULL;
@@ -134,7 +137,7 @@ static int server_init(struct qconfig_t *config) {
   qmutex_init(&server->id_map_mutex);
   g_server = server;
 
-  qthread_log_init(server->engine);
+  server->thread_log[0] = qthread_log_init(server->engine);
   server_start(server);
   qinfo("qserver started...");
   return 0;

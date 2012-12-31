@@ -18,7 +18,8 @@ typedef struct qthread_log_t {
   struct qengine_t *engine;
 } qthread_log_t;
 
-int qthread_log_init(struct qengine_t* engine);
+qthread_log_t* qthread_log_init(struct qengine_t* engine);
 struct qlog_t* qthread_log_get();
+void qthread_log_fetch(qthread_log_t *log, qlist_t **list);
 
 #endif  /* __QTHREAD_LOG_H__ */
