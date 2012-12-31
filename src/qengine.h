@@ -49,6 +49,7 @@ typedef struct qengine_t {
   const struct qdispatcher_t *dispatcher;
   void *data;
   qtimer_heap_t timer_heap;
+  char time_buff[20];
 } qengine_t;
 
 qengine_t* qengine_new();

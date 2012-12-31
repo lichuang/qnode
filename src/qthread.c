@@ -14,6 +14,7 @@
 #include "qmsg.h"
 #include "qserver.h"
 #include "qthread.h"
+#include "qthread_log.h"
 
 extern smsg_handler smsg_handlers[];
 
@@ -53,6 +54,7 @@ next:
 
 static void* main_loop(void *arg) {
   qthread_t *thread = (qthread_t*)arg;
+  qthread_log_init(thread->engine);
   qengine_loop(thread->engine);
   return NULL;
 }

@@ -14,6 +14,7 @@
 #include "qnet.h"
 #include "qserver.h"
 #include "qthread.h"
+#include "qthread_log.h"
 
 extern wmsg_handler wmsg_handlers[];
 
@@ -131,10 +132,11 @@ static int server_init(struct qconfig_t *config) {
   }
   qidmap_init(&server->id_map);
   qmutex_init(&server->id_map_mutex);
-  qinfo("qserver started...");
   g_server = server;
 
+  qthread_log_init(server->engine);
   server_start(server);
+  qinfo("qserver started...");
   return 0;
 }
 

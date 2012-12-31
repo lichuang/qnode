@@ -3,10 +3,13 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include "qassert.h"
 #include "qengine.h"
 #include "qlog.h"
 #include "qmalloc.h"
+#include "qthread_log.h"
 
 #define QRETIRED_FD -1
 
@@ -97,16 +100,22 @@ static qtime_t time_minus(struct timeval *time1, struct timeval *time2) {
 int qengine_loop(qengine_t* engine) {
   int done = 0;
   int num, i;
-  struct timeval time;
+  struct timeval now_time;
   struct timeval *nearest_time;
+  struct tm tm;
+  time_t t;
   qtime_t timeout_ms;
   while (!done) {
-    gettimeofday(&time, NULL);
+    t = time(NULL);
+    localtime_r(&t, &tm);
+    strftime(engine->time_buff, sizeof(engine->time_buff), "[%m-%d %T]", &tm);
+
+    gettimeofday(&now_time, NULL);
     nearest_time = qtimer_nearest(&engine->timer_heap);
     if (nearest_time == NULL) {
       timeout_ms = -1;
     } else {
-      timeout_ms = time_minus(nearest_time, &time);
+      timeout_ms = time_minus(nearest_time, &now_time);
     }
     if (timeout_ms < 0) {
       num = engine->dispatcher->poll(engine, -1);
@@ -129,7 +138,7 @@ int qengine_loop(qengine_t* engine) {
         }
       }
     }
-    qtimer_process(&engine->timer_heap, &time);
+    qtimer_process(&engine->timer_heap, &now_time);
   }
   return 0;
 }
