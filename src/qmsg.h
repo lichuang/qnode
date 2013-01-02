@@ -11,42 +11,47 @@
 
 #define QMSG_MASK_UNDELETED 0x1
 
+struct qmailbox_t;
+
+/* 
+ * s_* means server thread -> worker thread
+ * w_* means worker thread -> server thread
+ * other msg can use between both side
+ * NOTE: actor MUST be create in server thread and send to worker thread
+ * */
+enum {
+  s_init  = 1,
+  box     = 2,
+  s_start = 3,
+  spawn   = 4,
+  MAX_MSG_TYPE
+};
+
+enum {
+  SMSG_FLAG = 1,
+  WMSG_FLAG = 2,
+  MSG_FLAG  = 3,
+};
+
 /* define messages between worker-thread and main-thread */
 typedef struct qmsg_t {
   qlist_t entry;
 
-  enum {
-    SMSG_FLAG = 1,
-    WMSG_FLAG = 2,
-    MSG_FLAG  = 3,
-  } flag;
-
+  unsigned short flag;
+  unsigned int type;
   qtid_t tid; /* worker thread id */
 
-  /* 
-   * s_* means server thread -> worker thread
-   * w_* means worker thread -> server thread
-   * other msg can use between both side
-   * NOTE: actor MUST be create in server thread and send to worker thread
-   * */
-  enum {
-    s_init  = 1,
-    w_init,
-    s_start,
-    spawn,
-    MAX_MSG_TYPE
-  } type;
   unsigned int mask;
 
   union {
     struct {
-      int thread_num,
+      int thread_num;
     } s_init;
 
     struct {
       qtid_t tid;
-      qmailbox_t *box;
-    } w_init;
+      struct qmailbox_t *box;
+    } box;
 
     struct {
       struct qactor_t *actor;
@@ -84,19 +89,31 @@ qmsg_t* qmsg_new();
 
 #define qmsg_undelete(msg)        qmsg_checkmark(msg, QMSG_MASK_UNDELETED)
 
-#define qmsg_init_sinit(msg, actor)               \
+#define qmsg_init_sinit(msg, thread_num, i)     \
 do {                                              \
   qlist_entry_init(&(msg->entry));                \
-  msg->type = s_start;                            \
+  msg->type = s_init;                             \
   msg->flag = SMSG_FLAG;                          \
-  msg->args.s_start.actor = (actor);              \
+  msg->tid  = i;                                  \
+  msg->args.s_init.thread_num = (thread_num);     \
 } while (0)
 
-#define qmsg_init_sstart(msg, actor)              \
+#define qmsg_init_box(msg, box, src_tid, dst_tid) \
+do {                                              \
+  qlist_entry_init(&(msg->entry));                \
+  msg->type = box;                                \
+  msg->flag = MSG_FLAG;                           \
+  msg->tid  = dst_tid;                            \
+  msg->args.box.box = (box);                      \
+  msg->args.box.tid = (src_tid);                  \
+} while (0)
+
+#define qmsg_init_sstart(msg, actor, tid)         \
 do {                                              \
   qlist_entry_init(&(msg->entry));                \
   msg->type = s_start;                            \
   msg->flag = SMSG_FLAG;                          \
+  msg->tid  = tid;                                \
   msg->args.s_start.actor = (actor);              \
 } while (0)
 

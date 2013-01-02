@@ -8,6 +8,7 @@
 #include "qlist.h"
 #include "qlog.h"
 #include "qluautil.h"
+#include "qmailbox.h"
 #include "qmalloc.h"
 #include "qmsg.h"
 #include "qserver.h"
@@ -38,6 +39,26 @@ static int thread_handle_spawn_msg(qthread_t *thread, qmsg_t *msg) {
   return 0;
 }
 
+static int thread_handle_init_msg(qthread_t *thread, qmsg_t *msg) {
+  qinfo("handle init msg\n");
+  int thread_num = msg->args.s_init.thread_num;
+  thread->thread_box = (qmailbox_t**)qmalloc(thread_num * sizeof(qmailbox_t*));
+  qtid_t tid = thread->tid;
+  int i = 0;
+  for (i = 1; i <= thread_num; ++i) {
+    if (i != tid) {
+      qmailbox_t *box = qalloc_type(qmailbox_t);
+      thread->thread_box[i] = box;
+      qmsg_t *msg = qmsg_new();
+      qmsg_init_box(msg, box, tid, i);
+      qserver_add_mail(tid, msg);
+    } else {
+      thread->thread_box[i] = NULL;
+    }
+  }
+  return 0;
+}
+
 static int thread_handle_wrong_msg(qthread_t *thread, qmsg_t *msg) {
   qerror("handle thread type %d msg error", msg->type);
   return 0;
@@ -45,6 +66,8 @@ static int thread_handle_wrong_msg(qthread_t *thread, qmsg_t *msg) {
 
 smsg_handler smsg_handlers[] = {
   &thread_handle_wrong_msg,     /* wrong */
+  &thread_handle_init_msg,      /* s_init */
+  &thread_handle_wrong_msg,     /* w_init, wrong */
   &thread_handle_sstart_msg,    /* m_start */
   &thread_handle_spawn_msg,     /* spawn */
 };

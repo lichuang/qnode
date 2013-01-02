@@ -31,8 +31,18 @@ static int server_handle_spawn_msg(qserver_t *server, qmsg_t *msg) {
   return 0;
 }
 
+static int server_handle_box_msg(qserver_t *server, qmsg_t *msg) {
+  qinfo("handle info msg\n");
+  qmsg_set_undelete(msg);
+  msg->tid = msg->args.box.tid;
+  qserver_send_mail(msg);
+  return 0;
+}
+
 wmsg_handler wmsg_handlers[] = {
   &server_handle_wrong_msg,     /* wrong */
+  &server_handle_wrong_msg,     /* s_init, wrong */
+  &server_handle_box_msg,       /* box */
   &server_handle_wrong_msg,     /* s_start, wrong */
   &server_handle_spawn_msg,     /* spawn */
 };

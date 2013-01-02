@@ -22,5 +22,9 @@ all:$(OBJS)
 $(OBJ_DIR)/%.o:$(SRC_DIR)/%.$(EXTENSION) 
 	$(CC) $< -o $@ -c $(CFLAGS) $(INCLUDE) 
 
+rebuild:
+	make clean
+	make
+
 clean:
 	rm -rf $(OBJS) $(BIN_DIR)/*

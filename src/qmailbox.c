@@ -42,6 +42,9 @@ int qmailbox_active(qengine_t *engine, qmailbox_t *box) {
 }
 
 void qmailbox_add(qmailbox_t *box, struct qmsg_t *msg) {
+  if (box->write == NULL) {
+    qassert(box->write);
+  }
   qinfo("qmailbox_add %p, write: %p", box, box->write);
   /* save the write ptr first cause add_tail below
    * is-not atomic operation and the write ptr maybe changed 
@@ -52,10 +55,10 @@ void qmailbox_add(qmailbox_t *box, struct qmsg_t *msg) {
     qsignal_send(box->signal);
   }
   qinfo("signaler_send %d", box->active);
-  qinfo("empty: %d", qlist_empty(p));
 }
 
 int qmailbox_get(qmailbox_t *box, qlist_t **list) {
+  qassert(box->write);
   qinfo("qmailbox_get %p, active: %d, write: %p", box, box->active, box->write);
   *list = NULL;
   /* first save the read ptr */
@@ -64,10 +67,10 @@ int qmailbox_get(qmailbox_t *box, qlist_t **list) {
   qatomic_ptr_xchg(&(box->read), box->write);
   /* last change the write ptr to the read ptr saved before and return to list */
   *list = qatomic_ptr_xchg(&(box->write), read);
+  qassert(*list > 0xF);
   if (qsignal_active(box->signal, 0) == 1) {
     qsignal_recv(box->signal);
   }
   qinfo("qmailbox_get %p, active: %d, write: %p", box, box->active, *list);
-  qinfo("empty: %d", qlist_empty(*list));
   return qlist_empty(*list);
 }

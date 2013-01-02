@@ -19,6 +19,7 @@ typedef struct qthread_t {
   qtid_t tid;
   struct qengine_t *engine;
   struct qmailbox_t *box;        /* server send to thread */
+  struct qmailbox_t **thread_box;/* thread to thread box */
   qlist_t actor_list;
 } qthread_t;
 

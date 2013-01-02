@@ -21,7 +21,6 @@ qid_t qactor_new_id() {
 }
 
 qactor_t *qactor_new(qid_t aid, lua_State *state) {
-  qassert(server);
   qactor_t *actor = qalloc_type(qactor_t);
   if (actor == NULL) {
     return NULL;

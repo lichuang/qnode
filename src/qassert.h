@@ -5,6 +5,8 @@
 #ifndef __QASSERT_H__
 #define __QASSERT_H__
 
+#define DEBUG
+
 #ifdef DEBUG
 
 #define qassert(e) \

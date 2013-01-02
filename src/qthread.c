@@ -26,13 +26,14 @@ static void thread_box(int fd, int flags, void *data) {
   qlist_t *pos, *next;
   for (pos = list->next; pos != list; ) {
     qmsg_t *msg = qlist_entry(pos, qmsg_t, entry);
+    qassert(msg);
     next = pos->next;
     qlist_del_init(&(msg->entry));
     if (msg == NULL) {
       qinfo("msg NULL");
       goto next;
     }
-    qinfo("handle %d msg", msg->type);
+    qinfo("handle %d msg %p", msg->type, msg);
     if (!qmsg_is_smsg(msg)) {
       qerror("msg %d , flag %d is not server msg", msg->type, msg->flag);
       goto next;
