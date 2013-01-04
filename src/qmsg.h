@@ -21,20 +21,33 @@ typedef struct qmsg_t {
     MSG_FLAG  = 3,
   } flag;
 
+  qtid_t tid; /* worker thread id */
+
   /* 
    * s_* means server thread -> worker thread
-   * t_* means worker thread -> server thread
-   * other msg can use both
+   * w_* means worker thread -> server thread
+   * other msg can use between both side
    * NOTE: actor MUST be create in server thread and send to worker thread
    * */
   enum {
-    s_start = 1,
+    s_init  = 1,
+    w_init,
+    s_start,
     spawn,
     MAX_MSG_TYPE
   } type;
   unsigned int mask;
 
   union {
+    struct {
+      int thread_num,
+    } s_init;
+
+    struct {
+      qtid_t tid;
+      qmailbox_t *box;
+    } w_init;
+
     struct {
       struct qactor_t *actor;
     } s_start;
@@ -70,6 +83,14 @@ qmsg_t* qmsg_new();
 #define qmsg_clear_undelete(msg)  qmsg_clearmark(msg, QMSG_MASK_UNDELETED)
 
 #define qmsg_undelete(msg)        qmsg_checkmark(msg, QMSG_MASK_UNDELETED)
+
+#define qmsg_init_sinit(msg, actor)               \
+do {                                              \
+  qlist_entry_init(&(msg->entry));                \
+  msg->type = s_start;                            \
+  msg->flag = SMSG_FLAG;                          \
+  msg->args.s_start.actor = (actor);              \
+} while (0)
 
 #define qmsg_init_sstart(msg, actor)              \
 do {                                              \

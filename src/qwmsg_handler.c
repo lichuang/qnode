@@ -20,11 +20,14 @@ static int server_handle_wrong_msg(qserver_t *server, qmsg_t *msg) {
 
 static int server_handle_spawn_msg(qserver_t *server, qmsg_t *msg) {
   qid_t aid = msg->args.spawn.aid;
-  qactor_t *actor = qactor_new(aid);
+  lua_State *state = msg->args.spawn.state;
+  qactor_t *actor = qactor_new(aid, state);
   actor->parent = msg->args.spawn.parent;
   msg->args.spawn.actor = actor;
   qmsg_set_undelete(msg);
+  msg->tid = qserver_worker_thread();
   qserver_send_mail(msg);
+  server->actors[aid] = actor;
   return 0;
 }
 

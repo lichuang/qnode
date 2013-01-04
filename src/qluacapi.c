@@ -22,49 +22,17 @@ static int spawn(lua_State *state) {
   const char *mod = lua_tostring(state, 1);
   const char *fun = lua_tostring(state, 2);
   lua_State *new_state = qlua_new_state();
-  actor->state = new_state;
   qstring_t string;
   qstring_init(&string);
   qstring_assign(&string, mod);
   qstring_append(&string, ".lua");
-  if (qlua_dofile(actor, string.data) != 0) {
+  if (qlua_dofile(new_state, string.data) != 0) {
     qerror("load script to launce error");
   }
   qstring_destroy(&string);
 
   /* copy args table */
-  lua_newtable(new_state);
-  lua_pushvalue(new_state, 1);
-  if (lua_istable(state, 3)) {
-    lua_pushnil(state);
-    size_t len;
-    const char *key;
-    const char *str_val = NULL;
-    double num_val = 0;
-    while (lua_next(state, 3)) {
-      if (lua_isstring(state, -1)) {
-        str_val = lua_tolstring(state, -1, &len);
-      } else if (lua_isnumber(state, -1)) {
-        num_val = lua_tonumber(state, -1);
-      } else {
-        qerror("child arg table val MUST be number or string");
-        return -1;
-      }
-
-      key = lua_tolstring(state, -2, &len);
-
-      lua_pushstring(new_state, key);
-      if (str_val) {
-        lua_pushstring(new_state, str_val);
-      } else {
-        lua_pushnumber(new_state, num_val);
-      }
-      lua_rawset(new_state, -3);
-      lua_pop(state, 1);
-
-      str_val = NULL;
-    }
-  }
+  qlua_copy_table(state, new_state);
 
   lua_getglobal(new_state, mod);
   lua_getfield(new_state, -1, fun);
@@ -73,11 +41,23 @@ static int spawn(lua_State *state) {
   return qactor_spawn(actor, new_state);
 }
 
+static int send(lua_State *state) {
+  qactor_t *src_actor = get_actor(state);
+  qid_t id = (qid_t)lua_tonumber(state, 1);
+  qactor_t *dst_actor = qserver_get_actor(id);
+  if (dst_actor) {
+    return 0;
+  }
+
+  return 0;
+}
+
 static struct {
   const char *name;
   lua_CFunction func;
 } apis[] = {
   {"spawn", spawn},
+  {"send",  send},
   {NULL, NULL},
 };
 

@@ -25,6 +25,9 @@ void qluac_register(lua_State *state, struct qactor_t *);
  *      [IN]mod, fun, args table
  *      [OUT]actor id
  *
+ *  send: send message to an actor
+ *      [IN]id, args table
+ *      [OUT]none
  *
  *  2) timer
  *

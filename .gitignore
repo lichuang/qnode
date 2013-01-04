@@ -17,3 +17,5 @@
 *.app
 
 *.swp
+cscope*.
+*.tags*.

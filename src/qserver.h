@@ -40,6 +40,10 @@ void qserver_send_mail(struct qmsg_t *msg);
 
 void qserver_new_actor(struct qactor_t *actor);
 
+qtid_t qserver_worker_thread();
+
+struct qactor_t* qserver_get_actor(qid_t id);
+
 /* the GLOBAL server in the system */
 extern struct qserver_t *g_server;
 

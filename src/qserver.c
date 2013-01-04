@@ -70,8 +70,18 @@ next:
   }
 }
 
+qtid_t qserver_worker_thread() {
+  return 1;
+}
+
+qactor_t* qserver_get_actor(qid_t id) {
+  return g_server->actors[id];
+}
+
 void qserver_send_mail(struct qmsg_t *msg) {
-  qmailbox_add(g_server->thread_box[1], msg);
+  qtid_t tid = msg->tid;
+  qmailbox_add(g_server->thread_box[tid], msg);
+  qinfo("add a msg, type: %d, tid: %d, flag: %d", msg->type, msg->tid, msg->flag);
 }
 
 int qserver_add_mail(qtid_t tid, struct qmsg_t *msg) {
@@ -82,14 +92,14 @@ int qserver_add_mail(qtid_t tid, struct qmsg_t *msg) {
 static void server_start(qserver_t *server) {
   qid_t aid = qactor_new_id();
   qassert(aid != QAID_INVALID);
-  qactor_t *actor = qactor_new(aid);
+  qactor_t *actor = qactor_new(aid, NULL);
   qmsg_t *msg = qmsg_new();
   if (msg == NULL) {
     return;
   }
   qmsg_init_sstart(msg, actor);
+  msg->tid = qserver_worker_thread();
   qserver_send_mail(msg);
-  qinfo("add a msg, type: %d, flag: %d", msg->type, msg->flag);
 }
 
 static int server_init(struct qconfig_t *config) {
@@ -106,7 +116,7 @@ static int server_init(struct qconfig_t *config) {
     qfree(server);
     return -1;
   }
-  server->actors = (qactor_t**)qmalloc(QID_MAX * sizeof(qthread_t*));
+  server->actors = (qactor_t**)qmalloc(QID_MAX * sizeof(qactor_t*));
   if (server->actors == NULL) {
     qengine_destroy(server->engine);
     qfree(server);

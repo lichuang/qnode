@@ -23,7 +23,7 @@ typedef struct qactor_t {
 } qactor_t;
 
 qid_t qactor_new_id();
-qactor_t *qactor_new(qid_t aid);
+qactor_t *qactor_new(qid_t aid, lua_State *state);
 void qactor_destroy(qactor_t *actor);
 
 /* spawn an actor as child, return the actor ID */

@@ -20,13 +20,15 @@ qid_t qactor_new_id() {
   return id;
 }
 
-qactor_t *qactor_new(qid_t aid) {
+qactor_t *qactor_new(qid_t aid, lua_State *state) {
   qassert(server);
   qactor_t *actor = qalloc_type(qactor_t);
   if (actor == NULL) {
     return NULL;
   }
-  lua_State *state = qlua_new_state();
+  if (state == NULL) {
+    state = qlua_new_state();
+  }
   qluac_register(state, actor);
   actor->state = state;
   qlist_entry_init(&(actor->entry));

@@ -65,6 +65,41 @@ int qlua_get_table_number(lua_State *state, const char *key, int *number) {
   return 0;
 } 
 
+void qlua_copy_table(lua_State *src, lua_State *dst) {
+  lua_newtable(dst);
+  lua_pushvalue(dst, 1);
+  if (lua_istable(src, 3)) {
+    lua_pushnil(src);
+    size_t len;
+    const char *key;
+    const char *str_val = NULL;
+    double num_val = 0;
+    while (lua_next(src, 3)) {
+      if (lua_isstring(src, -1)) {
+        str_val = lua_tolstring(src, -1, &len);
+      } else if (lua_isnumber(src, -1)) {
+        num_val = lua_tonumber(src, -1);
+      } else {
+        qerror("child arg table val MUST be number or string");
+        return -1;
+      }
+
+      key = lua_tolstring(src, -2, &len);
+
+      lua_pushstring(dst, key);
+      if (str_val) {
+        lua_pushstring(dst, str_val);
+      } else {
+        lua_pushnumber(dst, num_val);
+      }
+      lua_rawset(dst, -3);
+      lua_pop(src, 1);
+
+      str_val = NULL;
+    }
+  }
+}
+
 static void lua_init_filename(const char *filename, qstring_t *full_name) {
   qserver_t *server = g_server;
   qstring_init(full_name);
@@ -81,10 +116,10 @@ int qlua_loadfile(struct qactor_t *actor, const char *filename) {
   return ret;
 }
 
-int qlua_dofile(struct qactor_t *actor, const char *filename) {
+int qlua_dofile(lua_State *state, const char *filename) {
   qstring_t full_name;
   lua_init_filename(filename, &full_name);
-  int ret = luaL_dofile(actor->state, full_name.data);
+  int ret = luaL_dofile(state, full_name.data);
   qstring_destroy(&full_name);
   return ret;
 }
