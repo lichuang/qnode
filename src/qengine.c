@@ -22,6 +22,14 @@ static void init_qevent(qevent_t *event) {
   event->data = NULL;
 }
 
+static void init_engine_time(qengine_t *engine) {
+  struct tm tm;
+  time_t t;
+  t = time(NULL);
+  localtime_r(&t, &tm);
+  strftime(engine->time_buff, sizeof(engine->time_buff), "[%m-%d %T]", &tm);
+}
+
 qengine_t* qengine_new() {
   qengine_t *engine = qalloc_type(qengine_t);
   engine->max_fd = 0;
@@ -40,6 +48,7 @@ qengine_t* qengine_new() {
     init_qevent(event);
   }
   qtimer_heap_init(&engine->timer_heap);
+  init_engine_time(engine);
   return engine;
 }
 
@@ -102,13 +111,9 @@ int qengine_loop(qengine_t* engine) {
   int num, i;
   struct timeval now_time;
   struct timeval *nearest_time;
-  struct tm tm;
-  time_t t;
   qtime_t timeout_ms;
   while (!done) {
-    t = time(NULL);
-    localtime_r(&t, &tm);
-    strftime(engine->time_buff, sizeof(engine->time_buff), "[%m-%d %T]", &tm);
+    init_engine_time(engine);
 
     gettimeofday(&now_time, NULL);
     nearest_time = qtimer_nearest(&engine->timer_heap);

@@ -54,7 +54,7 @@ void qmailbox_add(qmailbox_t *box, struct qmsg_t *msg) {
   if (qsignal_active(box->signal, 1) == 0) {
     qsignal_send(box->signal);
   }
-  qinfo("signaler_send %d", box->active);
+  qassert(box->signal->active == 1 || box->signal->active == 0);
 }
 
 int qmailbox_get(qmailbox_t *box, qlist_t **list) {

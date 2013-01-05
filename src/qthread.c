@@ -2,6 +2,7 @@
  * See Copyright Notice in qnode.h
  */
 
+#include <unistd.h>
 #include <stdio.h>
 #include "qassert.h"
 #include "qactor.h"
@@ -59,9 +60,12 @@ next:
 static void* main_loop(void *arg) {
   qthread_t *thread = (qthread_t*)arg;
 
-  //qmsg_t *msg = qmsg_new();
+  qmsg_t *msg = qmsg_new(thread->tid, QSERVER_THREAD_TID);
+  qmsg_init_thread_start(msg);
 
   g_server->thread_log[thread->tid] = qthread_log_init(thread->engine, thread->tid);
+  //sleep(1);
+  //qserver_add_mail(msg);
   qengine_loop(thread->engine);
   return NULL;
 }

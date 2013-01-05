@@ -26,7 +26,7 @@ enum {
   w_thread_box = 3,     /* worker thread send its mailbox to other worker thread */
   s_start = 4,
   spawn   = 5,
-  MAX_MSG_TYPE
+  QMAX_MSG_TYPE
 };
 
 enum {
@@ -48,15 +48,6 @@ typedef struct qmsg_t {
   unsigned int mask;
 
   union {
-    struct {
-      int thread_num;
-    } s_init;
-
-    struct {
-      qtid_t tid;
-      struct qmailbox_t *box;
-    } box;
-
     struct {
       struct qactor_t *actor;
     } s_start;
@@ -81,7 +72,7 @@ qmsg_t* qmsg_new(qtid_t sender_id, qtid_t receiver_id);
 #define qmsg_is_smsg(msg)         ((msg)->flag == SMSG_FLAG || (msg)->flag == MSG_FLAG)
 #define qmsg_is_wmsg(msg)         ((msg)->flag == WMSG_FLAG || (msg)->flag == MSG_FLAG)
 
-#define qmsg_invalid_type(type)   ((type) <= 0 || (type) >= MAX_MSG_TYPE)
+#define qmsg_invalid_type(type)   ((type) <= 0 || (type) >= QMAX_MSG_TYPE)
 
 #define qmsg_mark(msg, flag)      ((msg)->mask |= (flag))
 #define qmsg_clearmark(msg, flag) ((msg)->mask &= ~(flag))
@@ -93,15 +84,12 @@ qmsg_t* qmsg_new(qtid_t sender_id, qtid_t receiver_id);
 
 #define qmsg_undelete(msg)        qmsg_checkmark(msg, QMSG_MASK_UNDELETED)
 
-#define qmsg_init_box(msg, box, src_tid, dst_tid) \
-  do {                                              \
-      qlist_entry_init(&(msg->entry));                \
-      msg->flag = MSG_FLAG;                           \
-      msg->tid  = dst_tid;                            \
-      msg->args.box.box = (box);                      \
-      msg->args.box.tid = (src_tid);                  \
-  } while (0)
-
+#define qmsg_init_thread_start(msg)               \
+do {                                              \
+  qlist_entry_init(&(msg->entry));                \
+  msg->type = w_thread_started;                   \
+  msg->flag = WMSG_FLAG;                          \
+} while (0)
 
 #define qmsg_init_sstart(msg, actor)              \
 do {                                              \

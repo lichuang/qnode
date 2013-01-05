@@ -2,6 +2,7 @@
  * See Copyright Notice in qnode.h
  */
 
+#include <unistd.h>
 #include <stdio.h>
 #include "qactor.h"
 #include "qassert.h"
@@ -90,7 +91,9 @@ static void send_init_msg() {
 #endif
 
 qtid_t qserver_worker_thread() {
-  return 1;
+  static qtid_t i = 1;
+  i = (i + 1) % g_server->config->thread_num + 1;
+  return i;
 }
 
 qactor_t* qserver_get_actor(qid_t id) {
@@ -100,6 +103,7 @@ qactor_t* qserver_get_actor(qid_t id) {
 void qserver_send_mail(struct qmsg_t *msg) {
   qassert(msg->sender_id == QSERVER_THREAD_TID);
   qassert(msg->receiver_id > 0);
+  qassert(msg->type > 0 && msg->type < QMAX_MSG_TYPE);
   qtid_t tid = msg->receiver_id;
   qmailbox_add(g_server->thread_box[tid], msg);
   qinfo("add a msg %p, type: %d, tid: %d, flag: %d", msg, msg->type, msg->tid, msg->flag);
@@ -108,6 +112,7 @@ void qserver_send_mail(struct qmsg_t *msg) {
 int qserver_add_mail(struct qmsg_t *msg) {
   qassert(msg->sender_id > 0);
   qassert(msg->receiver_id == QSERVER_THREAD_TID);
+  qassert(msg->type > 0 && msg->type < QMAX_MSG_TYPE);
   qtid_t tid = msg->sender_id;
   qmailbox_add(g_server->box[tid], msg);
   return 0;
@@ -132,6 +137,7 @@ static int server_init(struct qconfig_t *config) {
   qassert(config->thread_num > 0);
   qassert(g_server == NULL);
   qlog_thread_new(config->thread_num + 1);
+  sleep(1);
   qserver_t *server = qalloc_type(qserver_t);
   g_server = server;
   server->config = config;
@@ -168,6 +174,7 @@ static int server_init(struct qconfig_t *config) {
     server->threads[i] = qthread_new(server, i); 
     qassert(server->threads[i]);
     server->thread_box[i] = qthread_mailbox(server->threads[i]);
+    sleep(1);
   }
   qidmap_init(&server->id_map);
   qmutex_init(&server->id_map_mutex);
