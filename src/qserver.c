@@ -7,7 +7,9 @@
 #include "qassert.h"
 #include "qconfig.h"
 #include "qengine.h"
+#include "qdefines.h"
 #include "qlog.h"
+#include "qlog_thread.h"
 #include "qmalloc.h"
 #include "qmailbox.h"
 #include "qmsg.h"
@@ -21,6 +23,9 @@ extern wmsg_handler wmsg_handlers[];
 struct qserver_t *g_server;
 
 static void server_accept(int fd, int flags, void *data) {
+  UNUSED(fd);
+  UNUSED(flags);
+  UNUSED(data);
   qinfo("add a connection....");
 }
 
@@ -39,6 +44,8 @@ static int init_server_event(struct qserver_t *server) {
 }
 
 static void server_box(int fd, int flags, void *data) {
+  UNUSED(fd);
+  UNUSED(flags);
   qinfo("handle server msg");
   qlist_t *list;
   qmailbox_t *box = (qmailbox_t*)data;
@@ -70,8 +77,9 @@ next:
   }
 }
 
+#if 0
 static void send_init_msg() {
-  sleep(1);
+  //sleep(1);
   int i;
   int thread_num = g_server->config->thread_num;
   for (i = 1; i <= thread_num; ++i) {
@@ -80,6 +88,7 @@ static void send_init_msg() {
     qserver_send_mail(msg);
   }
 }
+#endif
 
 qtid_t qserver_worker_thread() {
   return 1;
@@ -102,6 +111,7 @@ int qserver_add_mail(qtid_t tid, struct qmsg_t *msg) {
 }
 
 static void server_start(qserver_t *server) {
+  UNUSED(server);
   qid_t aid = qactor_new_id();
   qassert(aid != QID_INVALID);
   qactor_t *actor = qactor_new(aid, NULL);

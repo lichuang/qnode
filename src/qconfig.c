@@ -51,6 +51,7 @@ int qconfig_init(qconfig_t *config, const char *filename) {
 
   config_init_thread(config, L);  
   config_init_script(config, L);
+  config_init_log(config, L);
 
   lua_close(L);
   return 0;

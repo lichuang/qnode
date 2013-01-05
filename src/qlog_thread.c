@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "qassert.h"
 #include "qconfig.h"
+#include "qdefines.h"
 #include "qengine.h"
 #include "qlist.h"
 #include "qlog.h"
@@ -19,6 +20,8 @@
 qlog_thread_t *g_log_thread = NULL;
 
 static void thread_log_box(int fd, int flags, void *data) {
+  UNUSED(fd);
+  UNUSED(flags);
   qsignal_t *signal = (qsignal_t*)data;
   int idx;
   int i = 0;

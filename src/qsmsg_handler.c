@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "qassert.h"
 #include "qactor.h"
+#include "qdefines.h"
 #include "qlist.h"
 #include "qlog.h"
 #include "qluautil.h"
@@ -31,6 +32,7 @@ static int thread_handle_sstart_msg(qthread_t *thread, qmsg_t *msg) {
 }
 
 static int thread_handle_spawn_msg(qthread_t *thread, qmsg_t *msg) {
+  UNUSED(thread);
   qinfo("handle spawn msg");
   qmsg_clear_undelete(msg);
   qactor_t *actor = msg->args.spawn.actor;
@@ -46,11 +48,11 @@ static int thread_handle_init_msg(qthread_t *thread, qmsg_t *msg) {
   qtid_t tid = thread->tid;
   int i = 0;
   for (i = 1; i <= thread_num; ++i) {
-    if (i != tid) {
+    if ((qid_t)i != tid) {
       qmailbox_t *box = qalloc_type(qmailbox_t);
       thread->thread_box[i] = box;
       qmsg_t *msg = qmsg_new();
-      qmsg_init_box(msg, box, tid, i);
+      qmsg_init_box(msg, box, tid, (qid_t)i);
       qserver_add_mail(tid, msg);
     } else {
       thread->thread_box[i] = NULL;
@@ -60,6 +62,8 @@ static int thread_handle_init_msg(qthread_t *thread, qmsg_t *msg) {
 }
 
 static int thread_handle_wrong_msg(qthread_t *thread, qmsg_t *msg) {
+  UNUSED(thread);
+  UNUSED(msg);
   qerror("handle thread type %d msg error", msg->type);
   return 0;
 }

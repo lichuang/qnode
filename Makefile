@@ -13,7 +13,7 @@ DEPS=$(patsubst $(OBJ_DIR)/%.o, $(DEPS_DIR)/%.d, $(OBJS))
 INCLUDE= -I$(INCLUDE_DIR)
 		
 CC=gcc
-CFLAGS=-Wall -W -g 
+CFLAGS=-Wall -W -Werror -g 
 LDFLAGS= -lpthread -rdynamic -llua -ldl -lm
 
 all:$(OBJS) 

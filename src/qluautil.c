@@ -8,6 +8,7 @@
 #include <string.h>
 #include "qactor.h"
 #include "qconfig.h"
+#include "qdefines.h"
 #include "qluautil.h"
 #include "qlog.h"
 #include "qserver.h"
@@ -15,6 +16,7 @@
 #include "qthread.h"
 
 static int my_panic(lua_State *state) {
+  UNUSED(state);
   qerror("PANIC: unprotected error in call to Lua API (%s)\n", lua_tostring(state, -1));
   return 0;
 }
@@ -81,7 +83,7 @@ void qlua_copy_table(lua_State *src, lua_State *dst) {
         num_val = lua_tonumber(src, -1);
       } else {
         qerror("child arg table val MUST be number or string");
-        return -1;
+        return;
       }
 
       key = lua_tolstring(src, -2, &len);

@@ -2,11 +2,13 @@
  * See Copyright Notice in qnode.h
  */
 
+#include <stdio.h>
 #include <pthread.h>
 #include <string.h>
 #include "qassert.h"
 #include "qatomic.h"
 #include "qengine.h"
+#include "qdefines.h"
 #include "qlog.h"
 #include "qmalloc.h"
 #include "qthread_log.h"
@@ -14,6 +16,7 @@
 static pthread_key_t qthread_log_key;
 
 void qthread_log_destroy(void *value) {
+  UNUSED(value);
 }
 
 qthread_log_t* qthread_log_init(struct qengine_t* engine, int idx) {

@@ -101,7 +101,6 @@ do {                                              \
 #define qmsg_init_box(msg, box, src_tid, dst_tid) \
 do {                                              \
   qlist_entry_init(&(msg->entry));                \
-  msg->type = box;                                \
   msg->flag = MSG_FLAG;                           \
   msg->tid  = dst_tid;                            \
   msg->args.box.box = (box);                      \

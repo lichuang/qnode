@@ -6,6 +6,7 @@
 #include "qassert.h"
 #include "qactor.h"
 #include "qengine.h"
+#include "qdefines.h"
 #include "qlist.h"
 #include "qlog.h"
 #include "qluautil.h"
@@ -19,6 +20,8 @@
 extern smsg_handler smsg_handlers[];
 
 static void thread_box(int fd, int flags, void *data) {
+  UNUSED(fd);
+  UNUSED(flags);
   qinfo("thread box");
   qlist_t *list;
   qthread_t *thread = (qthread_t*)data;
@@ -61,6 +64,7 @@ static void* main_loop(void *arg) {
 }
 
 qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
+  UNUSED(server);
   qthread_t *thread = qalloc_type(qthread_t);
   if (thread == NULL) {
     qerror("create thread error");

@@ -67,7 +67,6 @@ int qmailbox_get(qmailbox_t *box, qlist_t **list) {
   qatomic_ptr_xchg(&(box->read), box->write);
   /* last change the write ptr to the read ptr saved before and return to list */
   *list = qatomic_ptr_xchg(&(box->write), read);
-  qassert(*list > 0xF);
   if (qsignal_active(box->signal, 0) == 1) {
     qsignal_recv(box->signal);
   }

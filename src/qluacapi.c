@@ -8,6 +8,7 @@
 #include "qluautil.h"
 #include "qlog.h"
 #include "qstring.h"
+#include "qserver.h"
 
 static qactor_t* get_actor(lua_State *state) {
   lua_getglobal(state, "c_actor");
@@ -42,7 +43,7 @@ static int spawn(lua_State *state) {
 }
 
 static int send(lua_State *state) {
-  qactor_t *src_actor = get_actor(state);
+  //qactor_t *src_actor = get_actor(state);
   qid_t id = (qid_t)lua_tonumber(state, 1);
   qactor_t *dst_actor = qserver_get_actor(id);
   if (dst_actor) {

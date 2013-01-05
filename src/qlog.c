@@ -7,7 +7,7 @@
 #include "qlog_thread.h"
 #include "qthread_log.h"
 
-static const char* err_levels[] = {
+static const char* log_levels[] = {
   "",
   "emerg",
   "alert",
@@ -20,6 +20,10 @@ static const char* err_levels[] = {
 };
 
 int g_log_level = QLOG_DEBUG;
+
+const char *level_str(int level) {
+  return log_levels[level];
+}
 
 static void init_log(qlog_t *log, int level, const char* file, long line, const char *format, va_list args) {
   //log->file_len = strlen(file);

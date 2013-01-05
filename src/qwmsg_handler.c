@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "qassert.h"
 #include "qactor.h"
+#include "qdefines.h"
 #include "qlist.h"
 #include "qlog.h"
 #include "qluautil.h"
@@ -14,6 +15,8 @@
 #include "qthread.h"
 
 static int server_handle_wrong_msg(qserver_t *server, qmsg_t *msg) {
+  UNUSED(server);
+  UNUSED(msg);
   qerror("handle server type %d msg error", msg->type);
   return 0;
 }
@@ -32,6 +35,7 @@ static int server_handle_spawn_msg(qserver_t *server, qmsg_t *msg) {
 }
 
 static int server_handle_box_msg(qserver_t *server, qmsg_t *msg) {
+  UNUSED(server);
   qinfo("handle info msg\n");
   qmsg_set_undelete(msg);
   msg->tid = msg->args.box.tid;
