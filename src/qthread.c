@@ -58,6 +58,9 @@ next:
 
 static void* main_loop(void *arg) {
   qthread_t *thread = (qthread_t*)arg;
+
+  //qmsg_t *msg = qmsg_new();
+
   g_server->thread_log[thread->tid] = qthread_log_init(thread->engine, thread->tid);
   qengine_loop(thread->engine);
   return NULL;
@@ -82,7 +85,7 @@ qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
   qlist_entry_init(&(thread->actor_list));
   int result;
   result = pthread_create(&thread->id, NULL, main_loop, thread);
-  qcheck(result == 0);
+  qassert(result == 0);
   qmailbox_active(thread->engine, thread->box);
   return thread;
 }

@@ -46,7 +46,7 @@ void qactor_destroy(qactor_t *actor) {
 qid_t qactor_spawn(qactor_t *actor, lua_State *state) {
   qassert(actor);
   qassert(actor->thread);
-  qmsg_t *msg = qmsg_new();
+  qmsg_t *msg = qmsg_new(actor->thread->tid, QSERVER_THREAD_TID);
   if (msg == NULL) {
     return QID_INVALID;
   }
@@ -57,6 +57,6 @@ qid_t qactor_spawn(qactor_t *actor, lua_State *state) {
   }
   qid_t parent = actor->aid;
   qmsg_init_spawn(msg, aid, parent, state);
-  qserver_add_mail(actor->thread->tid, msg);
+  qserver_add_mail(msg);
   return aid;
 }

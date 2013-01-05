@@ -43,6 +43,9 @@ static int thread_handle_spawn_msg(qthread_t *thread, qmsg_t *msg) {
 
 static int thread_handle_init_msg(qthread_t *thread, qmsg_t *msg) {
   qinfo("handle init msg\n");
+  UNUSED(thread);
+  UNUSED(msg);
+  /*
   int thread_num = msg->args.s_init.thread_num;
   thread->thread_box = (qmailbox_t**)qmalloc(thread_num * sizeof(qmailbox_t*));
   qtid_t tid = thread->tid;
@@ -58,6 +61,7 @@ static int thread_handle_init_msg(qthread_t *thread, qmsg_t *msg) {
       thread->thread_box[i] = NULL;
     }
   }
+  */
   return 0;
 }
 
@@ -70,8 +74,9 @@ static int thread_handle_wrong_msg(qthread_t *thread, qmsg_t *msg) {
 
 smsg_handler smsg_handlers[] = {
   &thread_handle_wrong_msg,     /* wrong */
+  &thread_handle_wrong_msg,     /* w_thread_started, wrong */
   &thread_handle_init_msg,      /* s_init */
-  &thread_handle_wrong_msg,     /* w_init, wrong */
-  &thread_handle_sstart_msg,    /* m_start */
+  &thread_handle_wrong_msg,     /* w_thread_box, wrong */
+  &thread_handle_sstart_msg,    /* s_start */
   &thread_handle_spawn_msg,     /* spawn */
 };

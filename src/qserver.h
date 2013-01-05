@@ -5,12 +5,14 @@
 #ifndef __QSERVER_H__
 #define __QSERVER_H__
 
+#include "qconfig.h"
 #include "qidmap.h"
 #include "qmutex.h"
 #include "qtype.h"
 
+#define QSERVER_THREAD_TID 0
+
 struct qactor_t;
-struct qconfig_t;
 struct qengine_t;
 struct qevent_t;
 struct qthread_t;
@@ -32,8 +34,8 @@ typedef struct qserver_t {
 
 int qserver_run(struct qconfig_t *config);
 
-/* worker thread tid send mail to server thread */
-int qserver_add_mail(qtid_t tid, struct qmsg_t *msg);
+/* worker thread send mail to server thread */
+int qserver_add_mail(struct qmsg_t *msg);
 
 /* server thread send mail to worker thread */
 void qserver_send_mail(struct qmsg_t *msg);

@@ -48,7 +48,7 @@ void qlog(int level, const char* file, long line, const char *format, ...) {
   init_log(log, level, file, line, format, args);
   va_end(args);
 
-#if 1
+#if 0
   log->n += sprintf(log->buff + log->n, " %s:%d ", log->file, log->line);
   vsprintf(log->buff + log->n, log->format, log->args);
   printf("%s\n", log->buff);

@@ -14,7 +14,7 @@ static void signal_make_pair(int *rfd, int *wfd) {
   int fds[2];
   int result;
   result = socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
-  qcheck(result == 0);
+  qassert(result == 0);
   *wfd = fds[0];
   *rfd = fds[1];
 }
@@ -49,7 +49,7 @@ void qsignal_send(qsignal_t *signal) {
     if (n == -1 && errno == EINTR) {
       continue;
     }
-    qcheck(n == sizeof(dummy));
+    qassert(n == sizeof(dummy));
     break;
   }
 }
@@ -58,7 +58,7 @@ void qsignal_recv(qsignal_t *signal) {
   unsigned char dummy;
   ssize_t n;
   n = recv(signal->rfd, &dummy, sizeof(dummy), 0);
-  qcheck(n >= 0);
-  qcheck(n == sizeof(dummy));
-  qcheck(dummy == 0);
+  qassert(n >= 0);
+  qassert(n == sizeof(dummy));
+  qassert(dummy == 0);
 }

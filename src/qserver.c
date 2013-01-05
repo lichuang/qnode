@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include "qactor.h"
 #include "qassert.h"
-#include "qconfig.h"
 #include "qengine.h"
 #include "qdefines.h"
 #include "qlog.h"
@@ -99,13 +98,17 @@ qactor_t* qserver_get_actor(qid_t id) {
 }
 
 void qserver_send_mail(struct qmsg_t *msg) {
-  qassert(msg);
-  qtid_t tid = msg->tid;
+  qassert(msg->sender_id == QSERVER_THREAD_TID);
+  qassert(msg->receiver_id > 0);
+  qtid_t tid = msg->receiver_id;
   qmailbox_add(g_server->thread_box[tid], msg);
   qinfo("add a msg %p, type: %d, tid: %d, flag: %d", msg, msg->type, msg->tid, msg->flag);
 }
 
-int qserver_add_mail(qtid_t tid, struct qmsg_t *msg) {
+int qserver_add_mail(struct qmsg_t *msg) {
+  qassert(msg->sender_id > 0);
+  qassert(msg->receiver_id == QSERVER_THREAD_TID);
+  qtid_t tid = msg->sender_id;
   qmailbox_add(g_server->box[tid], msg);
   return 0;
 }
@@ -115,12 +118,12 @@ static void server_start(qserver_t *server) {
   qid_t aid = qactor_new_id();
   qassert(aid != QID_INVALID);
   qactor_t *actor = qactor_new(aid, NULL);
-  qmsg_t *msg = qmsg_new();
+  qtid_t tid = qserver_worker_thread();
+  qmsg_t *msg = qmsg_new(QSERVER_THREAD_TID, tid);
   if (msg == NULL) {
     return;
   }
-  qtid_t tid = qserver_worker_thread();
-  qmsg_init_sstart(msg, actor, tid);
+  qmsg_init_sstart(msg, actor);
   qserver_send_mail(msg);
 }
 
