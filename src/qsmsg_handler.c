@@ -34,7 +34,6 @@ static int thread_handle_sstart_msg(qthread_t *thread, qmsg_t *msg) {
 static int thread_handle_spawn_msg(qthread_t *thread, qmsg_t *msg) {
   UNUSED(thread);
   qinfo("handle spawn msg");
-  qmsg_clear_undelete(msg);
   qactor_t *actor = msg->args.spawn.actor;
   actor->state = msg->args.spawn.state;
   lua_call(actor->state, 1, 0);

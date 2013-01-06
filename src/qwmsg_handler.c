@@ -23,15 +23,15 @@ static int server_handle_wrong_msg(qserver_t *server, qmsg_t *msg) {
 
 static int server_handle_spawn_msg(qserver_t *server, qmsg_t *msg) {
   qinfo("handle spawn msg");
+  qmsg_t *new_msg = qmsg_clone(msg);
   qid_t aid = msg->args.spawn.aid;
   lua_State *state = msg->args.spawn.state;
   qactor_t *actor = qactor_new(aid, state);
   actor->parent = msg->args.spawn.parent;
-  msg->args.spawn.actor = actor;
-  qmsg_set_undelete(msg);
-  msg->sender_id = QSERVER_THREAD_TID;
-  msg->receiver_id = qserver_worker_thread();
-  qserver_send_mail(msg);
+  new_msg->args.spawn.actor = actor;
+  new_msg->sender_id = QSERVER_THREAD_TID;
+  new_msg->receiver_id = qserver_worker_thread();
+  qserver_send_mail(new_msg);
   server->actors[aid] = actor;
   return 0;
 }
@@ -50,7 +50,6 @@ static int server_handle_thread_start_msg(qserver_t *server, qmsg_t *msg) {
 static int server_handle_thread_box_msg(qserver_t *server, qmsg_t *msg) {
   UNUSED(server);
   qinfo("handle info msg\n");
-  qmsg_set_undelete(msg);
   qserver_send_mail(msg);
   return 0;
 }

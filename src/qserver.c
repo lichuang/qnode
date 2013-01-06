@@ -70,9 +70,7 @@ static void server_box(int fd, int flags, void *data) {
     (wmsg_handlers[msg->type])(g_server, msg);
 
 next:
-    if (!qmsg_undelete(msg)) {
-      qfree(msg);
-    }
+    qfree(msg);
     pos = next;
   }
 }

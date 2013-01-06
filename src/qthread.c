@@ -50,9 +50,7 @@ static void thread_box(int fd, int flags, void *data) {
     (smsg_handlers[msg->type])(thread, msg);
 
 next:
-    if (!qmsg_undelete(msg)) {
-      qfree(msg);
-    }
+    qfree(msg);
     pos = next;
   }
 }

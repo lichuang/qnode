@@ -9,8 +9,6 @@
 #include "qlist.h"
 #include "qtype.h"
 
-#define QMSG_MASK_UNDELETED 0x1
-
 struct qmailbox_t;
 
 /* 
@@ -30,9 +28,10 @@ enum {
 };
 
 enum {
-  SMSG_FLAG = 1,
-  WMSG_FLAG = 2,
-  MSG_FLAG  = 3,
+  SMSG_FLAG = 1,        /* server-worker message flag */
+  WMSG_FLAG = 2,        /* worker-server message flag */
+  TMSG_FLAG = 3,        /* worker-worker message flag */
+  MSG_FLAG  = 4,        /* both side message flag */
 };
 
 /* define messages between worker-thread and main-thread */
@@ -44,8 +43,6 @@ typedef struct qmsg_t {
 
   qtid_t sender_id;
   qtid_t receiver_id;
-
-  unsigned int mask;
 
   union {
     struct {
@@ -68,21 +65,12 @@ typedef int (*smsg_handler)(struct qthread_t *thread, struct qmsg_t *msg);
 typedef int (*wmsg_handler)(struct qserver_t *server, struct qmsg_t *msg);
 
 qmsg_t* qmsg_new(qtid_t sender_id, qtid_t receiver_id);
+qmsg_t* qmsg_clone(qmsg_t *msg);
 
 #define qmsg_is_smsg(msg)         ((msg)->flag == SMSG_FLAG || (msg)->flag == MSG_FLAG)
 #define qmsg_is_wmsg(msg)         ((msg)->flag == WMSG_FLAG || (msg)->flag == MSG_FLAG)
 
 #define qmsg_invalid_type(type)   ((type) <= 0 || (type) >= QMAX_MSG_TYPE)
-
-#define qmsg_mark(msg, flag)      ((msg)->mask |= (flag))
-#define qmsg_clearmark(msg, flag) ((msg)->mask &= ~(flag))
-#define qmsg_checkmark(msg, flag) ((msg)->mask & (flag))
-
-#define qmsg_set_undelete(msg)    qmsg_mark(msg, QMSG_MASK_UNDELETED)
-
-#define qmsg_clear_undelete(msg)  qmsg_clearmark(msg, QMSG_MASK_UNDELETED)
-
-#define qmsg_undelete(msg)        qmsg_checkmark(msg, QMSG_MASK_UNDELETED)
 
 #define qmsg_init_thread_start(msg)               \
 do {                                              \

@@ -46,7 +46,8 @@ void qmailbox_add(qmailbox_t *box, struct qmsg_t *msg) {
     qassert(box->write);
   }
   qinfo("qmailbox_add %p, write: %p", box, box->write);
-  /* save the write ptr first cause add_tail below
+  /* 
+   * save the write ptr first cause add_tail below
    * is-not atomic operation and the write ptr maybe changed 
    * */
   qlist_t *p = box->write;
@@ -67,6 +68,8 @@ int qmailbox_get(qmailbox_t *box, qlist_t **list) {
   qatomic_ptr_xchg(&(box->read), box->write);
   /* last change the write ptr to the read ptr saved before and return to list */
   *list = qatomic_ptr_xchg(&(box->write), read);
+  qassert(box->read != box->write);
+  qassert(*list == box->read);
   if (qsignal_active(box->signal, 0) == 1) {
     qsignal_recv(box->signal);
   }
