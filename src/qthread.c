@@ -57,13 +57,10 @@ next:
 
 static void* main_loop(void *arg) {
   qthread_t *thread = (qthread_t*)arg;
-
-  qmsg_t *msg = qmsg_new(thread->tid, QSERVER_THREAD_TID);
-  qmsg_init_thread_start(msg);
-
+  //qmsg_t *msg = qmsg_new(thread->tid, QSERVER_THREAD_TID);
+  //qmsg_init_thread_start(msg);
   g_server->thread_log[thread->tid] = qthread_log_init(thread->engine, thread->tid);
-  //sleep(1);
-  //qserver_add_mail(msg);
+  thread->started = 1;
   qengine_loop(thread->engine);
   return NULL;
 }
@@ -88,6 +85,10 @@ qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
   int result;
   result = pthread_create(&thread->id, NULL, main_loop, thread);
   qassert(result == 0);
+  /* ugly, but works */
+  while (thread->started == 0) {
+    sleep(1);
+  }
   qmailbox_active(thread->engine, thread->box);
   return thread;
 }

@@ -2,7 +2,6 @@
  * See Copyright Notice in qnode.h
  */
 
-#include <unistd.h>
 #include <stdio.h>
 #include "qactor.h"
 #include "qassert.h"
@@ -135,7 +134,6 @@ static int server_init(struct qconfig_t *config) {
   qassert(config->thread_num > 0);
   qassert(g_server == NULL);
   qlog_thread_new(config->thread_num + 1);
-  sleep(1);
   qserver_t *server = qalloc_type(qserver_t);
   g_server = server;
   server->config = config;
@@ -172,7 +170,6 @@ static int server_init(struct qconfig_t *config) {
     server->threads[i] = qthread_new(server, i); 
     qassert(server->threads[i]);
     server->thread_box[i] = qthread_mailbox(server->threads[i]);
-    sleep(1);
   }
   qidmap_init(&server->id_map);
   qmutex_init(&server->id_map_mutex);

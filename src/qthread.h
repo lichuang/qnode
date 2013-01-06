@@ -15,6 +15,7 @@ struct qmsg_t;
 struct qserver_t;
 
 typedef struct qthread_t {
+  unsigned short started;
   pthread_t id;
   qtid_t tid;
   struct qengine_t *engine;

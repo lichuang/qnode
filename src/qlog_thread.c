@@ -2,6 +2,7 @@
  * See Copyright Notice in qnode.h
  */
 
+#include <unistd.h>
 #include <stdio.h>
 #include "qassert.h"
 #include "qconfig.h"
@@ -55,6 +56,7 @@ static void thread_log_box(int fd, int flags, void *data) {
 
 static void* main_loop(void *arg) {
   qlog_thread_t *thread = (qlog_thread_t*)arg;
+  thread->started = 1;
   qengine_loop(thread->engine);
   return NULL;
 }
@@ -76,9 +78,14 @@ int qlog_thread_new(int thread_num) {
     int fd = qsignal_get_fd(g_log_thread->signals[i]);
     qengine_add_event(g_log_thread->engine, fd, QEVENT_READ, thread_log_box, g_log_thread->signals[i]);
   }
+  g_log_thread->started = 0;
   int result;
   result = pthread_create(&g_log_thread->id, NULL, main_loop, g_log_thread);
   qassert(result == 0);
+  /* ugly, but works */
+  while (g_log_thread->started == 0) {
+    sleep(1);
+  }
   return 0;
 }
 
