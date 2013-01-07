@@ -57,6 +57,6 @@ qid_t qactor_spawn(qactor_t *actor, lua_State *state) {
   }
   qid_t parent = actor->aid;
   qmsg_init_spawn(msg, aid, parent, state);
-  qserver_add_mail(msg);
+  qserver_recv_msg(msg);
   return aid;
 }

@@ -19,11 +19,8 @@ struct qmailbox_t;
  * NOTE: actor MUST be create in server thread and send to worker thread
  * */
 enum {
-  w_thread_started = 1, /* worker thread send when thread started */
-  s_init  = 2,          /* server thread send when all worker thread started */
-  w_thread_box = 3,     /* worker thread send its mailbox to other worker thread */
-  s_start = 4,
-  spawn   = 5,
+  s_start = 1,
+  spawn   = 2,
   QMAX_MSG_TYPE
 };
 
@@ -71,13 +68,6 @@ qmsg_t* qmsg_clone(qmsg_t *msg);
 #define qmsg_is_wmsg(msg)         ((msg)->flag == WMSG_FLAG || (msg)->flag == MSG_FLAG)
 
 #define qmsg_invalid_type(type)   ((type) <= 0 || (type) >= QMAX_MSG_TYPE)
-
-#define qmsg_init_thread_start(msg)               \
-do {                                              \
-  qlist_entry_init(&(msg->entry));                \
-  msg->type = w_thread_started;                   \
-  msg->flag = WMSG_FLAG;                          \
-} while (0)
 
 #define qmsg_init_sstart(msg, actor)              \
 do {                                              \

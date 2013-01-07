@@ -31,34 +31,13 @@ static int server_handle_spawn_msg(qserver_t *server, qmsg_t *msg) {
   new_msg->args.spawn.actor = actor;
   new_msg->sender_id = QSERVER_THREAD_TID;
   new_msg->receiver_id = qserver_worker_thread();
-  qserver_send_mail(new_msg);
+  qserver_send_msg(new_msg);
   server->actors[aid] = actor;
-  return 0;
-}
-
-static int server_handle_thread_start_msg(qserver_t *server, qmsg_t *msg) {
-  qinfo("handle thread start msg");
-  static int thread_num = 0;
-  UNUSED(server);
-  UNUSED(msg);
-  ++thread_num;
-  if (thread_num == g_server->config->thread_num) {
-  }
-  return 0;
-}
-
-static int server_handle_thread_box_msg(qserver_t *server, qmsg_t *msg) {
-  UNUSED(server);
-  qinfo("handle info msg\n");
-  qserver_send_mail(msg);
   return 0;
 }
 
 wmsg_handler wmsg_handlers[] = {
   &server_handle_wrong_msg,         /* wrong */
-  &server_handle_thread_start_msg,  /* w_thread_started */
-  &server_handle_wrong_msg,         /* s_init, wrong */
-  &server_handle_thread_box_msg,    /* w_thread_box */
   &server_handle_wrong_msg,         /* s_start, wrong */
   &server_handle_spawn_msg,         /* spawn */
 };

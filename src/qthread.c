@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "qassert.h"
 #include "qactor.h"
+#include "qconfig.h"
 #include "qengine.h"
 #include "qdefines.h"
 #include "qlist.h"
@@ -20,7 +21,7 @@
 
 extern smsg_handler smsg_handlers[];
 
-static void thread_box(int fd, int flags, void *data) {
+static void server_box_func(int fd, int flags, void *data) {
   UNUSED(fd);
   UNUSED(flags);
   qinfo("thread box");
@@ -55,6 +56,12 @@ next:
   }
 }
 
+static void thread_box_func(int fd, int flags, void *data) {
+  UNUSED(fd);
+  UNUSED(flags);
+  UNUSED(data);
+}
+
 static void* main_loop(void *arg) {
   qthread_t *thread = (qthread_t*)arg;
   //qmsg_t *msg = qmsg_new(thread->tid, QSERVER_THREAD_TID);
@@ -66,7 +73,7 @@ static void* main_loop(void *arg) {
 }
 
 qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
-  UNUSED(server);
+  int thread_num = server->config->thread_num;
   qthread_t *thread = qalloc_type(qthread_t);
   if (thread == NULL) {
     qerror("create thread error");
@@ -79,15 +86,23 @@ qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
     return NULL;
   }
   thread->tid = tid;
-  thread->box = qmailbox_new(thread_box, thread);
+  thread->box = qmailbox_new(server_box_func, thread);
   qassert(thread->box);
   qlist_entry_init(&(thread->actor_list));
+  thread->channels = (qchannel_t**)qmalloc((thread_num + 1)* sizeof(qchannel_t*));
+  thread->channels[0] = NULL;
+  int i;
+  for (i = 1; i < thread_num + 1; ++i) {
+    qchannel_t *channel = qalloc_type(qchannel_t);
+    channel->in_box = channel->out_box = NULL;
+    thread->channels[i] = channel;
+  }
   int result;
   result = pthread_create(&thread->id, NULL, main_loop, thread);
   qassert(result == 0);
   /* ugly, but works */
   while (thread->started == 0) {
-    sleep(1);
+    usleep(100);
   }
   qmailbox_active(thread->engine, thread->box);
   return thread;
@@ -96,3 +111,16 @@ qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
 struct qmailbox_t* qthread_mailbox(qthread_t *thread) {
   return thread->box;
 }
+
+void qthread_init_thread_channel(qthread_t *src_thread, qthread_t *dst_thread) {
+  qtid_t src_id = src_thread->tid;
+  qtid_t dst_id = dst_thread->tid;
+  qchannel_t *src_channel = src_thread->channels[dst_id];
+  qchannel_t *dst_channel = dst_thread->channels[src_id];
+  qassert(src_channel->out_box == NULL);
+  qassert(dst_channel->in_box  == NULL);
+  qmailbox_t *box = qmailbox_new(thread_box_func, dst_thread);
+  src_channel->out_box = box;
+  dst_channel->in_box  = box;
+}
+

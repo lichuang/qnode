@@ -84,7 +84,7 @@ int qlog_thread_new(int thread_num) {
   qassert(result == 0);
   /* ugly, but works */
   while (g_log_thread->started == 0) {
-    sleep(1);
+    usleep(100);
   }
   return 0;
 }

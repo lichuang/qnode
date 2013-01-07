@@ -20,6 +20,11 @@ typedef struct qmailbox_t {
   struct qsignal_t *signal;
 } qmailbox_t;
 
+typedef struct qchannel_t {
+  qmailbox_t *in_box;
+  qmailbox_t *out_box;
+} qchannel_t;
+
 qmailbox_t* qmailbox_new(qevent_func_t *callback, void *reader);
 void        qmailbox_destroy(qmailbox_t *box);
 int         qmailbox_active(qengine_t *engine, qmailbox_t *box);

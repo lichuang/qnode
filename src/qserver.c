@@ -82,7 +82,7 @@ static void send_init_msg() {
   for (i = 1; i <= thread_num; ++i) {
     qmsg_t *msg = qmsg_new();
     qmsg_init_sinit(msg, thread_num, i);
-    qserver_send_mail(msg);
+    qserver_send_msg(msg);
   }
 }
 #endif
@@ -97,7 +97,7 @@ qactor_t* qserver_get_actor(qid_t id) {
   return g_server->actors[id];
 }
 
-void qserver_send_mail(struct qmsg_t *msg) {
+void qserver_send_msg(struct qmsg_t *msg) {
   qassert(msg->sender_id == QSERVER_THREAD_TID);
   qassert(msg->receiver_id > 0);
   qassert(msg->type > 0 && msg->type < QMAX_MSG_TYPE);
@@ -106,7 +106,7 @@ void qserver_send_mail(struct qmsg_t *msg) {
   qinfo("add a msg %p, type: %d, tid: %d, flag: %d", msg, msg->type, msg->tid, msg->flag);
 }
 
-int qserver_add_mail(struct qmsg_t *msg) {
+int qserver_recv_msg(struct qmsg_t *msg) {
   qassert(msg->sender_id > 0);
   qassert(msg->receiver_id == QSERVER_THREAD_TID);
   qassert(msg->type > 0 && msg->type < QMAX_MSG_TYPE);
@@ -126,7 +126,43 @@ static void server_start(qserver_t *server) {
     return;
   }
   qmsg_init_sstart(msg, actor);
-  qserver_send_mail(msg);
+  qserver_send_msg(msg);
+}
+
+static void init_thread(qserver_t *server) {
+  qconfig_t *config = server->config;
+  server->threads = (qthread_t**)qmalloc(config->thread_num * sizeof(qthread_t*));
+  qalloc_assert(server->threads);
+  server->threads[0] = NULL;
+  server->box = (qmailbox_t**)qmalloc(config->thread_num * sizeof(qmailbox_t*));
+  qalloc_assert(server->box);
+  server->box[0] = NULL;
+  server->thread_log = (qthread_log_t**)qmalloc(config->thread_num * sizeof(qthread_t*));
+  qalloc_assert(server->thread_log);
+  server->thread_box = (qmailbox_t**)qmalloc(config->thread_num * sizeof(qmailbox_t*));
+  qalloc_assert(server->thread_box);
+  server->thread_box[0] = NULL;
+  int i;
+  for (i = 1; i <= config->thread_num; ++i) {
+    server->box[i] = qmailbox_new(server_box, NULL);
+    server->box[i]->reader = server->box[i];
+    qmailbox_active(server->engine, server->box[i]);
+    server->threads[i] = qthread_new(server, i); 
+    qassert(server->threads[i]);
+    server->thread_box[i] = qthread_mailbox(server->threads[i]);
+  }
+
+  int j = 0;
+  for (i = 1; i <= config->thread_num; ++i) {
+    qthread_t *thread1 = server->threads[i];
+    for (j = 1; j <= config->thread_num; ++j) {
+      if (j == i) {
+        continue;
+      }
+      qthread_t *thread2 = server->threads[j];
+      qthread_init_thread_channel(thread1, thread2);
+    }
+  }
 }
 
 static int server_init(struct qconfig_t *config) {
@@ -149,28 +185,7 @@ static int server_init(struct qconfig_t *config) {
     qfree(server);
     return -1;
   }
-  /* alloc threads and mailbox */
-  server->threads = (qthread_t**)qmalloc(config->thread_num * sizeof(qthread_t*));
-  qalloc_assert(server->threads);
-  server->threads[0] = NULL;
-  server->box = (qmailbox_t**)qmalloc(config->thread_num * sizeof(qmailbox_t*));
-  qalloc_assert(server->box);
-  server->box[0] = NULL;
-  server->thread_log = (qthread_log_t**)qmalloc(config->thread_num * sizeof(qthread_t*));
-  qalloc_assert(server->thread_log);
-  server->thread_box = (qmailbox_t**)qmalloc(config->thread_num * sizeof(qmailbox_t*));
-  qalloc_assert(server->thread_box);
-  server->thread_box[0] = NULL;
-  int i;
-  for (i = 1; i <= config->thread_num; ++i) {
-    server->box[i] = qmailbox_new(server_box, NULL);
-    server->box[i]->reader = server->box[i];
-    qassert(server->box[i]);
-    qmailbox_active(server->engine, server->box[i]);
-    server->threads[i] = qthread_new(server, i); 
-    qassert(server->threads[i]);
-    server->thread_box[i] = qthread_mailbox(server->threads[i]);
-  }
+  init_thread(server);
   qidmap_init(&server->id_map);
   qmutex_init(&server->id_map_mutex);
 
