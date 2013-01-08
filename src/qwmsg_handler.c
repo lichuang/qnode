@@ -31,7 +31,7 @@ static int server_handle_spawn_msg(qserver_t *server, qmsg_t *msg) {
   new_msg->args.spawn.actor = actor;
   new_msg->sender_id = QSERVER_THREAD_TID;
   new_msg->receiver_id = qserver_worker_thread();
-  qserver_send_msg(new_msg);
+  qthread_add_msg(new_msg);
   server->actors[aid] = actor;
   return 0;
 }

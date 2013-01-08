@@ -27,7 +27,7 @@ static void server_box_func(int fd, int flags, void *data) {
   qinfo("thread box");
   qlist_t *list;
   qthread_t *thread = (qthread_t*)data;
-  qmailbox_get(thread->box, &list);
+  qmailbox_get(thread->in_box[0], &list);
   qlist_t *pos, *next;
   for (pos = list->next; pos != list; ) {
     qmsg_t *msg = qlist_entry(pos, qmsg_t, entry);
@@ -75,6 +75,7 @@ static void* main_loop(void *arg) {
 qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
   int thread_num = server->config->thread_num;
   qthread_t *thread = qalloc_type(qthread_t);
+  int i;
   if (thread == NULL) {
     qerror("create thread error");
     return NULL;
@@ -86,17 +87,24 @@ qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
     return NULL;
   }
   thread->tid = tid;
-  thread->box = qmailbox_new(server_box_func, thread);
-  qassert(thread->box);
-  qlist_entry_init(&(thread->actor_list));
-  thread->channels = (qchannel_t**)qmalloc((thread_num + 1)* sizeof(qchannel_t*));
-  thread->channels[0] = NULL;
-  int i;
-  for (i = 1; i < thread_num + 1; ++i) {
-    qchannel_t *channel = qalloc_type(qchannel_t);
-    channel->in_box = channel->out_box = NULL;
-    thread->channels[i] = channel;
+
+  thread->in_box  = (qmailbox_t**)qmalloc((thread_num + 1) * sizeof(qmailbox_t*));
+  thread->out_box = (qmailbox_t**)qmalloc((thread_num + 1) * sizeof(qmailbox_t*));
+  for (i = 0; i < thread_num + 1; ++i) {
+    thread->out_box[i] = NULL;
+    if (i == (int)tid) {
+      thread->in_box[i] = NULL;
+      continue;
+    }
+    if (i == 0) {
+      thread->in_box[i] = qmailbox_new(server_box_func, thread);
+    } else {
+      thread->in_box[i] = qmailbox_new(thread_box_func, thread);
+    }
+    qmailbox_active(thread->engine, thread->in_box[i]);
   }
+
+  qlist_entry_init(&(thread->actor_list));
   int result;
   result = pthread_create(&thread->id, NULL, main_loop, thread);
   qassert(result == 0);
@@ -104,23 +112,15 @@ qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
   while (thread->started == 0) {
     usleep(100);
   }
-  qmailbox_active(thread->engine, thread->box);
   return thread;
 }
 
-struct qmailbox_t* qthread_mailbox(qthread_t *thread) {
-  return thread->box;
+void qthread_add_msg(struct qmsg_t *msg) {
+  qassert(msg->sender_id == QSERVER_THREAD_TID);
+  qassert(msg->receiver_id > 0);
+  qassert(msg->type > 0 && msg->type < QMAX_MSG_TYPE);
+  qtid_t tid = msg->receiver_id;
+  qmailbox_add(g_server->out_box[tid], msg);
+  //qmailbox_add(g_server->threads[tid]->in_box[0], msg);
+  qinfo("add a msg %p, type: %d, tid: %d, flag: %d", msg, msg->type, msg->tid, msg->flag);
 }
-
-void qthread_init_thread_channel(qthread_t *src_thread, qthread_t *dst_thread) {
-  qtid_t src_id = src_thread->tid;
-  qtid_t dst_id = dst_thread->tid;
-  qchannel_t *src_channel = src_thread->channels[dst_id];
-  qchannel_t *dst_channel = dst_thread->channels[src_id];
-  qassert(src_channel->out_box == NULL);
-  qassert(dst_channel->in_box  == NULL);
-  qmailbox_t *box = qmailbox_new(thread_box_func, dst_thread);
-  src_channel->out_box = box;
-  dst_channel->in_box  = box;
-}
-
