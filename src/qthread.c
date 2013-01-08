@@ -19,12 +19,16 @@
 #include "qthread.h"
 #include "qthread_log.h"
 
-extern smsg_handler smsg_handlers[];
+extern qthread_msg_handler g_thread_msg_handlers[];
+typedef struct thread_box_t {
+  qthread_t *thread;
+  qmailbox_t *box;
+} thread_box_t;
 
 static void server_box_func(int fd, int flags, void *data) {
   UNUSED(fd);
   UNUSED(flags);
-  qinfo("thread box");
+  qinfo("server box");
   qlist_t *list;
   qthread_t *thread = (qthread_t*)data;
   qmailbox_get(thread->in_box[0], &list);
@@ -48,7 +52,7 @@ static void server_box_func(int fd, int flags, void *data) {
       goto next;
     }
     qinfo("handle %d msg", msg->type);
-    (smsg_handlers[msg->type])(thread, msg);
+    (g_thread_msg_handlers[msg->type])(thread, msg);
 
 next:
     qfree(msg);
@@ -57,15 +61,44 @@ next:
 }
 
 static void thread_box_func(int fd, int flags, void *data) {
+  qinfo("in thread_box_func");
   UNUSED(fd);
   UNUSED(flags);
-  UNUSED(data);
+  qlist_t *list;
+  qthread_box_t *thread_box = (qthread_box_t*)data;
+  qthread_t *thread = thread_box->thread;
+  qmailbox_t *box = thread_box->box;
+  qmailbox_get(box, &list);
+  qlist_t *pos, *next;
+  for (pos = list->next; pos != list; ) {
+    qmsg_t *msg = qlist_entry(pos, qmsg_t, entry);
+    qassert(msg);
+    next = pos->next;
+    qlist_del_init(&(msg->entry));
+    if (msg == NULL) {
+      qinfo("msg NULL");
+      goto next;
+    }
+    qinfo("handle %d msg %p", msg->type, msg);
+    if (!qmsg_is_smsg(msg)) {
+      qerror("msg %d , flag %d is not server msg", msg->type, msg->flag);
+      goto next;
+    }
+    if (qmsg_invalid_type(msg->type)) {
+      qerror("msg %d is not valid msg type", msg->type);
+      goto next;
+    }
+    qinfo("handle %d msg", msg->type);
+    (g_thread_msg_handlers[msg->type])(thread, msg);
+
+next:
+    qfree(msg);
+    pos = next;
+  }
 }
 
 static void* main_loop(void *arg) {
   qthread_t *thread = (qthread_t*)arg;
-  //qmsg_t *msg = qmsg_new(thread->tid, QSERVER_THREAD_TID);
-  //qmsg_init_thread_start(msg);
   g_server->thread_log[thread->tid] = qthread_log_init(thread->engine, thread->tid);
   thread->started = 1;
   qengine_loop(thread->engine);
@@ -88,6 +121,7 @@ qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
   }
   thread->tid = tid;
 
+  thread->thread_box = (qthread_box_t**)qmalloc((thread_num + 1) * sizeof(qthread_box_t*));
   thread->in_box  = (qmailbox_t**)qmalloc((thread_num + 1) * sizeof(qmailbox_t*));
   thread->out_box = (qmailbox_t**)qmalloc((thread_num + 1) * sizeof(qmailbox_t*));
   for (i = 0; i < thread_num + 1; ++i) {
@@ -99,7 +133,10 @@ qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
     if (i == 0) {
       thread->in_box[i] = qmailbox_new(server_box_func, thread);
     } else {
-      thread->in_box[i] = qmailbox_new(thread_box_func, thread);
+      thread->thread_box[i] = qalloc_type(qthread_box_t);
+      thread->in_box[i] = qmailbox_new(thread_box_func, thread->thread_box[i]);
+      thread->thread_box[i]->thread = thread;
+      thread->thread_box[i]->box = thread->in_box[i];
     }
     qmailbox_active(thread->engine, thread->in_box[i]);
   }
@@ -116,11 +153,18 @@ qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
 }
 
 void qthread_add_msg(struct qmsg_t *msg) {
-  qassert(msg->sender_id == QSERVER_THREAD_TID);
+  //qassert(msg->sender_id == QSERVER_THREAD_TID);
+  qassert(msg->sender_id != msg->receiver_id);
   qassert(msg->receiver_id > 0);
   qassert(msg->type > 0 && msg->type < QMAX_MSG_TYPE);
   qtid_t tid = msg->receiver_id;
-  qmailbox_add(g_server->out_box[tid], msg);
+  //qmailbox_add(g_server->out_box[tid], msg);
   //qmailbox_add(g_server->threads[tid]->in_box[0], msg);
+  if (msg->sender_id == QSERVER_THREAD_TID) {
+    qmailbox_add(g_server->out_box[tid], msg);
+  } else {
+    qthread_t *thread = g_server->threads[msg->sender_id];
+    qmailbox_add(thread->out_box[tid], msg);
+  }
   qinfo("add a msg %p, type: %d, tid: %d, flag: %d", msg, msg->type, msg->tid, msg->flag);
 }

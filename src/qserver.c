@@ -17,7 +17,7 @@
 #include "qthread.h"
 #include "qthread_log.h"
 
-extern wmsg_handler wmsg_handlers[];
+extern qserver_msg_handler g_server_msg_handlers[];
 
 struct qserver_t *g_server;
 
@@ -66,7 +66,7 @@ static void server_box(int fd, int flags, void *data) {
       goto next;
     }
     qinfo("handle %d msg", msg->type);
-    (wmsg_handlers[msg->type])(g_server, msg);
+    (g_server_msg_handlers[msg->type])(g_server, msg);
 
 next:
     qfree(msg);
@@ -145,7 +145,6 @@ static void init_thread(qserver_t *server) {
     server->threads[i]->out_box[0] = box;
   }
 
-  /*
   int j = 0;
   for (i = 1; i <= config->thread_num; ++i) {
     qthread_t *thread1 = server->threads[i];
@@ -154,10 +153,11 @@ static void init_thread(qserver_t *server) {
         continue;
       }
       qthread_t *thread2 = server->threads[j];
-      qthread_init_thread_channel(thread1, thread2);
+
+      thread1->out_box[j] = thread2->in_box[i];
+      thread2->out_box[i] = thread1->in_box[j];
     }
   }
-  */
 }
 
 static int server_init(struct qconfig_t *config) {

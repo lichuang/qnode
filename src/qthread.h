@@ -13,6 +13,12 @@ struct qengine_t;
 struct qmailbox_t;
 struct qmsg_t;
 struct qserver_t;
+struct qthread_t;
+
+typedef struct qthread_box_t {
+  struct qthread_t *thread;
+  struct qmailbox_t *box;
+} qthread_box_t;
 
 typedef struct qthread_t {
   unsigned short started;
@@ -21,6 +27,7 @@ typedef struct qthread_t {
   struct qengine_t *engine;
   struct qmailbox_t **in_box;
   struct qmailbox_t **out_box;
+  qthread_box_t **thread_box;
   qlist_t actor_list;
 } qthread_t;
 

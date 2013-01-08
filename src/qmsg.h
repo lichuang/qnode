@@ -56,10 +56,10 @@ typedef struct qmsg_t {
 } qmsg_t;
 
 /* handler for server thread msg */
-typedef int (*smsg_handler)(struct qthread_t *thread, struct qmsg_t *msg);
+typedef int (*qthread_msg_handler)(struct qthread_t *thread, struct qmsg_t *msg);
 
 /* handler for worker thread msg */
-typedef int (*wmsg_handler)(struct qserver_t *server, struct qmsg_t *msg);
+typedef int (*qserver_msg_handler)(struct qserver_t *server, struct qmsg_t *msg);
 
 qmsg_t* qmsg_new(qtid_t sender_id, qtid_t receiver_id);
 qmsg_t* qmsg_clone(qmsg_t *msg);

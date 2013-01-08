@@ -46,6 +46,30 @@ void qactor_destroy(qactor_t *actor) {
 qid_t qactor_spawn(qactor_t *actor, lua_State *state) {
   qassert(actor);
   qassert(actor->thread);
+  qtid_t receiver_id = qserver_worker_thread();
+  qmsg_t *msg = qmsg_new(actor->thread->tid, receiver_id);
+  if (msg == NULL) {
+    return QID_INVALID;
+  }
+  qid_t aid = qactor_new_id();
+  if (aid == QID_INVALID) {
+    qfree(msg);
+    return aid;
+  }
+  qid_t parent = actor->aid;
+  qmsg_init_spawn(msg, aid, parent, state);
+  qactor_t *new_actor = qactor_new(aid, state);
+  new_actor->parent = actor->aid;
+  msg->args.spawn.actor = new_actor;
+  //qserver_add_msg(msg);
+  qthread_add_msg(msg);
+  return aid;
+}
+/*
+qid_t qactor_spawn(qactor_t *actor, lua_State *state) {
+  qassert(actor);
+  qassert(actor->thread);
+  new_msg->receiver_id = qserver_worker_thread();
   qmsg_t *msg = qmsg_new(actor->thread->tid, QSERVER_THREAD_TID);
   if (msg == NULL) {
     return QID_INVALID;
@@ -60,3 +84,5 @@ qid_t qactor_spawn(qactor_t *actor, lua_State *state) {
   qserver_add_msg(msg);
   return aid;
 }
+*/
+
