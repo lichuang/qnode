@@ -82,7 +82,7 @@ static void send_init_msg() {
   for (i = 1; i <= thread_num; ++i) {
     qmsg_t *msg = qmsg_new();
     qmsg_init_sinit(msg, thread_num, i);
-    qthread_add_msg(msg);
+    qmsg_send(msg);
   }
 }
 #endif
@@ -97,15 +97,6 @@ qactor_t* qserver_get_actor(qid_t id) {
   return g_server->actors[id];
 }
 
-int qserver_add_msg(struct qmsg_t *msg) {
-  qassert(msg->sender_id > 0);
-  qassert(msg->receiver_id == QSERVER_THREAD_TID);
-  qassert(msg->type > 0 && msg->type < QMAX_MSG_TYPE);
-  qtid_t tid = msg->sender_id;
-  qmailbox_add(g_server->in_box[tid], msg);
-  return 0;
-}
-
 static void server_start(qserver_t *server) {
   UNUSED(server);
   qid_t aid = qactor_new_id();
@@ -117,7 +108,7 @@ static void server_start(qserver_t *server) {
     return;
   }
   qmsg_init_sstart(msg, actor);
-  qthread_add_msg(msg);
+  qmsg_send(msg);
 }
 
 static void init_thread(qserver_t *server) {

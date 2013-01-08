@@ -34,9 +34,6 @@ typedef struct qserver_t {
 
 int qserver_run(struct qconfig_t *config);
 
-/* worker thread send mail to server thread */
-int qserver_add_msg(struct qmsg_t *msg);
-
 void qserver_new_actor(struct qactor_t *actor);
 
 qtid_t qserver_worker_thread();

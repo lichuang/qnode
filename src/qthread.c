@@ -14,16 +14,9 @@
 #include "qluautil.h"
 #include "qmailbox.h"
 #include "qmalloc.h"
-#include "qmsg.h"
 #include "qserver.h"
 #include "qthread.h"
 #include "qthread_log.h"
-
-extern qthread_msg_handler g_thread_msg_handlers[];
-typedef struct thread_box_t {
-  qthread_t *thread;
-  qmailbox_t *box;
-} thread_box_t;
 
 static void server_box_func(int fd, int flags, void *data) {
   UNUSED(fd);
@@ -150,21 +143,4 @@ qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
     usleep(100);
   }
   return thread;
-}
-
-void qthread_add_msg(struct qmsg_t *msg) {
-  //qassert(msg->sender_id == QSERVER_THREAD_TID);
-  qassert(msg->sender_id != msg->receiver_id);
-  qassert(msg->receiver_id > 0);
-  qassert(msg->type > 0 && msg->type < QMAX_MSG_TYPE);
-  qtid_t tid = msg->receiver_id;
-  //qmailbox_add(g_server->out_box[tid], msg);
-  //qmailbox_add(g_server->threads[tid]->in_box[0], msg);
-  if (msg->sender_id == QSERVER_THREAD_TID) {
-    qmailbox_add(g_server->out_box[tid], msg);
-  } else {
-    qthread_t *thread = g_server->threads[msg->sender_id];
-    qmailbox_add(thread->out_box[tid], msg);
-  }
-  qinfo("add a msg %p, type: %d, tid: %d, flag: %d", msg, msg->type, msg->tid, msg->flag);
 }

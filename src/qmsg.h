@@ -16,7 +16,6 @@ struct qmailbox_t;
  * w_* means worker thread -> server thread
  * t_* means worker thread -> worker thread
  * other msg can use between both side
- * NOTE: actor MUST be create in server thread and send to worker thread
  * */
 enum {
   s_start = 1,
@@ -55,14 +54,16 @@ typedef struct qmsg_t {
   } args;
 } qmsg_t;
 
-/* handler for server thread msg */
+/* handler for worker thread msg */
 typedef int (*qthread_msg_handler)(struct qthread_t *thread, struct qmsg_t *msg);
 
-/* handler for worker thread msg */
+/* handler for server thread msg */
 typedef int (*qserver_msg_handler)(struct qserver_t *server, struct qmsg_t *msg);
 
 qmsg_t* qmsg_new(qtid_t sender_id, qtid_t receiver_id);
 qmsg_t* qmsg_clone(qmsg_t *msg);
+
+void qmsg_send(qmsg_t *msg);
 
 #define qmsg_is_smsg(msg)         ((msg)->flag == SMSG_FLAG || (msg)->flag == MSG_FLAG)
 #define qmsg_is_wmsg(msg)         ((msg)->flag == WMSG_FLAG || (msg)->flag == MSG_FLAG)

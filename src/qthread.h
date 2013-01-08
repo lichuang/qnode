@@ -7,6 +7,7 @@
 
 #include <pthread.h>
 #include "qlist.h"
+#include "qmsg.h"
 #include "qtype.h"
 
 struct qengine_t;
@@ -34,7 +35,7 @@ typedef struct qthread_t {
 qthread_t* qthread_new(struct qserver_t *server, qtid_t tid);
 void qthread_destroy(qthread_t *thread);
 
-void qthread_add_msg(struct qmsg_t *msg);
 void qthread_init_thread_channel(qthread_t *src_thread, qthread_t *dst_thread);
 
+extern qthread_msg_handler g_thread_msg_handlers[];
 #endif  /* __QTHREAD_H__ */
