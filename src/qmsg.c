@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "qassert.h"
+#include "qdefines.h"
 #include "qlog.h"
 #include "qmailbox.h"
 #include "qmalloc.h"
@@ -22,6 +23,22 @@ qmsg_t* qmsg_new(qtid_t sender_id, qtid_t receiver_id) {
   msg->receiver_id = receiver_id;
   msg->flag = msg->type = 0;
   return msg;
+}
+
+qactor_msg_t* qactor_msg_new() {
+  qactor_msg_t *msg = qalloc_type(qactor_msg_t);
+  qlist_entry_init(&msg->head);
+  return msg;
+}
+
+void qactor_msg_destroy(qactor_msg_t *msg) {
+  UNUSED(msg);
+}
+
+qarg_t* qarg_new() {
+  qarg_t *arg = qalloc_type(qarg_t);
+  qlist_entry_init(&arg->entry);
+  return arg;
 }
 
 qmsg_t* qmsg_clone(qmsg_t *msg) {

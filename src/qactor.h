@@ -16,7 +16,7 @@ struct qthread_t;
 
 typedef struct qactor_t {
   lua_State *state;
-  struct qthread_t *thread;
+  qtid_t tid;
   qid_t aid;
   qid_t parent;
   qlist_t entry;

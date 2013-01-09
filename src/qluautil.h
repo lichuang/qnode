@@ -9,6 +9,7 @@
 #include "qstring.h"
 
 struct qactor_t;
+struct qactor_msg_t;
 
 lua_State* qlua_new_state();
 
@@ -18,7 +19,8 @@ int qlua_get_table(lua_State *state, int idx, const char *key);
 int qlua_get_table_string(lua_State *state, const char *key, qstring_t *string);
 int qlua_get_table_number(lua_State *state, const char *key, int *number);
 
-void qlua_copy_table(lua_State *src, lua_State *dst);
+void qlua_copy_table(lua_State *src, lua_State *dst, int table_idx);
+struct qactor_msg_t* qlua_copy_arg_table(lua_State *state, int table_idx);
 
 int qlua_loadfile(struct qactor_t *actor, const char *filename);
 int qlua_dofile(lua_State *state, const char *filename);

@@ -4,9 +4,11 @@
 
 #include <stdio.h>
 #include "qactor.h"
+#include "qdefines.h"
 #include "qluacapi.h"
 #include "qluautil.h"
 #include "qlog.h"
+#include "qmsg.h"
 #include "qstring.h"
 #include "qserver.h"
 
@@ -18,7 +20,7 @@ static qactor_t* get_actor(lua_State *state) {
 /*
  * spawn an actor, return the actor ID
  * */
-static int spawn(lua_State *state) {
+static int c_spawn(lua_State *state) {
   qactor_t *actor = get_actor(state);
   const char *mod = lua_tostring(state, 1);
   const char *fun = lua_tostring(state, 2);
@@ -33,23 +35,28 @@ static int spawn(lua_State *state) {
   qstring_destroy(&string);
 
   /* copy args table */
-  qlua_copy_table(state, new_state);
+  qlua_copy_table(state, new_state, 3);
 
   lua_getglobal(new_state, mod);
   lua_getfield(new_state, -1, fun);
   /* push the args table */
   lua_pushvalue(new_state, 1);
-  return qactor_spawn(actor, new_state);
+  return (int)qactor_spawn(actor, new_state);
 }
 
-static int send(lua_State *state) {
-  //qactor_t *src_actor = get_actor(state);
+static int c_send(lua_State *state) {
+  qactor_t *src_actor = get_actor(state);
   qid_t id = (qid_t)lua_tonumber(state, 1);
   qactor_t *dst_actor = qserver_get_actor(id);
-  if (dst_actor) {
+  if (dst_actor == NULL) {
     return 0;
   }
+  /* copy args table */
+  qactor_msg_t *actor_msg = qlua_copy_arg_table(state, 2);
 
+  qmsg_t *msg = qmsg_new(src_actor->tid, dst_actor->tid);
+  qmsg_init_tsend(msg, actor_msg);
+  qmsg_send(msg);
   return 0;
 }
 
@@ -57,8 +64,8 @@ static struct {
   const char *name;
   lua_CFunction func;
 } apis[] = {
-  {"spawn", spawn},
-  {"send",  send},
+  {"spawn", c_spawn},
+  {"send",  c_send},
   {NULL, NULL},
 };
 

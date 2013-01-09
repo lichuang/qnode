@@ -18,7 +18,7 @@
 static int thread_handle_sstart_msg(qthread_t *thread, qmsg_t *msg) {
   qinfo("handle start msg");
   qactor_t *actor = msg->args.s_start.actor;
-  actor->thread = thread;
+  actor->tid = thread->tid;
 
   if (qlua_dofile(actor->state, "server.lua") != 0) {
     qerror("load server start script error");
@@ -40,6 +40,15 @@ static int thread_handle_spawn_msg(qthread_t *thread, qmsg_t *msg) {
   return 0;
 }
 
+static int thread_handle_tsend_msg(qthread_t *thread, qmsg_t *msg) {
+  UNUSED(thread);
+  qinfo("handle tsend msg");
+  qactor_t *actor = msg->args.spawn.actor;
+  actor->state = msg->args.spawn.state;
+  lua_call(actor->state, 1, 0);
+  return 0;
+}
+
 static int thread_handle_wrong_msg(qthread_t *thread, qmsg_t *msg) {
   UNUSED(thread);
   UNUSED(msg);
@@ -51,4 +60,5 @@ qthread_msg_handler g_thread_msg_handlers[] = {
   &thread_handle_wrong_msg,     /* wrong */
   &thread_handle_sstart_msg,    /* s_start */
   &thread_handle_spawn_msg,     /* spawn */
+  &thread_handle_tsend_msg,     /* t_send */
 };
