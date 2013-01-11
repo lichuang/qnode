@@ -20,16 +20,12 @@ qid_t qactor_new_id() {
   return id;
 }
 
-qactor_t *qactor_new(qid_t aid, lua_State *state) {
+qactor_t *qactor_new(qid_t aid) {
   qactor_t *actor = qalloc_type(qactor_t);
   if (actor == NULL) {
     return NULL;
   }
-  if (state == NULL) {
-    state = qlua_new_state();
-  }
-  qluac_register(state, actor);
-  actor->state = state;
+  actor->state = NULL;
   qlist_entry_init(&(actor->entry));
   actor->aid = aid;
   actor->parent = QID_INVALID;
@@ -41,6 +37,12 @@ void qactor_destroy(qactor_t *actor) {
   qassert(actor);
   lua_close(actor->state);
   qfree(actor);
+}
+
+void qactor_attach(qactor_t *actor, lua_State *state) {
+  qassert(actor->state == NULL);
+  qluac_register(state, actor);
+  actor->state = state;
 }
 
 qid_t qactor_spawn(qactor_t *actor, lua_State *state) {
@@ -57,7 +59,8 @@ qid_t qactor_spawn(qactor_t *actor, lua_State *state) {
   }
   qid_t parent = actor->aid;
   qmsg_init_spawn(msg, aid, parent, state);
-  qactor_t *new_actor = qactor_new(aid, state);
+  qactor_t *new_actor = qactor_new(aid);
+  qactor_attach(new_actor, state);
   new_actor->parent = actor->aid;
   msg->args.spawn.actor = new_actor;
   qmsg_send(msg);

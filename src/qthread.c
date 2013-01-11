@@ -134,6 +134,7 @@ qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
     qmailbox_active(thread->engine, thread->in_box[i]);
   }
 
+  thread->state = qlua_new_state();
   qlist_entry_init(&(thread->actor_list));
   int result;
   result = pthread_create(&thread->id, NULL, main_loop, thread);

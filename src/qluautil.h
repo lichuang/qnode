@@ -10,8 +10,10 @@
 
 struct qactor_t;
 struct qactor_msg_t;
+struct qthread_t;
 
 lua_State* qlua_new_state();
+lua_State* qlua_new_thread(struct qthread_t *thread);
 
 #define qlua_get_global_table(state, key) qlua_get_table(state, LUA_GLOBALSINDEX, key)
 

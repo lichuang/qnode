@@ -29,6 +29,10 @@ lua_State* qlua_new_state() {
   return state;
 }
 
+lua_State* qlua_new_thread(qthread_t *thread) {
+  return lua_newthread(thread->state);
+}
+
 int qlua_get_table(lua_State *state, int idx, const char *key) {
   lua_pushvalue(state, idx);
   lua_pushstring(state, key);

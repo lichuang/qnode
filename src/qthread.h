@@ -5,6 +5,7 @@
 #ifndef __QTHREAD_H__
 #define __QTHREAD_H__
 
+#include <lua.h>
 #include <pthread.h>
 #include "qlist.h"
 #include "qmsg.h"
@@ -30,6 +31,7 @@ typedef struct qthread_t {
   struct qmailbox_t **out_box;
   qthread_box_t **thread_box;
   qlist_t actor_list;
+  lua_State *state;
 } qthread_t;
 
 qthread_t* qthread_new(struct qserver_t *server, qtid_t tid);

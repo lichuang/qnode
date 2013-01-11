@@ -11,6 +11,7 @@
 #include "qmsg.h"
 #include "qstring.h"
 #include "qserver.h"
+#include "qthread.h"
 
 static qactor_t* get_actor(lua_State *state) {
   lua_getglobal(state, "c_actor");
@@ -24,7 +25,8 @@ static int c_spawn(lua_State *state) {
   qactor_t *actor = get_actor(state);
   const char *mod = lua_tostring(state, 1);
   const char *fun = lua_tostring(state, 2);
-  lua_State *new_state = qlua_new_state();
+  qthread_t *thread = g_server->threads[actor->tid];
+  lua_State *new_state = qlua_new_thread(thread);
   qstring_t string;
   qstring_init(&string);
   qstring_assign(&string, mod);

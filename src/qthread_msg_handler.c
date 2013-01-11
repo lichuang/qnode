@@ -8,6 +8,7 @@
 #include "qdefines.h"
 #include "qlist.h"
 #include "qlog.h"
+#include "qluacapi.h"
 #include "qluautil.h"
 #include "qmailbox.h"
 #include "qmalloc.h"
@@ -18,6 +19,8 @@
 static int thread_handle_sstart_msg(qthread_t *thread, qmsg_t *msg) {
   qinfo("handle start msg");
   qactor_t *actor = msg->args.s_start.actor;
+  qassert(actor->state == NULL);
+  qactor_attach(actor, qlua_new_thread(thread));
   actor->tid = thread->tid;
 
   if (qlua_dofile(actor->state, "server.lua") != 0) {
@@ -42,10 +45,11 @@ static int thread_handle_spawn_msg(qthread_t *thread, qmsg_t *msg) {
 
 static int thread_handle_tsend_msg(qthread_t *thread, qmsg_t *msg) {
   UNUSED(thread);
+  UNUSED(msg);
   qinfo("handle tsend msg");
-  qactor_t *actor = msg->args.spawn.actor;
-  actor->state = msg->args.spawn.state;
-  lua_call(actor->state, 1, 0);
+  //qactor_t *actor = msg->args.spawn.actor;
+  //actor->state = msg->args.spawn.state;
+  //lua_call(actor->state, 1, 0);
   return 0;
 }
 

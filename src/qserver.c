@@ -101,7 +101,7 @@ static void server_start(qserver_t *server) {
   UNUSED(server);
   qid_t aid = qactor_new_id();
   qassert(aid != QID_INVALID);
-  qactor_t *actor = qactor_new(aid, NULL);
+  qactor_t *actor = qactor_new(aid);
   qtid_t tid = qserver_worker_thread();
   qmsg_t *msg = qmsg_new(QSERVER_THREAD_TID, tid);
   if (msg == NULL) {
