@@ -18,6 +18,7 @@
 #include "qsignal.h"
 #include "qthread_log.h"
 
+pthread_key_t g_thread_log_key = PTHREAD_ONCE_INIT;
 qlog_thread_t *g_log_thread = NULL;
 
 static void thread_log_box(int fd, int flags, void *data) {
@@ -61,9 +62,16 @@ static void* main_loop(void *arg) {
   return NULL;
 }
 
+void log_key_destroy(void *value) {
+  UNUSED(value);
+}
+
 int qlog_thread_new(int thread_num) {
   g_log_thread = qalloc_type(qlog_thread_t);
   if (g_log_thread == NULL) {
+    return -1;
+  }
+  if (pthread_key_create(&g_thread_log_key, log_key_destroy) < 0) {
     return -1;
   }
   g_log_thread->engine = qengine_new();

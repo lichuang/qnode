@@ -53,7 +53,8 @@ void qlog(int level, const char* file, long line, const char *format, ...) {
   qassert(log->n > 5);
   log->n += sprintf(log->buff + log->n, " %s:%d ", log->file, log->line);
   vsprintf(log->buff + log->n, log->format, log->args);
-  printf("%s\n", log->buff);
+  fprintf(stdout, "%s\n", log->buff);
+  fflush(stdout);
 #else
   qlog_thread_active(log->idx);
 #endif

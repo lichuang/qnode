@@ -30,7 +30,7 @@ static void server_accept(int fd, int flags, void *data) {
 
 static int init_server_event(struct qserver_t *server) {
   return 0;
-  int fd = qnet_tcp_server(22222, "127.0.0.1");
+  int fd = qnet_tcp_listen(22222, "127.0.0.1");
   if (fd < 0) {
     return -1;
   }
@@ -74,19 +74,6 @@ next:
   }
 }
 
-#if 0
-static void send_init_msg() {
-  //sleep(1);
-  int i;
-  int thread_num = g_server->config->thread_num;
-  for (i = 1; i <= thread_num; ++i) {
-    qmsg_t *msg = qmsg_new();
-    qmsg_init_sinit(msg, thread_num, i);
-    qmsg_send(msg);
-  }
-}
-#endif
-
 qtid_t qserver_worker_thread() {
   static qtid_t i = 1;
   i = (i + 1) % g_server->config->thread_num + 1;
@@ -112,6 +99,7 @@ static void server_start(qserver_t *server) {
 }
 
 static void init_thread(qserver_t *server) {
+  int i, j;
   qconfig_t *config = server->config;
   server->threads = (qthread_t**)qmalloc(config->thread_num * sizeof(qthread_t*));
   qalloc_assert(server->threads);
@@ -124,7 +112,6 @@ static void init_thread(qserver_t *server) {
   server->out_box = (qmailbox_t**)qmalloc(config->thread_num * sizeof(qmailbox_t*));
   qalloc_assert(server->out_box);
   server->out_box[0] = NULL;
-  int i;
   for (i = 1; i <= config->thread_num; ++i) {
     qmailbox_t *box = qmailbox_new(server_box, NULL);
     box->reader = box;
@@ -136,7 +123,6 @@ static void init_thread(qserver_t *server) {
     server->threads[i]->out_box[0] = box;
   }
 
-  int j = 0;
   for (i = 1; i <= config->thread_num; ++i) {
     qthread_t *thread1 = server->threads[i];
     for (j = 1; j <= config->thread_num; ++j) {
@@ -177,7 +163,6 @@ static int server_init(struct qconfig_t *config) {
 
   server->thread_log[0] = qthread_log_init(server->engine, 0);
   server_start(server);
-  //send_init_msg();
   qinfo("qserver started...");
   return 0;
 }

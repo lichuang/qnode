@@ -4,11 +4,14 @@
 
 #include <stdio.h>
 #include "qactor.h"
+#include "qassert.h"
 #include "qdefines.h"
+#include "qengine.h"
 #include "qluacapi.h"
 #include "qluautil.h"
 #include "qlog.h"
 #include "qmsg.h"
+#include "qnet.h"
 #include "qstring.h"
 #include "qserver.h"
 #include "qthread.h"
@@ -62,12 +65,35 @@ static int c_send(lua_State *state) {
   return 0;
 }
 
+static int c_listen(lua_State *state) {
+  qactor_t *actor = get_actor(state);
+  qassert(actor);
+  qassert(actor->listen_fd == 0);
+  int port = (int)lua_tonumber(state, 1);
+  const char *addr = lua_tostring(state, 2);
+  int fd = qnet_tcp_listen(port, addr);
+  if (fd < 0) {
+    qerror("listen on %s:%d error\n", addr, port);
+    return 0;
+  }
+  qthread_t *thread = g_server->threads[actor->tid];
+  qengine_t *engine = thread->engine;
+  if (qengine_add_event(engine, fd, QEVENT_READ, qactor_accept, actor) < 0) {
+    qerror("add event on %s:%d error\n", addr, port);
+    return 0;
+  }
+  actor->listen_fd = fd;
+
+  return 0;
+}
+
 static struct {
   const char *name;
   lua_CFunction func;
 } apis[] = {
   {"spawn", c_spawn},
   {"send",  c_send},
+  {"listen",  c_listen},
   {NULL, NULL},
 };
 

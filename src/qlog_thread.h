@@ -21,5 +21,6 @@ int qlog_thread_new(int thread_num);
 void qlog_thread_active(int idx);
 
 extern qlog_thread_t *g_log_thread;
+extern pthread_key_t g_thread_log_key;
 
 #endif  /* __QLOG_THREAD_H__ */

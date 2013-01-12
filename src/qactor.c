@@ -4,8 +4,10 @@
 
 #include "qactor.h"
 #include "qassert.h"
+#include "qdefines.h"
 #include "qluacapi.h"
 #include "qluautil.h"
+#include "qlog.h"
 #include "qidmap.h"
 #include "qmailbox.h"
 #include "qmalloc.h"
@@ -29,6 +31,7 @@ qactor_t *qactor_new(qid_t aid) {
   qlist_entry_init(&(actor->entry));
   actor->aid = aid;
   actor->parent = QID_INVALID;
+  actor->listen_fd = 0;
   qserver_new_actor(actor);
   return actor;
 }
@@ -65,4 +68,12 @@ qid_t qactor_spawn(qactor_t *actor, lua_State *state) {
   msg->args.spawn.actor = new_actor;
   qmsg_send(msg);
   return aid;
+}
+
+void qactor_accept(int fd, int flags, void *data) {
+  UNUSED(fd);
+  UNUSED(flags);
+  qactor_t *actor = (qactor_t*)data;
+  qassert(actor->listen_fd == fd);
+  qerror("accept ....");
 }

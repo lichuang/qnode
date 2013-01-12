@@ -57,7 +57,7 @@ int set_nonblocking(int fd) {
     return 0;
 }
 
-int qnet_tcp_server(int port, const char *bindaddr) {
+int qnet_tcp_listen(int port, const char *bindaddr) {
     int fd;
     struct sockaddr_in sa;
 
@@ -85,3 +85,7 @@ int qnet_tcp_server(int port, const char *bindaddr) {
     return fd;
 }
 
+/*
+int qnet_tcp_accept(int fd) {
+}
+*/

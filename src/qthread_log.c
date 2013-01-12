@@ -13,16 +13,9 @@
 #include "qmalloc.h"
 #include "qthread_log.h"
 
-static pthread_key_t qthread_log_key;
-
-void qthread_log_destroy(void *value) {
-  UNUSED(value);
-}
+extern pthread_key_t g_thread_log_key;
 
 qthread_log_t* qthread_log_init(struct qengine_t* engine, int idx) {
-  if (pthread_key_create(&qthread_log_key, qthread_log_destroy) < 0) {
-    return NULL;
-  }
   qthread_log_t *thread_log = qalloc_type(qthread_log_t);
   if (thread_log == NULL) {
     return NULL;
@@ -32,18 +25,18 @@ qthread_log_t* qthread_log_init(struct qengine_t* engine, int idx) {
   thread_log->write = &thread_log->lists[0];
   thread_log->read  = &thread_log->lists[0];
   thread_log->engine = engine;
-  if (pthread_setspecific(qthread_log_key, thread_log) < 0) {
+  if (pthread_setspecific(g_thread_log_key, thread_log) < 0) {
     qfree(thread_log);
     return NULL;
   }
-  qassert(pthread_getspecific(qthread_log_key) != NULL);
+  qassert(pthread_getspecific(g_thread_log_key) != NULL);
   thread_log->idx = idx;
   return thread_log;
 }
 
 struct qlog_t* qthread_log_get() {
   qthread_log_t *thread_log = NULL;
-  thread_log = (qthread_log_t*)pthread_getspecific(qthread_log_key);
+  thread_log = (qthread_log_t*)pthread_getspecific(g_thread_log_key);
   if (thread_log == NULL) {
     return NULL;
   }

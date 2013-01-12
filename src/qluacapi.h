@@ -29,6 +29,12 @@ void qluac_register(lua_State *state, struct qactor_t *);
  *      [IN]id, args table
  *      [OUT]none
  *
+ *  2) tcp
+ *
+ *  listen: 
+ *      [IN]port, address
+ *      [OUT]fd
+ *
  *  2) timer
  *
  */

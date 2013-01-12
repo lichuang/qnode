@@ -20,6 +20,7 @@ typedef struct qactor_t {
   qid_t aid;
   qid_t parent;
   qlist_t entry;
+  int listen_fd;
 } qactor_t;
 
 qid_t qactor_new_id();
@@ -29,5 +30,7 @@ void qactor_destroy(qactor_t *actor);
 
 /* spawn an actor as child, return the actor ID */
 qid_t qactor_spawn(qactor_t *actor, lua_State *state);
+
+void qactor_accept(int fd, int flags, void *data);
 
 #endif  /* __QACTOR_H__ */
