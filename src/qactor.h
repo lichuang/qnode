@@ -21,6 +21,7 @@ typedef struct qactor_t {
   qid_t parent;
   qlist_t entry;
   int listen_fd;
+  qlist_t conn_list;
 } qactor_t;
 
 qid_t qactor_new_id();

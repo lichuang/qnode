@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include "qassert.h"
 #include "qlog.h"
 #include "qnet.h"
 
@@ -85,7 +86,14 @@ int qnet_tcp_listen(int port, const char *bindaddr) {
     return fd;
 }
 
-/*
-int qnet_tcp_accept(int fd) {
+int qnet_tcp_accept(int listen_fd) {
+  int fd = accept(listen_fd, NULL, NULL);
+  if (fd == -1 && 
+    (errno == EAGAIN || errno == EWOULDBLOCK || 
+     errno == EINTR || errno == ECONNABORTED)) {
+    return -1;
+  }
+  qassert(fd != -1);
+  set_nonblocking(fd);
+  return fd;
 }
-*/

@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "qactor.h"
 #include "qassert.h"
+#include "qconnection.h"
 #include "qengine.h"
 #include "qdefines.h"
 #include "qlog.h"
@@ -156,6 +157,11 @@ static int server_init(struct qconfig_t *config) {
     qengine_destroy(server->engine);
     qfree(server);
     return -1;
+  }
+  server->connections = (qconnection_t**)qmalloc(QID_MAX * sizeof(qconnection_t*));
+  int i;
+  for (i = 0; i < QID_MAX; ++i) {
+    server->connections[i] = NULL;
   }
   init_thread(server);
   qidmap_init(&server->id_map);

@@ -3,7 +3,6 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include "qmalloc.h"
 
 static void malloc_default_oom(size_t size) {

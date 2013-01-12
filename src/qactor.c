@@ -4,6 +4,7 @@
 
 #include "qactor.h"
 #include "qassert.h"
+#include "qconnection.h"
 #include "qdefines.h"
 #include "qluacapi.h"
 #include "qluautil.h"
@@ -12,6 +13,7 @@
 #include "qmailbox.h"
 #include "qmalloc.h"
 #include "qmsg.h"
+#include "qnet.h"
 #include "qserver.h"
 #include "qthread.h"
 
@@ -29,6 +31,7 @@ qactor_t *qactor_new(qid_t aid) {
   }
   actor->state = NULL;
   qlist_entry_init(&(actor->entry));
+  qlist_entry_init(&(actor->conn_list));
   actor->aid = aid;
   actor->parent = QID_INVALID;
   actor->listen_fd = 0;
@@ -71,9 +74,15 @@ qid_t qactor_spawn(qactor_t *actor, lua_State *state) {
 }
 
 void qactor_accept(int fd, int flags, void *data) {
+  qinfo("actor accept ....");
   UNUSED(fd);
   UNUSED(flags);
   qactor_t *actor = (qactor_t*)data;
   qassert(actor->listen_fd == fd);
-  qerror("accept ....");
+  int sock = -1;
+  while ((sock = qnet_tcp_accept(actor->listen_fd)) != -1) {
+    qconnection_t *connection = qconnection_get(sock);
+    connection->aid = actor->aid;
+    qlist_add_tail(&connection->entry, &actor->conn_list);
+  }
 }

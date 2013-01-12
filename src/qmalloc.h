@@ -4,6 +4,8 @@
 #ifndef __QMALLOC_H__
 #define __QMALLOC_H__
 
+#include <stdlib.h>
+
 #define qalloc_type(T)        (T*)qmalloc(sizeof(T))
 #define qalloc_array(T, size) (T*)qmalloc(sizeof(T) * size)
 
