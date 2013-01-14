@@ -25,7 +25,7 @@ static qactor_t* get_actor(lua_State *state) {
 /*
  * spawn an actor, return the actor ID
  * */
-static int qspawn(lua_State *state) {
+static int qnode_spawn(lua_State *state) {
   qactor_t *actor = get_actor(state);
   const char *mod = lua_tostring(state, 1);
   const char *fun = lua_tostring(state, 2);
@@ -50,7 +50,7 @@ static int qspawn(lua_State *state) {
   return (int)qactor_spawn(actor, new_state);
 }
 
-static int qsend(lua_State *state) {
+static int qnode_send(lua_State *state) {
   qactor_t *srqnode = get_actor(state);
   qid_t id = (qid_t)lua_tonumber(state, 1);
   qactor_t *dst_actor = qserver_get_actor(id);
@@ -66,14 +66,15 @@ static int qsend(lua_State *state) {
   return 0;
 }
 
-static int qtcp_listen(lua_State *state) {
+static int qnode_tcp_listen(lua_State *state) {
   qactor_t *actor = get_actor(state);
   qassert(actor);
   qassert(actor->listen_fd == 0);
-  const char *addr = lua_tostring(state, 1);
-  int port = (int)lua_tonumber(state, 2);
-  if (lua_type(state, 3) != LUA_TFUNCTION) {
-    qerror("invalid listener on %s:%d\n", addr, port);
+  //const char *addr = lua_tostring(state, 1);
+  const char *addr = "0.0.0.0";
+  int port = (int)lua_tonumber(state, 1);
+  if (lua_type(state, 2) != LUA_TFUNCTION) {
+    qerror("invalid listener on :%d\n", addr, port);
     return 0;
   }
   if (actor->lua_ref[LISTENER] != -1) {
@@ -106,18 +107,30 @@ static int qtcp_listen(lua_State *state) {
   return 0;
 }
 
-static int qtcp_accept(lua_State *state) {
+static int qnode_tcp_accept(lua_State *state) {
   qactor_t *actor = get_actor(state);
   qconnection_t *connection = qactor_get_connection(actor);
   lua_pushlightuserdata(actor->state, connection);
   return 1;
 }
 
-luaL_Reg apis[] = {
-  {"qnode_spawn", qspawn},
-  {"qnode_send",  qsend},
-  {"qnode_tcp_listen",  qtcp_listen},
-  {"qnode_tcp_accept",  qtcp_accept},
+static int qnode_tcp_recv(lua_State *state) {
+  UNUSED(state);
+  return 0;
+}
+
+static int qnode_tcp_send(lua_State *state) {
+  UNUSED(state);
+  return 0;
+}
+
+static luaL_Reg apis[] = {
+  {"qnode_spawn",       qnode_spawn},
+  {"qnode_send",        qnode_send},
+  {"qnode_tcp_listen",  qnode_tcp_listen},
+  {"qnode_tcp_accept",  qnode_tcp_accept},
+  {"qnode_tcp_recv",    qnode_tcp_recv},
+  {"qnode_tcp_send",    qnode_tcp_send},
   {NULL, NULL},
 };
 

@@ -21,6 +21,14 @@ enum lua_api_ref {
   QMAX_LUA_API_REF
 };
 
+typedef struct qactor_listener_t {
+  int listen_fd;
+  qlist_t conn_list;
+} qactor_listener_t;
+
+typedef struct qactor_connection_t {
+} qactor_connection_t;
+
 typedef struct qactor_t {
   lua_State *state;
   qtid_t tid;
