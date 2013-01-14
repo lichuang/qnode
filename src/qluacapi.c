@@ -82,7 +82,7 @@ static int qnode_tcp_listen(lua_State *state) {
     return 0;
   }
   /* push listen callback */
-  lua_pushvalue(state, 3);
+  lua_pushvalue(state, 2);
   actor->lua_ref[LISTENER] = luaL_ref(state, LUA_REGISTRYINDEX);
   if (actor->lua_ref[LISTENER] == LUA_REFNIL) {
     qerror("ref listener on %s:%d error\n", addr, port);
