@@ -11,6 +11,7 @@
 #include "qtype.h"
 #include "qlist.h"
 
+struct qconnection_t;
 struct qserver_t;
 struct qthread_t;
 
@@ -40,5 +41,7 @@ void qactor_destroy(qactor_t *actor);
 qid_t qactor_spawn(qactor_t *actor, lua_State *state);
 
 void qactor_accept(int fd, int flags, void *data);
+
+struct qconnection_t* qactor_get_connection(qactor_t *actor);
 
 #endif  /* __QACTOR_H__ */

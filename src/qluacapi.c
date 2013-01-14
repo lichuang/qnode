@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "qactor.h"
 #include "qassert.h"
+#include "qconnection.h"
 #include "qdefines.h"
 #include "qengine.h"
 #include "qluacapi.h"
@@ -17,7 +18,7 @@
 #include "qthread.h"
 
 static qactor_t* get_actor(lua_State *state) {
-  lua_getglobal(state, "c_actor");
+  lua_getglobal(state, "qnode");
   return (qactor_t*)lua_touserdata(state, -1);
 }
 
@@ -50,7 +51,7 @@ static int qspawn(lua_State *state) {
 }
 
 static int qsend(lua_State *state) {
-  qactor_t *src_actor = get_actor(state);
+  qactor_t *srqnode = get_actor(state);
   qid_t id = (qid_t)lua_tonumber(state, 1);
   qactor_t *dst_actor = qserver_get_actor(id);
   if (dst_actor == NULL) {
@@ -59,18 +60,18 @@ static int qsend(lua_State *state) {
   /* copy args table */
   qactor_msg_t *actor_msg = qlua_copy_arg_table(state, 2);
 
-  qmsg_t *msg = qmsg_new(src_actor->tid, dst_actor->tid);
+  qmsg_t *msg = qmsg_new(srqnode->tid, dst_actor->tid);
   qmsg_init_tsend(msg, actor_msg);
   qmsg_send(msg);
   return 0;
 }
 
-static int qlisten(lua_State *state) {
+static int qtcp_listen(lua_State *state) {
   qactor_t *actor = get_actor(state);
   qassert(actor);
   qassert(actor->listen_fd == 0);
-  int port = (int)lua_tonumber(state, 1);
-  const char *addr = lua_tostring(state, 2);
+  const char *addr = lua_tostring(state, 1);
+  int port = (int)lua_tonumber(state, 2);
   if (lua_type(state, 3) != LUA_TFUNCTION) {
     qerror("invalid listener on %s:%d\n", addr, port);
     return 0;
@@ -105,10 +106,18 @@ static int qlisten(lua_State *state) {
   return 0;
 }
 
+static int qtcp_accept(lua_State *state) {
+  qactor_t *actor = get_actor(state);
+  qconnection_t *connection = qactor_get_connection(actor);
+  lua_pushlightuserdata(actor->state, connection);
+  return 1;
+}
+
 luaL_Reg apis[] = {
-  {"qspawn", qspawn},
-  {"qsend",  qsend},
-  {"qlisten",  qlisten},
+  {"qnode_spawn", qspawn},
+  {"qnode_send",  qsend},
+  {"qnode_tcp_listen",  qtcp_listen},
+  {"qnode_tcp_accept",  qtcp_accept},
   {NULL, NULL},
 };
 
@@ -120,5 +129,5 @@ void qluac_register(lua_State *state, struct qactor_t *actor) {
     lua_register(state, name, func);
   }
   lua_pushlightuserdata(state, actor);
-  lua_setglobal(state, "c_actor");
+  lua_setglobal(state, "qnode");
 }

@@ -21,19 +21,19 @@ void qluac_register(lua_State *state, struct qactor_t *);
  *
  *  1) actor 
  *
- *  spawn: spawn an actor
+ *  qnode_spawn: spawn an actor
  *      [IN]mod, fun, args table
  *      [OUT]actor id
  *
- *  send: send message to an actor
+ *  qnode_send: send message to an actor
  *      [IN]id, args table
- *      [OUT]none
+ *      [OUT]NONE
  *
  *  2) tcp
  *
- *  listen: 
- *      [IN]port, address
- *      [OUT]fd
+ *  qnode_tcp_listen: 
+ *      [IN]address, port, accept callback
+ *      [OUT]NONE
  *
  *  2) timer
  *

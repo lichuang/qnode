@@ -111,3 +111,13 @@ void qactor_accept(int fd, int flags, void *data) {
   }
   lua_call(actor->state, 0, 0);
 }
+
+struct qconnection_t* qactor_get_connection(qactor_t *actor) {
+  if (qlist_empty(&actor->conn_list)) {
+    return NULL;
+  }
+  qlist_t *pos = actor->conn_list.next;
+  qlist_del_init(pos);
+  qconnection_t *connection = qlist_entry(pos, qconnection_t, entry);
+  return connection;
+}
