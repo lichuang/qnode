@@ -24,7 +24,7 @@ static qactor_t* get_actor(lua_State *state) {
 /*
  * spawn an actor, return the actor ID
  * */
-static int c_spawn(lua_State *state) {
+static int qspawn(lua_State *state) {
   qactor_t *actor = get_actor(state);
   const char *mod = lua_tostring(state, 1);
   const char *fun = lua_tostring(state, 2);
@@ -49,7 +49,7 @@ static int c_spawn(lua_State *state) {
   return (int)qactor_spawn(actor, new_state);
 }
 
-static int c_send(lua_State *state) {
+static int qsend(lua_State *state) {
   qactor_t *src_actor = get_actor(state);
   qid_t id = (qid_t)lua_tonumber(state, 1);
   qactor_t *dst_actor = qserver_get_actor(id);
@@ -65,12 +65,29 @@ static int c_send(lua_State *state) {
   return 0;
 }
 
-static int c_listen(lua_State *state) {
+static int qlisten(lua_State *state) {
   qactor_t *actor = get_actor(state);
   qassert(actor);
   qassert(actor->listen_fd == 0);
   int port = (int)lua_tonumber(state, 1);
   const char *addr = lua_tostring(state, 2);
+  if (lua_type(state, 3) != LUA_TFUNCTION) {
+    qerror("invalid listener on %s:%d\n", addr, port);
+    return 0;
+  }
+  if (actor->lua_ref[LISTENER] != -1) {
+    qerror("listener exist on actor listen to %s:%d\n", addr, port);
+    return 0;
+  }
+  /* push listen callback */
+  lua_pushvalue(state, 3);
+  actor->lua_ref[LISTENER] = luaL_ref(state, LUA_REGISTRYINDEX);
+  if (actor->lua_ref[LISTENER] == LUA_REFNIL) {
+    qerror("ref listener on %s:%d error\n", addr, port);
+    return 0;
+  }
+  /* pop listen callback */
+  lua_pop(state, 1);
   int fd = qnet_tcp_listen(port, addr);
   if (fd < 0) {
     qerror("listen on %s:%d error\n", addr, port);
@@ -83,17 +100,15 @@ static int c_listen(lua_State *state) {
     return 0;
   }
   actor->listen_fd = fd;
+  lua_pushvalue(state, -3);
 
   return 0;
 }
 
-static struct {
-  const char *name;
-  lua_CFunction func;
-} apis[] = {
-  {"spawn", c_spawn},
-  {"send",  c_send},
-  {"listen",  c_listen},
+luaL_Reg apis[] = {
+  {"qspawn", qspawn},
+  {"qsend",  qsend},
+  {"qlisten",  qlisten},
   {NULL, NULL},
 };
 

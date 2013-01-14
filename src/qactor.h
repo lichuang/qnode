@@ -14,6 +14,12 @@
 struct qserver_t;
 struct qthread_t;
 
+#define QINVALID_LUA_REF -1
+enum lua_api_ref {
+  LISTENER = 0,
+  QMAX_LUA_API_REF
+};
+
 typedef struct qactor_t {
   lua_State *state;
   qtid_t tid;
@@ -22,6 +28,7 @@ typedef struct qactor_t {
   qlist_t entry;
   int listen_fd;
   qlist_t conn_list;
+  int lua_ref[QMAX_LUA_API_REF];
 } qactor_t;
 
 qid_t qactor_new_id();

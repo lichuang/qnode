@@ -26,6 +26,7 @@ qid_t qactor_new_id() {
 
 qactor_t *qactor_new(qid_t aid) {
   qactor_t *actor = qalloc_type(qactor_t);
+  int i;
   if (actor == NULL) {
     return NULL;
   }
@@ -35,6 +36,9 @@ qactor_t *qactor_new(qid_t aid) {
   actor->aid = aid;
   actor->parent = QID_INVALID;
   actor->listen_fd = 0;
+  for (i = 0; i < QMAX_LUA_API_REF; ++i) {
+    actor->lua_ref[i] = QINVALID_LUA_REF;
+  }
   qserver_new_actor(actor);
   return actor;
 }
@@ -73,6 +77,23 @@ qid_t qactor_spawn(qactor_t *actor, lua_State *state) {
   return aid;
 }
 
+static int actor_get_lua_ref(qactor_t *actor, int ref) {
+  lua_State *state = actor->state;
+  qassert(ref >= 0 && ref < QMAX_LUA_API_REF);
+  qassert(state);
+  int idx = actor->lua_ref[ref];
+  if (idx == QINVALID_LUA_REF) {
+    qerror("actor %d get ref on %d error", actor->aid, ref);
+    return -1;
+  }
+  lua_rawgeti(state, LUA_REGISTRYINDEX, idx);
+  if(lua_type(state, -1) != LUA_TFUNCTION) {
+    qerror("actor %d get ref callback on %d error", actor->aid, ref);
+    return -1;
+  }
+  return 0;
+}
+
 void qactor_accept(int fd, int flags, void *data) {
   qinfo("actor accept ....");
   UNUSED(fd);
@@ -85,4 +106,8 @@ void qactor_accept(int fd, int flags, void *data) {
     connection->aid = actor->aid;
     qlist_add_tail(&connection->entry, &actor->conn_list);
   }
+  if (actor_get_lua_ref(actor, LISTENER) < 0) {
+    return;
+  }
+  lua_call(actor->state, 0, 0);
 }
