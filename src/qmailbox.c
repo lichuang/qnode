@@ -60,7 +60,7 @@ void qmailbox_add(qmailbox_t *box, struct qmsg_t *msg) {
 
 int qmailbox_get(qmailbox_t *box, qlist_t **list) {
   qassert(box->write);
-  qinfo("qmailbox_get %p, active: %d, write: %p", box, box->active, box->write);
+  qinfo("qmailbox_get %p, active: %d, write: %p", box, box->signal->active, box->write);
   *list = NULL;
   /* first save the read ptr */
   qlist_t *read = box->read;
@@ -73,6 +73,6 @@ int qmailbox_get(qmailbox_t *box, qlist_t **list) {
   if (qsignal_active(box->signal, 0) == 1) {
     qsignal_recv(box->signal);
   }
-  qinfo("qmailbox_get %p, active: %d, write: %p", box, box->active, *list);
+  qinfo("qmailbox_get %p, active: %d, write: %p", box, box->signal->active, *list);
   return qlist_empty(*list);
 }

@@ -26,7 +26,7 @@ const char *level_str(int level) {
   return log_levels[level];
 }
 
-static void init_log(qlog_t *log, int level, const char* file, long line, const char *format, va_list args) {
+static void log_init(qlog_t *log, int level, const char* file, long line, const char *format, va_list args) {
   //log->file_len = strlen(file);
   strcpy(log->file, file);
   //log->fmt_len = strlen(format);
@@ -46,16 +46,17 @@ void qlog(int level, const char* file, long line, const char *format, ...) {
   }
   va_list args;
   va_start(args, format);
-  init_log(log, level, file, line, format, args);
-  va_end(args);
+  log_init(log, level, file, line, format, args);
 
 #if 1
   qassert(log->n > 5);
   log->n += sprintf(log->buff + log->n, " %s:%d ", log->file, log->line);
-  vsprintf(log->buff + log->n, log->format, log->args);
+  //vsprintf(log->buff + log->n, log->format, log->args);
+  vsprintf(log->buff + log->n, log->format, args);
   fprintf(stdout, "%s\n", log->buff);
   fflush(stdout);
 #else
   qlog_thread_active(log->idx);
 #endif
+  va_end(args);
 }

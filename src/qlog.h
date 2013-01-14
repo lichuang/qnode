@@ -40,8 +40,8 @@ typedef struct qlog_t {
 extern int g_log_level;
 void qlog(int level, const char* file, long line, const char *format, ...);
 
-#define qerror(format, args...) qlog(QLOG_ERR, __FILE__, __LINE__, format, #args)
-#define qinfo(format, args...) qlog(QLOG_ERR, __FILE__, __LINE__, format, #args)
-#define qdebug(format, args...) qlog(QLOG_ERR, __FILE__, __LINE__, format, #args)
+#define qerror(args...) qlog(QLOG_ERR, __FILE__, __LINE__, args)
+#define qinfo(args...) qlog(QLOG_ERR, __FILE__, __LINE__, args)
+#define qdebug(args...) qlog(QLOG_ERR, __FILE__, __LINE__, args)
 
 #endif  /* __QLOG_H__ */
