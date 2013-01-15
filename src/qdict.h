@@ -22,8 +22,8 @@ typedef struct qkey_t {
   unsigned short type;
 } qkey_t;
 
-#define QKEY_NUM(num) {{(num)}, QDICT_KEY_NUMBER}
-#define QKEY_STR(str) {{(str)}, QDICT_KEY_STRING}
+#define QKEY_NUMBER(key, n) do { (key).data.num = (n); (key).type = QDICT_KEY_NUMBER; } while(0)
+#define QKEY_STRING(key, s) do { (key).data.str = (s); (key).type = QDICT_KEY_STRING; } while(0)
 
 enum {
   QDICT_VAL_NUMBER = 0,
@@ -48,6 +48,8 @@ typedef struct qdict_val_t {
   } data;
   unsigned short type;
 } qdict_val_t;
+
+#define QVAL_NUMBER(val, n) do { (val).data.num = (n); (key).type = QDICT_VAL_NUMBER; } while(0)
 
 typedef struct qdict_entry_t {
   qlist_t entry;

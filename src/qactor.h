@@ -12,6 +12,7 @@
 #include "qlist.h"
 
 struct qconnection_t;
+struct qdict_t;
 struct qserver_t;
 struct qthread_t;
 
@@ -37,6 +38,7 @@ typedef struct qactor_t {
   qlist_t entry;
   int listen_fd;
   qlist_t conn_list;
+  struct qdict_t *listen_params;
   int lua_ref[QMAX_LUA_API_REF];
 } qactor_t;
 

@@ -7,6 +7,7 @@
 #include "qassert.h"
 #include "qconnection.h"
 #include "qdefines.h"
+#include "qdict.h"
 #include "qengine.h"
 #include "qluacapi.h"
 #include "qluautil.h"
@@ -66,6 +67,18 @@ static int qnode_send(lua_State *state) {
   return 0;
 }
 
+static void init_tcp_listen_params(qactor_t *actor) {
+  actor->listen_params = qdict_new(5);
+
+  {
+    qkey_t key;
+    QKEY_STRING(key, "packet");
+    qdict_val_t val;
+    QVAL_NUMBER(val, 0);
+    qdict_add(actor->listen_params, &key, &val);
+  }
+}
+
 static int qnode_tcp_listen(lua_State *state) {
   qactor_t *actor = get_actor(state);
   qassert(actor);
@@ -104,6 +117,7 @@ static int qnode_tcp_listen(lua_State *state) {
   actor->listen_fd = fd;
   lua_pushvalue(state, -3);
 
+  init_tcp_listen_params(actor);  
   return 0;
 }
 
