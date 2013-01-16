@@ -146,12 +146,14 @@ int qdict_copy_lua_table(qdict_t *dict, lua_State *state, int index) {
   qstring_t str;
   qkey_t dict_key;
   qdict_val_t dict_val;
+  int type;
   while (lua_next(state, index)) {
     int val_idx = lua_gettop(state);
     int key_idx = val_idx - 1;
-    if (lua_isstring(state, val_idx)) {
-      str_val = lua_tolstring(state, val_idx, &len);
-    } else if (lua_isnumber(state, val_idx)) {
+    type = lua_type(state, val_idx);
+    if (type == LUA_TSTRING) {
+      num_val = lua_tonumber(state, val_idx);
+    } else if (type == LUA_TNUMBER) {
       num_val = lua_tonumber(state, val_idx);
     } else {
       qerror("table val MUST be number or string");

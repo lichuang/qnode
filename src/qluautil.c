@@ -81,12 +81,14 @@ void qlua_copy_table(lua_State *src, lua_State *dst, int table_idx) {
     const char *key;
     const char *str_val = NULL;
     double num_val = 0;
+    int type;
     while (lua_next(src, table_idx)) {
       int val_idx = lua_gettop(src);
       int key_idx = val_idx - 1;
-      if (lua_isstring(src, val_idx)) {
+      type = lua_type(state, val_idx);
+      if (type == LUA_TSTRING) {
         str_val = lua_tolstring(src, val_idx, &len);
-      } else if (lua_isnumber(src, val_idx)) {
+      } else if (type == LUA_TNUMBER) {
         num_val = lua_tonumber(src, val_idx);
       } else {
         qerror("child arg table val MUST be number or string");
@@ -117,14 +119,15 @@ struct qactor_msg_t* qlua_copy_arg_table(lua_State *state, int table_idx) {
     const char *key;
     const char *str_val = NULL;
     double num_val = 0;
+    type = lua_type(state, val_idx);
     msg = qactor_msg_new();
     while (lua_next(state, table_idx)) {
       int val_idx = lua_gettop(state);
       int key_idx = val_idx - 1;
-
-      if (lua_isstring(state, val_idx)) {
+      type = lua_type(state, val_idx);
+      if (type == LUA_TSTRING) {
         str_val = lua_tolstring(state, val_idx, &len);
-      } else if (lua_isnumber(state, val_idx)) {
+      } else if (type == LUA_TNUMBER) {
         num_val = lua_tonumber(state, val_idx);
       } else {
         qerror("child arg table val MUST be number or string");
