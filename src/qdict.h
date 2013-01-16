@@ -49,7 +49,8 @@ typedef struct qdict_val_t {
   unsigned short type;
 } qdict_val_t;
 
-#define QVAL_NUMBER(val, n) do { (val).data.num = (n); (key).type = QDICT_VAL_NUMBER; } while(0)
+#define QVAL_NUMBER(val, n) do { (val).data.num = (n); (val).type = QDICT_VAL_NUMBER; } while(0)
+#define QVAL_STRING(val, s) do { (val).data.str = (s); (val).type = QDICT_VAL_STRING; } while(0)
 
 typedef struct qdict_entry_t {
   qlist_t entry;
@@ -60,6 +61,7 @@ typedef struct qdict_entry_t {
 typedef struct qdict_t {
   qlist_t **buckets;
   unsigned int hashsize;
+  unsigned int num;
 } qdict_t;
 
 qdict_t* qdict_new(unsigned int hashsize);
@@ -67,4 +69,5 @@ int qdict_add(qdict_t *dict, qkey_t *key, qdict_val_t *val);
 int qdict_replace(qdict_t *dict, qkey_t *key, qdict_val_t *val);
 qdict_val_t* qdict_get(qdict_t *dict, qkey_t *key);
 
+int qdict_copy_lua_table(qdict_t *dict, lua_State *state, int index);
 #endif  /* __QDICT_H__ */

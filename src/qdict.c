@@ -2,6 +2,9 @@
  * See Copyright Notice in qnode.h
  */
 
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
 #include <string.h>
 #include "qassert.h"
 #include "qdict.h"
@@ -12,6 +15,7 @@ qdict_t* qdict_new(unsigned int hashsize) {
   int i;
   qdict_t *dict = qalloc_type(qdict_t);
   dict->hashsize = hashsize;
+  dict->num = 0;
   dict->buckets  = (qlist_t **)qmalloc(hashsize * sizeof(qlist_t*));
   for (i = 0; i < (int)hashsize; ++i) {
     qlist_t *list = qalloc_type(qlist_t);
@@ -86,6 +90,7 @@ static void copy_key(qdict_entry_t *entry, qkey_t *key) {
   if (key->type == QDICT_KEY_STRING) {
     dict_key->type = QDICT_KEY_STRING;
     dict_key->data.str  = qalloc_type(qstring_t); 
+    qstring_init(dict_key->data.str);
     qstring_assign(dict_key->data.str, key->data.str);
     return;
   }
@@ -107,6 +112,7 @@ int qdict_add(qdict_t *dict, qkey_t *key, qdict_val_t *val) {
   copy_val(entry, val);
   qlist_t *list = dict->buckets[idx];
   qlist_add_tail(&entry->entry, list);
+  dict->num = 0;
   return 0;
 }
 
@@ -126,4 +132,46 @@ qdict_val_t* qdict_get(qdict_t *dict, qkey_t *key) {
     return NULL;
   }
   return &(entry->val);
+}
+
+int qdict_copy_lua_table(qdict_t *dict, lua_State *state, int index) {
+  if (!lua_istable(state, index)) {
+    return -1;
+  }
+  lua_pushnil(state);
+  size_t len;
+  const char *key;
+  const char *str_val = NULL;
+  double num_val = 0;
+  qstring_t str;
+  qkey_t dict_key;
+  qdict_val_t dict_val;
+  while (lua_next(state, index)) {
+    int val_idx = lua_gettop(state);
+    int key_idx = val_idx - 1;
+    if (lua_isstring(state, val_idx)) {
+      str_val = lua_tolstring(state, val_idx, &len);
+    } else if (lua_isnumber(state, val_idx)) {
+      num_val = lua_tonumber(state, val_idx);
+    } else {
+      qerror("table val MUST be number or string");
+      return -1;
+    }
+
+    key = lua_tolstring(state, key_idx, &len);
+    QKEY_STRING(dict_key, key);
+
+    if (str_val) {
+      qstring_init(&str);
+      qstring_assign(&str, str_val);
+      QVAL_STRING(dict_val, &str);
+    } else {
+      QVAL_NUMBER(dict_val, num_val);
+    }
+    qdict_replace(dict, &dict_key, &dict_val);
+    lua_pop(state, 1);
+
+    str_val = NULL;
+  }
+  return 0;
 }

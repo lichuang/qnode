@@ -118,6 +118,7 @@ static int qnode_tcp_listen(lua_State *state) {
   lua_pushvalue(state, -3);
 
   init_tcp_listen_params(actor);  
+  qdict_copy_lua_table(actor->listen_params, state, 3);
   return 0;
 }
 
