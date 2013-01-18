@@ -4,7 +4,6 @@
 
 #include "qactor.h"
 #include "qassert.h"
-#include "qconnection.h"
 #include "qdefines.h"
 #include "qluacapi.h"
 #include "qluautil.h"
@@ -15,6 +14,7 @@
 #include "qmsg.h"
 #include "qnet.h"
 #include "qserver.h"
+#include "qsocket.h"
 #include "qthread.h"
 
 qid_t qactor_new_id() {
@@ -102,9 +102,9 @@ void qactor_accept(int fd, int flags, void *data) {
   qassert(actor->listen_fd == fd);
   int sock = -1;
   while ((sock = qnet_tcp_accept(actor->listen_fd)) != -1) {
-    qconnection_t *connection = qconnection_get(sock);
-    connection->aid = actor->aid;
-    qlist_add_tail(&connection->entry, &actor->conn_list);
+    qsocket_t *socket = qsocket_get(sock);
+    socket->aid = actor->aid;
+    qlist_add_tail(&socket->entry, &actor->conn_list);
   }
   if (actor_get_lua_ref(actor, LISTENER) < 0) {
     return;
@@ -112,12 +112,12 @@ void qactor_accept(int fd, int flags, void *data) {
   lua_call(actor->state, 0, 0);
 }
 
-struct qconnection_t* qactor_get_connection(qactor_t *actor) {
+struct qsocket_t* qactor_get_socket(qactor_t *actor) {
   if (qlist_empty(&actor->conn_list)) {
     return NULL;
   }
   qlist_t *pos = actor->conn_list.next;
   qlist_del_init(pos);
-  qconnection_t *connection = qlist_entry(pos, qconnection_t, entry);
-  return connection;
+  qsocket_t *socket = qlist_entry(pos, qsocket_t, entry);
+  return socket;
 }

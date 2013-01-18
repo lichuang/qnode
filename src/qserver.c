@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include "qactor.h"
 #include "qassert.h"
-#include "qconnection.h"
+#include "qsocket.h"
 #include "qengine.h"
 #include "qdefines.h"
 #include "qlog.h"
@@ -26,7 +26,7 @@ static void server_accept(int fd, int flags, void *data) {
   UNUSED(fd);
   UNUSED(flags);
   UNUSED(data);
-  qinfo("add a connection....");
+  qinfo("add a socket....");
 }
 
 static int init_server_event(struct qserver_t *server) {
@@ -158,10 +158,10 @@ static int server_init(struct qconfig_t *config) {
     qfree(server);
     return -1;
   }
-  server->connections = (qconnection_t**)qmalloc(QID_MAX * sizeof(qconnection_t*));
+  server->sockets = (qsocket_t**)qmalloc(QID_MAX * sizeof(qsocket_t*));
   int i;
   for (i = 0; i < QID_MAX; ++i) {
-    server->connections[i] = NULL;
+    server->sockets[i] = NULL;
   }
   init_thread(server);
   qidmap_init(&server->id_map);

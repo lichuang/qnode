@@ -13,7 +13,7 @@
 #define QSERVER_THREAD_TID 0
 
 struct qactor_t;
-struct qconnection_t;
+struct qsocket_t;
 struct qengine_t;
 struct qevent_t;
 struct qthread_t;
@@ -28,7 +28,7 @@ typedef struct qserver_t {
   struct qmailbox_t **out_box;
   struct qthread_log_t **thread_log;
   struct qactor_t **actors;
-  struct qconnection_t **connections;
+  struct qsocket_t **sockets;
   unsigned int num_actor;
   qidmap_t id_map;
   qmutex_t  id_map_mutex;

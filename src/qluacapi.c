@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include "qactor.h"
 #include "qassert.h"
-#include "qconnection.h"
 #include "qdefines.h"
 #include "qdict.h"
 #include "qengine.h"
@@ -14,8 +13,9 @@
 #include "qlog.h"
 #include "qmsg.h"
 #include "qnet.h"
-#include "qstring.h"
 #include "qserver.h"
+#include "qsocket.h"
+#include "qstring.h"
 #include "qthread.h"
 
 static qactor_t* get_actor(lua_State *state) {
@@ -124,8 +124,8 @@ static int qnode_tcp_listen(lua_State *state) {
 
 static int qnode_tcp_accept(lua_State *state) {
   qactor_t *actor = get_actor(state);
-  qconnection_t *connection = qactor_get_connection(actor);
-  lua_pushlightuserdata(actor->state, connection);
+  qsocket_t *socket = qactor_get_socket(actor);
+  lua_pushlightuserdata(actor->state, socket);
   return 1;
 }
 

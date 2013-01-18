@@ -11,7 +11,7 @@
 #include "qtype.h"
 #include "qlist.h"
 
-struct qconnection_t;
+struct qsocket_t;
 struct qdict_t;
 struct qserver_t;
 struct qthread_t;
@@ -27,8 +27,8 @@ typedef struct qactor_listener_t {
   qlist_t conn_list;
 } qactor_listener_t;
 
-typedef struct qactor_connection_t {
-} qactor_connection_t;
+typedef struct qactor_socket_t {
+} qactor_socket_t;
 
 typedef struct qactor_t {
   lua_State *state;
@@ -52,6 +52,6 @@ qid_t qactor_spawn(qactor_t *actor, lua_State *state);
 
 void qactor_accept(int fd, int flags, void *data);
 
-struct qconnection_t* qactor_get_connection(qactor_t *actor);
+struct qsocket_t* qactor_get_socket(qactor_t *actor);
 
 #endif  /* __QACTOR_H__ */
