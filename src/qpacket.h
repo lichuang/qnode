@@ -24,5 +24,6 @@ typedef struct qpacket_t {
 } qpacket_t;
 
 void qpacket_init(qpacket_t *packet);
+void qpacket_destroy(qpacket_t *packet);
 
 #endif  /* __QPACKET_H__ */

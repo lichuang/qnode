@@ -130,7 +130,8 @@ static int qnode_tcp_accept(lua_State *state) {
 }
 
 static int qnode_tcp_recv(lua_State *state) {
-  UNUSED(state);
+  qsocket_t *socket = (qsocket_t*)lua_touserdata(state, 1);
+  UNUSED(socket);
   return 0;
 }
 

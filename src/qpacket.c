@@ -19,3 +19,7 @@ void qpacket_init(qpacket_t *packet) {
   packet->head = packet->current = &(buffer->entry);
   packet->size = 0;
 }
+
+void qpacket_destroy(qpacket_t *packet) {
+  packet = packet;
+}

@@ -81,6 +81,7 @@ void qlua_copy_table(lua_State *src, lua_State *dst, int table_idx) {
     const char *key;
     const char *str_val = NULL;
     double num_val = 0;
+    void *user_data = NULL;
     int type;
     while (lua_next(src, table_idx)) {
       int val_idx = lua_gettop(src);
@@ -90,8 +91,10 @@ void qlua_copy_table(lua_State *src, lua_State *dst, int table_idx) {
         str_val = lua_tolstring(src, val_idx, &len);
       } else if (type == LUA_TNUMBER) {
         num_val = lua_tonumber(src, val_idx);
+      } else if (type == LUA_TLIGHTUSERDATA) {
+        user_data = lua_touserdata(src, val_idx);
       } else {
-        qerror("child arg table val MUST be number or string");
+        qerror("error type: %d", type);
         return;
       }
 
@@ -100,13 +103,15 @@ void qlua_copy_table(lua_State *src, lua_State *dst, int table_idx) {
       lua_pushstring(dst, key);
       if (str_val) {
         lua_pushstring(dst, str_val);
+        str_val = NULL;
+      } else if (user_data) {
+        lua_pushlightuserdata(dst, user_data);
+        user_data = NULL;
       } else {
         lua_pushnumber(dst, num_val);
       }
       lua_rawset(dst, -3);
       lua_pop(src, 1);
-
-      str_val = NULL;
     }
   }
 }
