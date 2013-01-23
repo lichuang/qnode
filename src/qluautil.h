@@ -28,4 +28,6 @@ int qlua_loadfile(struct qactor_t *actor, const char *filename);
 int qlua_dofile(lua_State *state, const char *filename);
 int qlua_init_path(struct qactor_t *actor);
 
+struct qactor_t* qlua_get_actor(lua_State *state);
+
 #endif  /* __QLUAUTIL_H__ */

@@ -204,3 +204,8 @@ int qlua_init_path(struct qactor_t *actor) {
   qstring_destroy(&full_path);
   return 0;
 }
+
+struct qactor_t* qlua_get_actor(lua_State *state) {
+  lua_getglobal(state, "qnode");
+  return (qactor_t*)lua_touserdata(state, -1);
+}
