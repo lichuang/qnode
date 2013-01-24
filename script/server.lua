@@ -17,7 +17,8 @@ server.start = function()
   print("server start");
   --local aid = qspawn("child", "test", {id = 2000});
   --send(aid, {id = "send"});
-  qnode_tcp_listen(22880, accept);
+  local socket = qnode_tcp_listen(22880);
+  assert(socket)
 end
 
 _G["server"] = server

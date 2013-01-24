@@ -32,8 +32,12 @@ void qluac_register(lua_State *state, struct qactor_t *);
  *  2) tcp
  *
  *  qnode_tcp_listen: 
- *      [IN]port, accept callback, listen params table
- *      [OUT]result
+ *      [IN]port, listen params table
+ *      [OUT]descriptor or nil
+ *
+ *  qnode_tcp_accept: 
+ *      [IN]descriptor, timeout
+ *      [OUT]descriptor or nil(timeout)
  *
  *  qnode_tcp_recv: 
  *      [IN]socket

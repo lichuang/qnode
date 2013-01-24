@@ -11,7 +11,6 @@
 #include "qtype.h"
 #include "qlist.h"
 
-struct qsocket_t;
 struct qdict_t;
 struct qserver_t;
 struct qthread_t;
@@ -22,22 +21,13 @@ enum lua_api_ref {
   QMAX_LUA_API_REF
 };
 
-typedef struct qactor_listener_t {
-  int listen_fd;
-  qlist_t conn_list;
-} qactor_listener_t;
-
-typedef struct qactor_socket_t {
-} qactor_socket_t;
-
 typedef struct qactor_t {
   lua_State *state;
   qtid_t tid;
   qid_t aid;
   qid_t parent;
   qlist_t entry;
-  int listen_fd;
-  qlist_t conn_list;
+  qlist_t desc_list;
   struct qdict_t *listen_params;
   int lua_ref[QMAX_LUA_API_REF];
 } qactor_t;
@@ -51,7 +41,5 @@ void qactor_destroy(qactor_t *actor);
 qid_t qactor_spawn(qactor_t *actor, lua_State *state);
 
 void qactor_accept(int fd, int flags, void *data);
-
-struct qsocket_t* qactor_get_socket(qactor_t *actor);
 
 #endif  /* __QACTOR_H__ */

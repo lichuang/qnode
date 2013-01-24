@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include "qactor.h"
 #include "qassert.h"
-#include "qsocket.h"
+#include "qdescriptor.h"
 #include "qengine.h"
 #include "qdefines.h"
 #include "qlog.h"
@@ -142,6 +142,7 @@ static int server_init(struct qconfig_t *config) {
   qassert(config);
   qassert(config->thread_num > 0);
   qassert(g_server == NULL);
+  int i;
   qlog_thread_new(config->thread_num + 1);
   qserver_t *server = qalloc_type(qserver_t);
   g_server = server;
@@ -158,11 +159,12 @@ static int server_init(struct qconfig_t *config) {
     qfree(server);
     return -1;
   }
-  server->sockets = (qsocket_t**)qmalloc(QID_MAX * sizeof(qsocket_t*));
-  int i;
+
+  server->descriptors = (qdescriptor_t**)qmalloc(QID_MAX * sizeof(qdescriptor_t*));
   for (i = 0; i < QID_MAX; ++i) {
-    server->sockets[i] = NULL;
+    server->descriptors[i] = NULL;
   }
+
   init_thread(server);
   qidmap_init(&server->id_map);
   qmutex_init(&server->id_map_mutex);

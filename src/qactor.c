@@ -14,7 +14,6 @@
 #include "qmsg.h"
 #include "qnet.h"
 #include "qserver.h"
-#include "qsocket.h"
 #include "qthread.h"
 
 qid_t qactor_new_id() {
@@ -32,10 +31,9 @@ qactor_t *qactor_new(qid_t aid) {
   }
   actor->state = NULL;
   qlist_entry_init(&(actor->entry));
-  qlist_entry_init(&(actor->conn_list));
+  qlist_entry_init(&(actor->desc_list));
   actor->aid = aid;
   actor->parent = QID_INVALID;
-  actor->listen_fd = 0;
   for (i = 0; i < QMAX_LUA_API_REF; ++i) {
     actor->lua_ref[i] = QINVALID_LUA_REF;
   }
@@ -99,25 +97,12 @@ void qactor_accept(int fd, int flags, void *data) {
   UNUSED(fd);
   UNUSED(flags);
   qactor_t *actor = (qactor_t*)data;
-  qassert(actor->listen_fd == fd);
-  int sock = -1;
-  while ((sock = qnet_tcp_accept(actor->listen_fd)) != -1) {
-    qsocket_t *socket = qsocket_get(sock);
-    socket->aid = actor->aid;
-    qlist_add_tail(&socket->entry, &actor->conn_list);
+  //int sock = -1;
+  //while ((sock = qnet_tcp_accept(actor->listen_fd)) != -1) {
+  while (1) {
   }
   if (actor_get_lua_ref(actor, LISTENER) < 0) {
     return;
   }
   lua_call(actor->state, 0, 0);
-}
-
-struct qsocket_t* qactor_get_socket(qactor_t *actor) {
-  if (qlist_empty(&actor->conn_list)) {
-    return NULL;
-  }
-  qlist_t *pos = actor->conn_list.next;
-  qlist_del_init(pos);
-  qsocket_t *socket = qlist_entry(pos, qsocket_t, entry);
-  return socket;
 }
