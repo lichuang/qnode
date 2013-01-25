@@ -27,12 +27,8 @@ static int qnode_spawn(lua_State *state) {
   qstring_assign(&string, mod);
   qstring_append(&string, ".lua");
   if (qlua_threadloadfile(new_state, string.data) != 0) {
-    qstring_t str = qstring_init();
-    qstring_format(&str, "load file %s error", str.data);
     lua_pushnil(state);
-    lua_pushlstring(state, str.data, str.len);
-    qerror(str.data);
-    qstring_destroy(&str);
+    lua_pushfstring(state, "load file %s error", string.data);
     return 2;
   }
   qstring_destroy(&string);
@@ -59,11 +55,8 @@ static int qnode_send(lua_State *state) {
   qid_t id = (qid_t)lua_tonumber(state, 1);
   qactor_t *dst_actor = qserver_get_actor(id);
   if (dst_actor == NULL) {
-    qstring_t str = qstring_init();
-    qstring_format(&str, "dst actor %d not found", id);
     lua_pushnil(state);
-    lua_pushlstring(state, str.data, str.len);
-    qstring_destroy(&str);
+    lua_pushfstring(state, "dst actor %d not found", id);
     return 2;
   }
   /* copy args table */
