@@ -5,6 +5,7 @@
 #include "qactor.h"
 #include "qassert.h"
 #include "qdefines.h"
+#include "qengine.h"
 #include "qluacapi.h"
 #include "qluautil.h"
 #include "qlog.h"
@@ -25,7 +26,6 @@ qid_t qactor_new_id() {
 
 qactor_t *qactor_new(qid_t aid) {
   qactor_t *actor = qalloc_type(qactor_t);
-  int i;
   if (actor == NULL) {
     return NULL;
   }
@@ -34,9 +34,6 @@ qactor_t *qactor_new(qid_t aid) {
   qlist_entry_init(&(actor->desc_list));
   actor->aid = aid;
   actor->parent = QID_INVALID;
-  for (i = 0; i < QMAX_LUA_API_REF; ++i) {
-    actor->lua_ref[i] = QINVALID_LUA_REF;
-  }
   qserver_new_actor(actor);
   return actor;
 }
@@ -75,34 +72,8 @@ qid_t qactor_spawn(qactor_t *actor, lua_State *state) {
   return aid;
 }
 
-static int actor_get_lua_ref(qactor_t *actor, int ref) {
-  lua_State *state = actor->state;
-  qassert(ref >= 0 && ref < QMAX_LUA_API_REF);
-  qassert(state);
-  int idx = actor->lua_ref[ref];
-  if (idx == QINVALID_LUA_REF) {
-    qerror("actor %d get ref on %d error", actor->aid, ref);
-    return -1;
-  }
-  lua_rawgeti(state, LUA_REGISTRYINDEX, idx);
-  if(lua_type(state, -1) != LUA_TFUNCTION) {
-    qerror("actor %d get ref callback on %d error", actor->aid, ref);
-    return -1;
-  }
-  return 0;
-}
-
-void qactor_accept(int fd, int flags, void *data) {
-  qinfo("actor accept ....");
-  UNUSED(fd);
-  UNUSED(flags);
-  qactor_t *actor = (qactor_t*)data;
-  //int sock = -1;
-  //while ((sock = qnet_tcp_accept(actor->listen_fd)) != -1) {
-  while (1) {
-  }
-  if (actor_get_lua_ref(actor, LISTENER) < 0) {
-    return;
-  }
-  lua_call(actor->state, 0, 0);
+struct qengine_t* qactor_get_engine(qactor_t *actor) {
+  qassert(actor);
+  qassert(actor->tid > 0);
+  return g_server->threads[actor->tid]->engine;
 }

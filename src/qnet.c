@@ -88,8 +88,9 @@ int qnet_tcp_listen(int port, const char *bindaddr) {
   return fd;
 }
 
-int qnet_tcp_accept(int listen_fd) {
-  int fd = accept(listen_fd, NULL, NULL);
+int qnet_tcp_accept(int listen_fd,
+                    struct sockaddr *addr, socklen_t *addrlen) {
+  int fd = accept(listen_fd, addr, addrlen);
   if (fd == -1) { 
     return -1;
   }

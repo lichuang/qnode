@@ -14,7 +14,6 @@ static void init_tcp_descriptor(qdescriptor_t *desc) {
 }
 
 qdescriptor_t* qdescriptor_new(int fd, unsigned short type, qactor_t *actor) {
-  qassert(actor);
   qassert(fd < QID_MAX);
   qdescriptor_t *desc = g_server->descriptors[fd];
   if (desc) {
@@ -36,4 +35,11 @@ qdescriptor_t* qdescriptor_new(int fd, unsigned short type, qactor_t *actor) {
     init_tcp_descriptor(desc);
   }
   return desc;
+}
+
+struct qactor_t* qdescriptor_get_actor(qdescriptor_t *desc) {
+  if (desc->aid >= 0) {
+    return g_server->actors[desc->aid];
+  }
+  return NULL;
 }

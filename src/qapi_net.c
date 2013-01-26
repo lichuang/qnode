@@ -2,10 +2,12 @@
  * See Copyright Notice in qnode.h
  */
 
+#include <errno.h>
 #include "qactor.h"
 #include "qassert.h"
 #include "qdefines.h"
 #include "qdescriptor.h"
+#include "qengine.h"
 #include "qdict.h"
 #include "qengine.h"
 #include "qlog.h"
@@ -48,20 +50,53 @@ static int qnode_tcp_listen(lua_State *state) {
   return 1;
 }
 
+static void node_accept(int fd, int flags, void *data) {
+  UNUSED(fd);
+  UNUSED(flags);
+  struct sockaddr remote;
+  socklen_t n = sizeof(struct sockaddr);
+  qdescriptor_t *desc = (qdescriptor_t *)data;
+  //qtcp_descriptor_t *tcp = &(desc->data.tcp);
+  qactor_t *actor = qdescriptor_get_actor(desc);
+  lua_State *state = actor->state;
+  qinfo("add a socket....");
+  int sock = qnet_tcp_accept(desc->fd, &remote, &n);
+  if (sock == -1) {
+    lua_pushnil(state);
+    lua_pushliteral(state, "socket closed");
+    lua_resume(state, 2);
+    return;
+  }
+  lua_pushnumber(state, sock);
+  lua_resume(state, 1);
+  return;
+}
+
 static int qnode_tcp_accept(lua_State *state) {
+  struct sockaddr remote;
+  socklen_t n = sizeof(struct sockaddr);
   qactor_t *actor = qlua_get_actor(state);
   qdescriptor_t *desc = (qdescriptor_t*)lua_touserdata(state, 1);
   qtcp_descriptor_t *tcp = &(desc->data.tcp);
   int timeout = (int)lua_tonumber(state, 2);
-  if (tcp->inet.state != QINET_STATE_LISTENING) {
+  if (tcp->inet.state != QINET_STATE_LISTENING &&
+      tcp->inet.state != QINET_STATE_ACCEPTING) {
+    lua_pushnil(state);
+    lua_pushfstring(state, "socket state %d error", tcp->inet.state);
+    return 2;
+  }
+  int fd = qnet_tcp_accept(desc->fd, &remote, &n);
+  if (fd == -1) {
+    if (errno == EAGAIN || errno == EWOULDBLOCK) {
+      qengine_t *engine = qactor_get_engine(actor);
+      qengine_add_event(engine, desc->fd, QEVENT_READ, node_accept, desc);
+      tcp->inet.state = QINET_STATE_ACCEPTING;
+      return lua_yield(state, 0); 
+    }
+
     lua_pushnil(state);
     lua_pushliteral(state, "socket closed");
     return 2;
-  }
-  int fd = qnet_tcp_accept(desc->fd);
-  if (fd == -1) {
-    qerror("accept error");
-    return lua_yield(state, 0); 
   }
   qdescriptor_t *accept_desc = qdescriptor_new(fd, QDESCRIPTOR_TCP, actor);
   desc->data.tcp.inet.state = QINET_STATE_CONNECTED;

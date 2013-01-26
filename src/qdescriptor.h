@@ -67,5 +67,6 @@ typedef struct qdescriptor_t {
 } qdescriptor_t;
 
 qdescriptor_t* qdescriptor_new(int fd, unsigned short type, qactor_t *actor);
+struct qactor_t* qdescriptor_get_actor(qdescriptor_t *desc);
 
 #endif  /* __QDESCRIPTOR_H__ */

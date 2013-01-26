@@ -12,14 +12,9 @@
 #include "qlist.h"
 
 struct qdict_t;
+struct qengine_t;
 struct qserver_t;
 struct qthread_t;
-
-#define QINVALID_LUA_REF -1
-enum lua_api_ref {
-  LISTENER = 0,
-  QMAX_LUA_API_REF
-};
 
 typedef struct qactor_t {
   lua_State *state;
@@ -29,7 +24,6 @@ typedef struct qactor_t {
   qlist_t entry;
   qlist_t desc_list;
   struct qdict_t *listen_params;
-  int lua_ref[QMAX_LUA_API_REF];
 } qactor_t;
 
 qid_t qactor_new_id();
@@ -40,6 +34,6 @@ void qactor_destroy(qactor_t *actor);
 /* spawn an actor as child, return the actor ID */
 qid_t qactor_spawn(qactor_t *actor, lua_State *state);
 
-void qactor_accept(int fd, int flags, void *data);
+struct qengine_t* qactor_get_engine(qactor_t *actor);
 
 #endif  /* __QACTOR_H__ */
