@@ -89,8 +89,7 @@ static void copy_key(qdict_entry_t *entry, qkey_t *key) {
   }
   if (key->type == QDICT_KEY_STRING) {
     dict_key->type = QDICT_KEY_STRING;
-    dict_key->data.str  = qalloc_type(qstring_t); 
-    qstring_init(dict_key->data.str);
+    dict_key->data.str  = qstring_new();
     qstring_assign(dict_key->data.str, key->data.str);
     return;
   }
@@ -143,7 +142,7 @@ int qdict_copy_lua_table(qdict_t *dict, lua_State *state, int index) {
   const char *key;
   const char *str_val = NULL;
   double num_val = 0;
-  qstring_t str;
+  qstring_t str = qstring_init();
   qkey_t dict_key;
   qdict_val_t dict_val;
   int type;
@@ -164,7 +163,6 @@ int qdict_copy_lua_table(qdict_t *dict, lua_State *state, int index) {
     QKEY_STRING(dict_key, key);
 
     if (str_val) {
-      qstring_init(&str);
       qstring_assign(&str, str_val);
       QVAL_STRING(dict_val, &str);
     } else {

@@ -35,8 +35,13 @@ static int qnode_tcp_listen(lua_State *state) {
   int port = (int)lua_tonumber(state, 1);
   int fd = qnet_tcp_listen(port, addr);
   if (fd < 0) {
-    qerror("listen on %s:%d error\n", addr, port);
-    return 0;
+    lua_pushnil(state);
+    qstring_t str =  qstring_init();
+    qstring_format(&str, "listen on %s:%d error", addr, port);
+    lua_pushlstring(state, str.data, str.len);
+    qerror(str.data);
+    qstring_destroy(&str);
+    return 2;
   }
   qdescriptor_t *desc = qdescriptor_new(fd, QDESCRIPTOR_TCP, actor);
   desc->data.tcp.inet.state = QINET_STATE_LISTENING;
@@ -53,9 +58,13 @@ static int qnode_tcp_accept(lua_State *state) {
   qtcp_descriptor_t *tcp = &(desc->data.tcp);
   int timeout = (int)lua_tonumber(state, 2);
   if (tcp->inet.state != QINET_STATE_LISTENING) {
-    qerror("socket closed");
     lua_pushnil(state);
-    return 1;
+    qstring_t str =  qstring_init();
+    qstring_format(&str, "socket closed");
+    lua_pushlstring(state, str.data, str.len);
+    qerror(str.data);
+    qstring_destroy(&str);
+    return 2;
   }
   int fd = qnet_tcp_accept(desc->fd);
   if (fd == -1) {

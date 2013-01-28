@@ -31,7 +31,7 @@ static void config_init_script(qconfig_t *config, lua_State *L) {
 
 static void config_set_default(qconfig_t *config) {
   config->thread_num = 2;
-  qstring_init(&(config->script_path));
+  qstring_init_str(config->script_path);
   qstring_assign(&(config->script_path), "./script");
 }
 

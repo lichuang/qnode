@@ -1,6 +1,7 @@
 /*
  * See Copyright Notice in qnode.h
  */
+
 #include <stdio.h>
 #include "qactor.h"
 #include "qassert.h"
@@ -22,14 +23,16 @@ static int qnode_spawn(lua_State *state) {
   const char *fun = lua_tostring(state, 2);
   qthread_t *thread = g_server->threads[actor->tid];
   lua_State *new_state = qlua_new_thread(thread);
-  qstring_t string;
-  qstring_init(&string);
+  qstring_t string = qstring_init();
   qstring_assign(&string, mod);
   qstring_append(&string, ".lua");
   if (qlua_threadloadfile(new_state, string.data) != 0) {
-    qerror("load script to launch error");
+    qstring_t str = qstring_init();
+    qstring_format(&str, "load file %s error", str.data);
     lua_pushnil(state);
-    lua_pushliteral(state, "load file error");
+    lua_pushlstring(state, str.data, str.len);
+    qerror(str.data);
+    qstring_destroy(&str);
     return 2;
   }
   qstring_destroy(&string);
@@ -56,7 +59,12 @@ static int qnode_send(lua_State *state) {
   qid_t id = (qid_t)lua_tonumber(state, 1);
   qactor_t *dst_actor = qserver_get_actor(id);
   if (dst_actor == NULL) {
-    return 0;
+    qstring_t str = qstring_init();
+    qstring_format(&str, "dst actor %d not found", id);
+    lua_pushnil(state);
+    lua_pushlstring(state, str.data, str.len);
+    qstring_destroy(&str);
+    return 2;
   }
   /* copy args table */
   qactor_msg_t *actor_msg = qlua_copy_arg_table(state, 2);
@@ -64,7 +72,8 @@ static int qnode_send(lua_State *state) {
   qmsg_t *msg = qmsg_new(srqnode->tid, dst_actor->tid);
   qmsg_init_tsend(msg, actor_msg);
   qmsg_send(msg);
-  return 0;
+  lua_pushnumber(state, 0);
+  return 1;
 }
 
 luaL_Reg node_apis[] = {

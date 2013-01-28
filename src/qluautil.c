@@ -142,11 +142,11 @@ struct qactor_msg_t* qlua_copy_arg_table(lua_State *state, int table_idx) {
 
       qarg_t *arg = qarg_new();
       key = lua_tolstring(state, key_idx, &len);
-      qstring_init(&(arg->key.str)); 
+      qstring_init_str(arg->key.str); 
       qstring_assign(&(arg->key.str), key);
 
       if (str_val) {
-        qstring_init(&(arg->val.str)); 
+        qstring_init_str(arg->val.str); 
         qstring_assign(&(arg->val.str), str_val);
       } else {
         arg->val.num = (int)num_val;
@@ -162,7 +162,7 @@ struct qactor_msg_t* qlua_copy_arg_table(lua_State *state, int table_idx) {
 
 static void lua_init_filename(const char *filename, qstring_t *full_name) {
   qserver_t *server = g_server;
-  qstring_init(full_name);
+  qstring_init_str(*full_name);
   qstring_assign(full_name, server->config->script_path.data);
   qstring_append(full_name, "/");
   qstring_append(full_name, filename);
@@ -195,7 +195,7 @@ int qlua_init_path(struct qactor_t *actor) {
   lua_getfield(state, -1, "path" );
   const char* cur_path = lua_tostring( state, -1 );
   qstring_t full_path;
-  qstring_init(&full_path);
+  qstring_init_str(full_path);
   qstring_assign(&full_path, cur_path);
   qstring_append(&full_path, ";");
   qstring_append(&full_path, path);

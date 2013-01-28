@@ -14,7 +14,10 @@ typedef struct qstring_t {
   char *data;
 } qstring_t;
 
-void qstring_init(qstring_t *string);
+#define qstring_init() {0, 0, NULL}
+#define qstring_init_str(str) {(str).len = (str).size = 0; (str).data = NULL;}
+
+qstring_t* qstring_new();
 
 void qstring_destroy(qstring_t *string);
 

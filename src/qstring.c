@@ -8,9 +8,11 @@
 #include "qlog.h"
 #include "qmalloc.h"
 
-void qstring_init(qstring_t *string) {
-  string->len = string->size = 0;
-  string->data = NULL;
+qstring_t* qstring_new() {
+  qstring_t *str  = qalloc_type(qstring_t); 
+  str->len = str->size = 0;
+  str->data = NULL;
+  return str;
 }
 
 void qstring_destroy(qstring_t *string) {
