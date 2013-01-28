@@ -16,15 +16,14 @@
 #include "qstring.h"
 #include "qthread.h"
 
-static int my_panic(lua_State *state) {
-  UNUSED(state);
+static int panic(lua_State *state) {
   qerror("PANIC: unprotected error in call to Lua API (%s)\n", lua_tostring(state, -1));
   return 0;
 }
 
 lua_State* qlua_new_state() {
   lua_State *state = lua_open();
-  lua_atpanic(state, my_panic);
+  lua_atpanic(state, panic);
   luaL_openlibs(state);
   return state;
 }
@@ -168,11 +167,12 @@ static void lua_init_filename(const char *filename, qstring_t *full_name) {
   qstring_append(full_name, filename);
 }
 
-int qlua_loadfile(struct qactor_t *actor, const char *filename) {
+int qlua_loadfile(lua_State *state, const char *filename) {
   qstring_t full_name;
   lua_init_filename(filename, &full_name);
-  int ret = luaL_loadfile(actor->state, full_name.data);
+  int ret = luaL_loadfile(state, full_name.data);
   qstring_destroy(&full_name);
+  lua_resume(state, 0);
   return ret;
 }
 

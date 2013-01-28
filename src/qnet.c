@@ -90,12 +90,9 @@ int qnet_tcp_listen(int port, const char *bindaddr) {
 
 int qnet_tcp_accept(int listen_fd) {
   int fd = accept(listen_fd, NULL, NULL);
-  if (fd == -1 && 
-    (errno == EAGAIN || errno == EWOULDBLOCK || 
-     errno == EINTR || errno == ECONNABORTED)) {
+  if (fd == -1) { 
     return -1;
   }
-  qassert(fd != -1);
   set_nonblocking(fd);
   return fd;
 }

@@ -23,7 +23,8 @@ static int thread_handle_sstart_msg(qthread_t *thread, qmsg_t *msg) {
   qactor_attach(actor, qlua_new_thread(thread));
   actor->tid = thread->tid;
 
-  if (qlua_dofile(actor->state, "server.lua") != 0) {
+  //if (qlua_dofile(actor->state, "server.lua") != 0) {
+  if (qlua_loadfile(actor->state, "server.lua") != 0) {
     qerror("load server start script error");
     return -1; 
   }

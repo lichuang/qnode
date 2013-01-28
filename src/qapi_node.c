@@ -26,8 +26,9 @@ static int qnode_spawn(lua_State *state) {
   qstring_init(&string);
   qstring_assign(&string, mod);
   qstring_append(&string, ".lua");
-  if (qlua_dofile(new_state, string.data) != 0) {
-    qerror("load script to launce error");
+  //if (qlua_dofile(new_state, string.data) != 0) {
+  if (qlua_loadfile(new_state, string.data) != 0) {
+    qerror("load script to launch error");
   }
   qstring_destroy(&string);
 

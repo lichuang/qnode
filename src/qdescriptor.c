@@ -7,6 +7,12 @@
 #include "qmalloc.h"
 #include "qserver.h"
 
+static void init_tcp_descriptor(qdescriptor_t *desc) {
+  qtcp_descriptor_t  *tcp  = &(desc->data.tcp);
+  qinet_descriptor_t *inet = &(tcp->inet);
+  inet->state = QINET_STATE_OPEN;
+}
+
 qdescriptor_t* qdescriptor_new(int fd, unsigned short type, qactor_t *actor) {
   qassert(actor);
   qassert(fd < QID_MAX);
@@ -25,5 +31,9 @@ qdescriptor_t* qdescriptor_new(int fd, unsigned short type, qactor_t *actor) {
   desc->aid  = actor->aid;
   desc->type = type;
   qlist_add_tail(&desc->entry, &actor->desc_list);
+
+  if (type == QDESCRIPTOR_TCP) {
+    init_tcp_descriptor(desc);
+  }
   return desc;
 }
