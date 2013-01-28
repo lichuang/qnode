@@ -7,6 +7,7 @@
 #include <lauxlib.h>
 #include <string.h>
 #include "qactor.h"
+#include "qassert.h"
 #include "qconfig.h"
 #include "qdefines.h"
 #include "qluautil.h"
@@ -167,11 +168,13 @@ static void lua_init_filename(const char *filename, qstring_t *full_name) {
   qstring_append(full_name, filename);
 }
 
-int qlua_loadfile(lua_State *state, const char *filename) {
+int qlua_threadloadfile(lua_State *state, const char *filename) {
+  /* TODO: check the state is a lua thread */
   qstring_t full_name;
   lua_init_filename(filename, &full_name);
   int ret = luaL_loadfile(state, full_name.data);
   qstring_destroy(&full_name);
+  // start the coroutine
   lua_resume(state, 0);
   return ret;
 }

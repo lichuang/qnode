@@ -63,3 +63,16 @@ int qstring_append(qstring_t *string, const char *str) {
   string->len += len - 1;
   return 0;
 }
+
+int qstring_format(qstring_t *string, char *fmt, ...) {
+  va_list args;
+
+  if (string_reserve(string, 200, 0) < 0) {
+    return -1;
+  }
+  va_start(args, fmt);
+  int ret = vsnprintf(string->data, 200, fmt, args);
+  va_end(args);
+
+  return ret;
+}

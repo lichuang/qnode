@@ -26,9 +26,11 @@ static int qnode_spawn(lua_State *state) {
   qstring_init(&string);
   qstring_assign(&string, mod);
   qstring_append(&string, ".lua");
-  //if (qlua_dofile(new_state, string.data) != 0) {
-  if (qlua_loadfile(new_state, string.data) != 0) {
+  if (qlua_threadloadfile(new_state, string.data) != 0) {
     qerror("load script to launch error");
+    lua_pushnil(state);
+    lua_pushliteral(state, "load file error");
+    return 2;
   }
   qstring_destroy(&string);
 
@@ -39,7 +41,14 @@ static int qnode_spawn(lua_State *state) {
   lua_getfield(new_state, -1, fun);
   /* push the args table */
   lua_pushvalue(new_state, 1);
-  return (int)qactor_spawn(actor, new_state);
+  int id = qactor_spawn(actor, new_state);
+  if (id == -1) {
+    lua_pushnil(state);
+    lua_pushliteral(state, "spawn error");
+    return 2;
+  }
+  lua_pushnumber(state, id);
+  return 1;
 }
 
 static int qnode_send(lua_State *state) {
