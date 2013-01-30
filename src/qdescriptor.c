@@ -4,6 +4,7 @@
 #include "qactor.h"
 #include "qassert.h"
 #include "qdescriptor.h"
+#include "qlog.h"
 #include "qmalloc.h"
 #include "qserver.h"
 
@@ -11,6 +12,9 @@ static void init_tcp_descriptor(qdescriptor_t *desc) {
   qtcp_descriptor_t  *tcp  = &(desc->data.tcp);
   qinet_descriptor_t *inet = &(tcp->inet);
   inet->state = QINET_STATE_OPEN;
+  if (qbuffer_init(&(tcp->buffer)) < 0) {
+    qerror("create descriptor buffer error");
+  }
 }
 
 qdescriptor_t* qdescriptor_new(int fd, unsigned short type, qactor_t *actor) {

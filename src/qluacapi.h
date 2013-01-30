@@ -36,11 +36,11 @@ void qluac_register(lua_State *state, struct qactor_t *);
  *      [OUT]descriptor or nil
  *
  *  qnode_tcp_accept: 
- *      [IN]descriptor, timeout
+ *      [IN]descriptor, [, timeout]
  *      [OUT]descriptor or nil(timeout)
  *
  *  qnode_tcp_recv: 
- *      [IN]socket
+ *      [IN]socket [, timeout]
  *      [OUT]packet
  *
  *  2) timer

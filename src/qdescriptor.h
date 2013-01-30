@@ -7,6 +7,7 @@
 
 #include <ifaddrs.h>
 #include <netinet/in.h>
+#include "qbuffer.h"
 #include "qlist.h"
 #include "qtype.h"
 
@@ -31,21 +32,13 @@ struct qactor_t;
 #define QINET_STATE_ACCEPTING       (QINET_STATE_LISTENING | QINET_F_ACC)
 #define QINET_STATE_MULTI_ACCEPTING (QINET_STATE_ACCEPTING | QINET_F_MULTI_CLIENT)
 
-/* The general purpose sockaddr */
-typedef union {
-  struct sockaddr sa;
-  struct sockaddr_in sai;
-#ifdef HAVE_IN6
-  struct sockaddr_in6 sai6;
-#endif
-} qinet_address_t;
-
 typedef struct qinet_descriptor_t {
   int state;
 } qinet_descriptor_t;
 
 typedef struct qtcp_descriptor_t {
   qinet_descriptor_t inet;
+  qbuffer_t buffer;
 } qtcp_descriptor_t;
 
 typedef struct qfile_descriptor_t {
@@ -66,7 +59,7 @@ typedef struct qdescriptor_t {
   } data;
 } qdescriptor_t;
 
-qdescriptor_t* qdescriptor_new(int fd, unsigned short type, qactor_t *actor);
+qdescriptor_t* qdescriptor_new(int fd, unsigned short type, struct qactor_t *actor);
 struct qactor_t* qdescriptor_get_actor(qdescriptor_t *desc);
 
 #endif  /* __QDESCRIPTOR_H__ */

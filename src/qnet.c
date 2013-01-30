@@ -12,6 +12,7 @@
 #include <sys/socket.h>
 #include "qassert.h"
 #include "qdefines.h"
+#include "qdescriptor.h"
 #include "qlog.h"
 #include "qnet.h"
 
@@ -97,3 +98,4 @@ int qnet_tcp_accept(int listen_fd,
   set_nonblocking(fd);
   return fd;
 }
+
