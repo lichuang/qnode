@@ -2,6 +2,7 @@
  * See Copyright Notice in qnode.h
  */
 
+#include <stdint.h>
 #include "qactor.h"
 #include "qassert.h"
 #include "qdefines.h"

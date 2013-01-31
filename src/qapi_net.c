@@ -50,7 +50,7 @@ static int qnode_tcp_listen(lua_State *state) {
   return 1;
 }
 
-static void node_accept(int fd, int flags, void *data) {
+static void socket_accept(int fd, int flags, void *data) {
   UNUSED(fd);
   UNUSED(flags);
   struct sockaddr remote;
@@ -88,7 +88,7 @@ static int qnode_tcp_accept(lua_State *state) {
   qtcp_descriptor_t *tcp = &(desc->data.tcp);
   int timeout = (int)lua_tonumber(state, 2);
   if (tcp->inet.state != QINET_STATE_LISTENING &&
-      tcp->inet.state != QINET_STATE_ACCEPTING) {
+    tcp->inet.state != QINET_STATE_ACCEPTING) {
     lua_pushnil(state);
     lua_pushfstring(state, "socket state %d error", tcp->inet.state);
     return 2;
@@ -97,7 +97,7 @@ static int qnode_tcp_accept(lua_State *state) {
   if (fd == -1) {
     if (errno == EAGAIN || errno == EWOULDBLOCK) {
       qengine_t *engine = qactor_get_engine(actor);
-      qengine_add_event(engine, desc->fd, QEVENT_READ, node_accept, desc);
+      qengine_add_event(engine, desc->fd, QEVENT_READ, socket_accept, desc);
       tcp->inet.state = QINET_STATE_ACCEPTING;
       return lua_yield(state, 0); 
     }
@@ -113,6 +113,31 @@ static int qnode_tcp_accept(lua_State *state) {
   return 1;
 }
 
+static void socket_recv(int fd, int flags, void *data) {
+  UNUSED(fd);
+  UNUSED(flags);
+  qdescriptor_t *desc = (qdescriptor_t *)data;
+  qtcp_descriptor_t *tcp = &(desc->data.tcp);
+  if (tcp->inet.state != QINET_STATE_CONNECTED) {
+    return;
+  }
+  qactor_t *actor = qdescriptor_get_actor(desc);
+  lua_State *state = actor->state;
+  int nret = qnet_tcp_recv(desc, 0);
+  if (nret < 0) {
+    lua_pushnil(state);
+    lua_pushliteral(state, "socket closed");
+    lua_resume(state, 2);
+    return;
+  }
+  qengine_t *engine = qactor_get_engine(actor);
+  qengine_del_event(engine, desc->fd, QEVENT_READ);
+  qinfo("recv: %s", desc->data.tcp.buffer.data);
+  desc->data.tcp.buffer.pos = 0;
+  lua_pushlightuserdata(state, &(desc->data.tcp.buffer));
+  lua_resume(state, 1);
+}
+
 static int qnode_tcp_recv(lua_State *state) {
   qdescriptor_t *desc = (qdescriptor_t*)lua_touserdata(state, 1);
   qtcp_descriptor_t *tcp = &(desc->data.tcp);
@@ -122,12 +147,70 @@ static int qnode_tcp_recv(lua_State *state) {
     return 2;
   }
 
-  return 0;
+  int nret = qnet_tcp_recv(desc, 0);
+  if (nret < 0) {
+    lua_pushnil(state);
+    lua_pushliteral(state, "socket closed");
+    return 2;
+  }
+  if (nret == 0) {
+    qactor_t *actor = qlua_get_actor(state);
+    qengine_t *engine = qactor_get_engine(actor);
+    qengine_add_event(engine, desc->fd, QEVENT_READ, socket_recv, desc);
+    return lua_yield(state, 0); 
+  }
+  desc->data.tcp.buffer.pos = 0;
+  qinfo("recv: %s", desc->data.tcp.buffer.data);
+  lua_pushlightuserdata(state, &(desc->data.tcp.buffer));
+  return 1;
+}
+
+static void socket_send(int fd, int flags, void *data) {
+  UNUSED(fd);
+  UNUSED(flags);
+  qdescriptor_t *desc = (qdescriptor_t *)data;
+  qtcp_descriptor_t *tcp = &(desc->data.tcp);
+  if (tcp->inet.state != QINET_STATE_CONNECTED) {
+    return;
+  }
+  qactor_t *actor = qdescriptor_get_actor(desc);
+  lua_State *state = actor->state;
+  int nret = qnet_tcp_send(desc);
+  if (nret < 0) {
+    lua_pushnil(state);
+    lua_pushliteral(state, "socket closed");
+    lua_resume(state, 2);
+    return;
+  }
+  qengine_t *engine = qactor_get_engine(actor);
+  qengine_del_event(engine, desc->fd, QEVENT_WRITE);
+  desc->data.tcp.buffer.pos = 0;
+  lua_resume(state, 1);
 }
 
 static int qnode_tcp_send(lua_State *state) {
-  UNUSED(state);
-  return 0;
+  qdescriptor_t *desc = (qdescriptor_t*)lua_touserdata(state, 1);
+  qtcp_descriptor_t *tcp = &(desc->data.tcp);
+  if (tcp->inet.state != QINET_STATE_CONNECTED) {
+    lua_pushnil(state);
+    lua_pushliteral(state, "socket closed");
+    return 2;
+  }
+
+  int nret = qnet_tcp_send(desc);
+  if (nret < 0) {
+    lua_pushnil(state);
+    lua_pushliteral(state, "socket closed");
+    return 2;
+  }
+  if (nret == 0) {
+    qactor_t *actor = qlua_get_actor(state);
+    qengine_t *engine = qactor_get_engine(actor);
+    qengine_add_event(engine, desc->fd, QEVENT_WRITE, socket_send, desc);
+    return lua_yield(state, 0); 
+  }
+  lua_pushnumber(state, 0);
+  return 1;
 }
 
 luaL_Reg net_apis[] = {

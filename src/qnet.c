@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include "qassert.h"
+#include "qbuffer.h"
 #include "qdefines.h"
 #include "qdescriptor.h"
 #include "qlog.h"
@@ -99,3 +100,72 @@ int qnet_tcp_accept(int listen_fd,
   return fd;
 }
 
+int qnet_tcp_recv(struct qdescriptor_t *desc, uint32_t size) {
+  qtcp_descriptor_t *tcp = &(desc->data.tcp);
+  int fd = desc->fd;
+  qbuffer_t *buffer = &(tcp->buffer);
+  qbuffer_reserve(buffer, size);
+  if (buffer->data == NULL) {
+    return -1;
+  }
+  int nbytes = recv(fd, buffer->data + buffer->pos,
+                        buffer->size - buffer->pos, 0);
+
+  /*
+   * Several errors are OK. When speculative read is being done we may not
+   * be able to read a single byte to the socket. Also, SIGSTOP issued
+   * by a debugging tool can result in EINTR error.
+   */
+  if (nbytes == -1
+    && (errno == EAGAIN
+      || errno == EWOULDBLOCK
+      || errno == EINTR)) {
+    return 0;
+  }
+
+  /*
+   * Signal peer failure.
+   */
+  if (nbytes == -1
+    && (errno == ECONNRESET
+      || errno == ECONNREFUSED
+      || errno == ETIMEDOUT
+      || errno == EHOSTUNREACH
+      || errno == ENOTCONN)) {
+    return -1;
+  }
+
+  if (nbytes == 0) {
+    return -1;
+  }
+  buffer->pos += nbytes;
+  buffer->len =  buffer->pos;
+  return nbytes;
+}
+
+int qnet_tcp_send(struct qdescriptor_t *desc) {
+  qtcp_descriptor_t *tcp = &(desc->data.tcp);
+  int fd = desc->fd;
+  qbuffer_t *buffer = &(tcp->buffer);
+
+  int nbytes = send(fd, buffer->data + buffer->pos,
+                    buffer->len - buffer->pos, 0);
+
+  /*  
+   *  Several errors are OK. When speculative write is being done we may not
+   *  be able to write a single byte to the socket. Also, SIGSTOP issued
+   *  by a debugging tool can result in EINTR error.
+   */
+  if (nbytes == -1 &&
+      (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) {
+    return 0;
+  }
+
+  /* 
+   * Signalise peer failure.
+   */
+  if (nbytes == -1 && (errno == ECONNRESET || errno == EPIPE)) {
+    return -1;
+  }
+  return nbytes;
+}

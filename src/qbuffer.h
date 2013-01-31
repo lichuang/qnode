@@ -10,15 +10,14 @@
 typedef struct qbuffer_t {
   char *data;
   uint32_t size;
+  uint32_t pos;
   uint32_t len;
 } qbuffer_t;
 
-#define qbuffer_reserve(buffer, size) do {    \
-  int left = (buffer)->size - (buffer)->len;  \
-  if (left < size) {                          \
-    qbuffer_extend((buffer), size);           \
-  }                                           \
-} while(0)
+#define qbuffer_reserve(buffer, len)  \
+  if ((buffer)->size < (len)) {       \
+    qbuffer_extend((buffer), (len));  \
+  } 
 
 int qbuffer_init(qbuffer_t *buffer);
 

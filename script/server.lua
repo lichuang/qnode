@@ -8,9 +8,13 @@ end
 
 function accept(_listen)
   print("in accept")
-  local fd = qnode_tcp_accept(_listen)
-  --local aid = qnode_spawn("server", "child", {id = 200, sock = socket})
-  print("after accept " .. fd)
+  local socket = qnode_tcp_accept(_listen)
+  print("after accept")
+  qnode_tcp_recv(socket)
+  print("after recv")
+  local n = qnode_tcp_send(socket)
+  print("send " .. n)
+  accept(_listen)
 end
 
 server.start = function()
