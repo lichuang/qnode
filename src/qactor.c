@@ -4,10 +4,10 @@
 
 #include <stdint.h>
 #include "qactor.h"
+#include "qapi.h"
 #include "qassert.h"
 #include "qdefines.h"
 #include "qengine.h"
-#include "qluacapi.h"
 #include "qluautil.h"
 #include "qlog.h"
 #include "qidmap.h"
@@ -47,7 +47,7 @@ void qactor_destroy(qactor_t *actor) {
 
 void qactor_attach(qactor_t *actor, lua_State *state) {
   qassert(actor->state == NULL);
-  qluac_register(state, actor);
+  qapi_register(state, actor);
   actor->state = state;
 }
 

@@ -2,7 +2,7 @@
  * See Copyright Notice in qnode.h
  */
 
-#include "qluacapi.h"
+#include "qapi.h"
 
 extern luaL_Reg node_apis[];
 extern luaL_Reg net_apis[];
@@ -15,7 +15,7 @@ static api_array array[] = {
   NULL
 };
 
-void qluac_register(lua_State *state, struct qactor_t *actor) {
+void qapi_register(lua_State *state, struct qactor_t *actor) {
   int i, j;
   for (i = 0; array[i] != NULL; ++i) {
     for (j = 0; array[i][j].name != NULL; ++j) {

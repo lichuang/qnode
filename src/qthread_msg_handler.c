@@ -8,7 +8,6 @@
 #include "qdefines.h"
 #include "qlist.h"
 #include "qlog.h"
-#include "qluacapi.h"
 #include "qluautil.h"
 #include "qmailbox.h"
 #include "qmalloc.h"

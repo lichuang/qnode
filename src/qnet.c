@@ -94,6 +94,9 @@ int qnet_tcp_accept(int listen_fd,
                     struct sockaddr *addr, socklen_t *addrlen) {
   int fd = accept(listen_fd, addr, addrlen);
   if (fd == -1) { 
+    if (errno == EAGAIN || errno == EWOULDBLOCK) {
+      return 0;
+    }
     return -1;
   }
   set_nonblocking(fd);
@@ -108,6 +111,7 @@ int qnet_tcp_recv(struct qdescriptor_t *desc, uint32_t size) {
   if (buffer->data == NULL) {
     return -1;
   }
+  buffer->len = size;
   int nbytes = recv(fd, buffer->data + buffer->pos,
                         buffer->size - buffer->pos, 0);
 
@@ -139,7 +143,9 @@ int qnet_tcp_recv(struct qdescriptor_t *desc, uint32_t size) {
     return -1;
   }
   buffer->pos += nbytes;
-  buffer->len =  buffer->pos;
+  if (buffer->len == 0) {
+    buffer->len =  buffer->pos;
+  }
   return nbytes;
 }
 

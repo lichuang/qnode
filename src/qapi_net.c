@@ -95,16 +95,15 @@ static int qnode_tcp_accept(lua_State *state) {
   }
   int fd = qnet_tcp_accept(desc->fd, &remote, &n);
   if (fd == -1) {
-    if (errno == EAGAIN || errno == EWOULDBLOCK) {
-      qengine_t *engine = qactor_get_engine(actor);
-      qengine_add_event(engine, desc->fd, QEVENT_READ, socket_accept, desc);
-      tcp->inet.state = QINET_STATE_ACCEPTING;
-      return lua_yield(state, 0); 
-    }
-
     lua_pushnil(state);
     lua_pushliteral(state, "socket closed");
     return 2;
+  }
+  if (fd == 0) {
+    qengine_t *engine = qactor_get_engine(actor);
+    qengine_add_event(engine, desc->fd, QEVENT_READ, socket_accept, desc);
+    tcp->inet.state = QINET_STATE_ACCEPTING;
+    return lua_yield(state, 0); 
   }
   qdescriptor_t *accept_desc = qdescriptor_new(fd, QDESCRIPTOR_TCP, actor);
   accept_desc->data.tcp.inet.state = QINET_STATE_CONNECTED;

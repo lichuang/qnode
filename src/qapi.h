@@ -2,8 +2,8 @@
  * See Copyright Notice in qnode.h
  */
 
-#ifndef __QLUACAPI_H__
-#define __QLUACAPI_H__
+#ifndef __QAPI_H__
+#define __QAPI_H__
 
 #include <lua.h>
 #include <lualib.h>
@@ -14,7 +14,7 @@ struct qactor_t;
 /*
  * regist all C APIs to Lua
  * */
-void qluac_register(lua_State *state, struct qactor_t *);
+void qapi_register(lua_State *state, struct qactor_t *);
 
 /*
  *  Lua C API:
@@ -34,16 +34,25 @@ void qluac_register(lua_State *state, struct qactor_t *);
  *  qnode_tcp_listen: 
  *      [IN]port, listen params table
  *      [OUT]descriptor or nil
+ *      [ERROR]nil, error message
  *
  *  qnode_tcp_accept: 
  *      [IN]descriptor, [, timeout]
  *      [OUT]descriptor or nil(timeout)
+ *      [ERROR]nil, error message
  *
  *  qnode_tcp_recv: 
  *      [IN]socket [, timeout]
- *      [OUT]packet
+ *      [OUT]buffer
+ *      [ERROR]nil, error message
+ *
+ *  qnode_tcp_send: 
+ *      [IN]socket [, timeout]
+ *      [OUT]0
+ *      [ERROR]nil, error message
  *
  *  2) timer
  *
  */
-#endif  /* __QLUACAPI_H__ */
+
+#endif  /* __QAPI_H__ */
