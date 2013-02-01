@@ -33,8 +33,12 @@ qactor_t *qactor_new(qid_t aid) {
   actor->state = NULL;
   qlist_entry_init(&(actor->entry));
   qlist_entry_init(&(actor->desc_list));
+  qlist_entry_init(&(actor->msg_list));
   actor->aid = aid;
   actor->parent = QID_INVALID;
+  actor->waiting_netio = 0;
+  actor->waiting_msg   = 0;
+  qspinlock_init(&(actor->desc_list_lock));
   qserver_new_actor(actor);
   return actor;
 }

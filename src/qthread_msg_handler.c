@@ -44,11 +44,22 @@ static int thread_handle_spawn_msg(qthread_t *thread, qmsg_t *msg) {
 
 static int thread_handle_tsend_msg(qthread_t *thread, qmsg_t *msg) {
   UNUSED(thread);
-  UNUSED(msg);
   qinfo("handle tsend msg");
-  //qactor_t *actor = msg->args.spawn.actor;
-  //actor->state = msg->args.spawn.state;
-  //lua_call(actor->state, 1, 0);
+  qactor_msg_t *actor_msg = msg->args.t_send.actor_msg;
+  qactor_t *actor = qserver_get_actor(actor_msg->dst);
+  lua_State *state = actor->state;
+  /*
+   * if the state yield waiting for msg, push the msg into stack and resume
+   * */
+  if (lua_status(state) == LUA_YIELD && actor->waiting_msg) {
+    actor->waiting_msg = 0;
+    lua_pushlightuserdata(state, actor_msg);
+    return lua_resume(state, 1);
+  }
+  /*
+   * else add the msg to the actor msg list
+   * */
+  qlist_add_tail(&actor_msg->msg_entry, &(actor->msg_list));
   return 0;
 }
 

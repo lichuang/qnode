@@ -25,7 +25,10 @@ typedef struct qarg_t {
 } qarg_t;
 
 typedef struct qactor_msg_t {
-  qlist_t head;
+  qlist_t arg_list;
+  qlist_t msg_entry;
+  qid_t src;
+  qid_t dst;
 } qactor_msg_t;
 
 struct qmailbox_t;

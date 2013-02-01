@@ -29,6 +29,10 @@ void qapi_register(lua_State *state, struct qactor_t *);
  *      [IN]id, args table
  *      [OUT]NONE
  *
+ *  qnode_controll: attach a descriptor to a node
+ *      [IN]descriptor
+ *      [OUT]NONE
+ *
  *  2) tcp
  *
  *  qnode_tcp_listen: 

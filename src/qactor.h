@@ -10,6 +10,7 @@
 #include <lauxlib.h>
 #include "qtype.h"
 #include "qlist.h"
+#include "qmutex.h"
 
 struct qdict_t;
 struct qengine_t;
@@ -18,11 +19,18 @@ struct qthread_t;
 
 typedef struct qactor_t {
   lua_State *state;
+  /*
+   * lua thread YIELD reason
+   */
+  unsigned waiting_netio:1;
+  unsigned waiting_msg:1;
   qtid_t tid;
   qid_t aid;
   qid_t parent;
   qlist_t entry;
-  qlist_t desc_list;
+  qlist_t desc_list;              /* descriptor list */
+  qspinlock_t desc_list_lock;     /* descriptor list lock */
+  qlist_t msg_list;               /* message list */
   struct qdict_t *listen_params;
 } qactor_t;
 

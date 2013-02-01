@@ -151,7 +151,7 @@ struct qactor_msg_t* qlua_copy_arg_table(lua_State *state, int table_idx) {
       } else {
         arg->val.num = (int)num_val;
       }
-      qlist_add_tail(&arg->entry, &msg->head);
+      qlist_add_tail(&arg->entry, &msg->arg_list);
       lua_pop(state, 1);
 
       str_val = NULL;

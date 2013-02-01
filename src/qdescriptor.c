@@ -6,6 +6,7 @@
 #include "qdescriptor.h"
 #include "qlog.h"
 #include "qmalloc.h"
+#include "qmutex.h"
 #include "qserver.h"
 
 static void init_tcp_descriptor(qdescriptor_t *desc) {
@@ -33,7 +34,9 @@ qdescriptor_t* qdescriptor_new(int fd, unsigned short type, qactor_t *actor) {
   }
   desc->aid  = actor->aid;
   desc->type = type;
+  qspinlock_lock(&(actor->desc_list_lock));
   qlist_add_tail(&desc->entry, &actor->desc_list);
+  qspinlock_unlock(&(actor->desc_list_lock));
 
   if (type == QDESCRIPTOR_TCP) {
     init_tcp_descriptor(desc);

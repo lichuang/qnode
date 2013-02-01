@@ -27,7 +27,8 @@ qmsg_t* qmsg_new(qtid_t sender_id, qtid_t receiver_id) {
 
 qactor_msg_t* qactor_msg_new() {
   qactor_msg_t *msg = qalloc_type(qactor_msg_t);
-  qlist_entry_init(&msg->head);
+  qlist_entry_init(&(msg->arg_list));
+  qlist_entry_init(&(msg->msg_entry));
   return msg;
 }
 

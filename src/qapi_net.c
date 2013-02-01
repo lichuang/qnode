@@ -213,9 +213,9 @@ static int qnode_tcp_send(lua_State *state) {
 }
 
 luaL_Reg net_apis[] = {
-  {"qnode_tcp_listen",  qnode_tcp_listen},
-  {"qnode_tcp_accept",  qnode_tcp_accept},
-  {"qnode_tcp_recv",    qnode_tcp_recv},
-  {"qnode_tcp_send",    qnode_tcp_send},
+  {"qnode_tcp_listen",    qnode_tcp_listen},
+  {"qnode_tcp_accept",    qnode_tcp_accept},
+  {"qnode_tcp_recv",      qnode_tcp_recv},
+  {"qnode_tcp_send",      qnode_tcp_send},
   {NULL, NULL},
 };

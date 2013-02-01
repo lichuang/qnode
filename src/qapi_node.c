@@ -6,10 +6,12 @@
 #include "qactor.h"
 #include "qassert.h"
 #include "qdefines.h"
+#include "qdescriptor.h"
 #include "qdict.h"
 #include "qluautil.h"
 #include "qlog.h"
 #include "qmsg.h"
+#include "qmutex.h"
 #include "qserver.h"
 #include "qstring.h"
 #include "qthread.h"
@@ -51,7 +53,7 @@ static int qnode_spawn(lua_State *state) {
 }
 
 static int qnode_send(lua_State *state) {
-  qactor_t *srqnode = qlua_get_actor(state);
+  qactor_t *src_actor = qlua_get_actor(state);
   qid_t id = (qid_t)lua_tonumber(state, 1);
   qactor_t *dst_actor = qserver_get_actor(id);
   if (dst_actor == NULL) {
@@ -61,16 +63,42 @@ static int qnode_send(lua_State *state) {
   }
   /* copy args table */
   qactor_msg_t *actor_msg = qlua_copy_arg_table(state, 2);
+  actor_msg->src = src_actor->aid;
+  actor_msg->dst = dst_actor->aid;
 
-  qmsg_t *msg = qmsg_new(srqnode->tid, dst_actor->tid);
+  qmsg_t *msg = qmsg_new(src_actor->tid, dst_actor->tid);
   qmsg_init_tsend(msg, actor_msg);
   qmsg_send(msg);
   lua_pushnumber(state, 0);
   return 1;
 }
 
+static int qnode_attach(lua_State *state) {
+  qdescriptor_t *desc = (qdescriptor_t*)lua_touserdata(state, 1);
+  qactor_t *old_actor = qdescriptor_get_actor(desc);
+  qactor_t *actor = qlua_get_actor(state);
+  if (old_actor->aid == actor->aid) {
+    return 0;
+  }
+  /*
+   * detach from old actor
+   * */
+  qspinlock_lock(&(old_actor->desc_list_lock));
+  qlist_del_init(&(desc->entry));
+  qspinlock_unlock(&(old_actor->desc_list_lock));
+  /*
+   * attach to new actor
+   * */
+  qspinlock_lock(&(actor->desc_list_lock));
+  desc->aid = actor->aid;
+  qlist_add_tail(&desc->entry, &actor->desc_list);
+  qspinlock_unlock(&(actor->desc_list_lock));
+  return 0;
+}
+
 luaL_Reg node_apis[] = {
   {"qnode_spawn",       qnode_spawn},
   {"qnode_send",        qnode_send},
+  {"qnode_attach",      qnode_attach},
   {NULL, NULL},
 };
