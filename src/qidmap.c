@@ -2,6 +2,8 @@
  * See Copyright Notice in qnode.h
  */
 
+#include <stdio.h>
+#include "qassert.h"
 #include "qidmap.h"
 
 /* page size = 2^12 = 4K */
@@ -66,10 +68,11 @@ static int alloc_qid(qidmap_t *idmap) {
   return QID_INVALID;
 }
 
-void qid_free(qidmap_t *idmap, qid_t qid) {
-  int offset = qid & BITS_PER_PAGE_MASK;
+void qid_free(qidmap_t *idmap, qid_t id) {
+  int offset = id & BITS_PER_PAGE_MASK;
   idmap->nr_free++;
   clear_bit(offset, &idmap->page);
+  idmap->data[id] = NULL;
 }
 
 void qidmap_init(qidmap_t *idmap) {
@@ -77,10 +80,16 @@ void qidmap_init(qidmap_t *idmap) {
   idmap->nr_free = QID_MAX;
   for (i = 0; i < QID_MAX; ++i) {
     idmap->page[i] = '0';
+    idmap->data[i] = NULL;
   }
   idmap->last_qid = QID_INVALID;
 }
 
 qid_t qid_new(qidmap_t *idmap) {
   return alloc_qid(idmap);
+}
+
+void   qid_attach(qidmap_t *idmap, qid_t id, void *data) {
+  qassert(idmap->data[id] == NULL);
+  idmap->data[id] = data;
 }

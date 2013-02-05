@@ -24,10 +24,13 @@ static void init_qevent(qevent_t *event) {
 
 static void init_engine_time(qengine_t *engine) {
   struct tm tm;
-  time_t t;
-  t = time(NULL);
+  time_t t = time(NULL);
   localtime_r(&t, &tm);
   strftime(engine->time_buff, sizeof(engine->time_buff), "[%m-%d %T]", &tm);
+  /*
+   * convert to ms
+   * */
+  engine->now = 1000 * t;
 }
 
 qengine_t* qengine_new() {
@@ -47,7 +50,7 @@ qengine_t* qengine_new() {
     event = &(engine->active_events[i]);
     init_qevent(event);
   }
-  qtimer_heap_init(&engine->timer_heap);
+  qtimer_manager_init(&engine->timer_mng, engine);
   init_engine_time(engine);
   return engine;
 }
@@ -100,33 +103,25 @@ int qengine_del_event(qengine_t* engine, int fd, int flags) {
   return 0;
 }
 
-static qtime_t time_minus(struct timeval *time1, struct timeval *time2) {
-  qtime_t sec  = time1->tv_sec  - time2->tv_sec;
-  qtime_t usec = time1->tv_usec - time2->tv_usec;
+/*
+static uint32_t time_minus(struct timeval *time1, struct timeval *time2) {
+  uint32_t sec  = time1->tv_sec  - time2->tv_sec;
+  uint32_t usec = time1->tv_usec - time2->tv_usec;
   return (sec / 1000 + usec * 1000);
 }
+*/
 
 int qengine_loop(qengine_t* engine) {
   int done = 0;
   int num, i;
-  struct timeval now_time;
-  struct timeval *nearest_time;
-  qtime_t timeout_ms;
+  //struct timeval now_time;
+  //uint32_t timeout_ms;
   while (!done) {
     init_engine_time(engine);
 
-    gettimeofday(&now_time, NULL);
-    nearest_time = qtimer_nearest(&engine->timer_heap);
-    if (nearest_time == NULL) {
-      timeout_ms = -1;
-    } else {
-      timeout_ms = time_minus(nearest_time, &now_time);
-    }
-    if (timeout_ms < 0) {
-      num = engine->dispatcher->poll(engine, -1);
-    } else {
-      num = engine->dispatcher->poll(engine, timeout_ms);
-    }
+    //gettimeofday(&now_time, NULL);
+    int next = qtimer_next(&engine->timer_mng);
+    num = engine->dispatcher->poll(engine, next);
     for (i = 0; i < num; i++) {
       qevent_t *event = &(engine->events[engine->active_events[i].fd]);
       int flags = engine->active_events[i].flags;
@@ -143,7 +138,7 @@ int qengine_loop(qengine_t* engine) {
         }
       }
     }
-    qtimer_process(&engine->timer_heap, &now_time);
+    qtimer_process(&(engine->timer_mng));
   }
   return 0;
 }
@@ -152,10 +147,10 @@ void qengine_destroy(qengine_t *engine) {
   qfree(engine);
 }
 
-qid_t qengine_add_timer(qengine_t* engine, qtime_t timeout_ms, qtimer_func_t *func, int type, void *data) {
-  return qtimer_add(&engine->timer_heap, timeout_ms, func, type, data);
+qid_t qengine_add_timer(qengine_t* engine, uint32_t timeout_ms, qtimer_func_t *func, int type, void *data) {
+  return qtimer_add(&engine->timer_mng, timeout_ms, func, type, data);
 }
 
 int qengine_del_timer(qengine_t* engine, qid_t id) {
-  return qtimer_del(&engine->timer_heap, id);
+  return qtimer_del(&engine->timer_mng, id);
 }

@@ -12,6 +12,4 @@ typedef long qid_t;
 
 typedef void (qtimer_func_t)(void *data);
 
-typedef long long qtime_t;
-
 #endif  /* __QTYPE_H__ */

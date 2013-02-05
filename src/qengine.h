@@ -5,8 +5,9 @@
 #ifndef __QENGINE_H__
 #define __QENGINE_H__
 
+#include <stdint.h>
 #include <sys/time.h>
-#include "qtimer_heap.h"
+#include "qtimer.h"
 
 #define QMAX_EVENTS  (1024 * 10)
 
@@ -39,7 +40,7 @@ typedef struct qdispatcher_t {
   int (*init)(struct qengine_t*);
   int (*add)(struct qengine_t *engine, int fd, int flags);
   int (*del)(struct qengine_t *engine, int fd, int flags);
-  int (*poll)(struct qengine_t *, qtime_t timeout_ms);
+  int (*poll)(struct qengine_t *, uint32_t timeout_ms);
 } qdispatcher_t;
 
 typedef struct qengine_t {
@@ -48,7 +49,8 @@ typedef struct qengine_t {
   int max_fd;
   const struct qdispatcher_t *dispatcher;
   void *data;
-  qtimer_heap_t timer_heap;
+  qtimer_manager_t timer_mng;
+  uint64_t now;
   char time_buff[20];
 } qengine_t;
 
@@ -59,7 +61,7 @@ void qengine_destroy(qengine_t *engine);
 int qengine_add_event(qengine_t* engine, int fd, int flags, qevent_func_t *callback, void *data);
 int qengine_del_event(qengine_t* engine, int fd, int flags);
 
-qid_t qengine_add_timer(qengine_t* engine, qtime_t timeout_ms, qtimer_func_t *func, int type, void *data);
+qid_t qengine_add_timer(qengine_t* engine, uint32_t timeout_ms, qtimer_func_t *func, int type, void *data);
 int qengine_del_timer(qengine_t* engine, qid_t id);
 
 #endif  /* __QENGINE_H__ */
