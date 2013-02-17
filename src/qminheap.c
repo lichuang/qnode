@@ -8,6 +8,7 @@
 
 void qminheap_init(qminheap_t *heap, cmp_func_t cmp, set_func_t set, get_func_t get) {
   int i = 0;
+  heap->data = (void**)qmalloc(QID_MAX * sizeof(void*)); 
   for (i = 0; i < QID_MAX; ++i) {
     heap->data[i] = NULL;
   }
