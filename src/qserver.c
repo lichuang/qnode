@@ -2,6 +2,7 @@
  * See Copyright Notice in qnode.h
  */
 
+#include <signal.h>
 #include <stdio.h>
 #include "qactor.h"
 #include "qassert.h"
@@ -138,6 +139,32 @@ static void init_thread(qserver_t *server) {
   }
 }
 
+static void sig_handler(int sig) {
+  qinfo("caught signal %d", sig);
+  switch (sig) {
+  case SIGTERM:
+  case SIGINT:
+  case SIGQUIT:
+  case SIGABRT:
+    g_server->started = 0;
+    break;
+  default:
+    break;
+  }
+}
+
+static void setup_signal() {
+  struct sigaction act;
+
+  sigemptyset(&act.sa_mask);
+  act.sa_flags = SA_NODEFER | SA_ONSTACK | SA_RESETHAND;
+  act.sa_handler = sig_handler;
+  sigaction(SIGTERM, &act, NULL);
+  sigaction(SIGINT,  &act, NULL);
+  sigaction(SIGQUIT, &act, NULL);
+  sigaction(SIGABRT, &act, NULL);
+}
+
 static int server_init(struct qconfig_t *config) {
   qassert(config);
   qassert(config->thread_num > 0);
@@ -168,6 +195,7 @@ static int server_init(struct qconfig_t *config) {
   init_thread(server);
   qidmap_init(&server->id_map);
   qmutex_init(&server->id_map_mutex);
+  setup_signal();
 
   server->thread_log[0] = qthread_log_init(server->engine, 0);
   server_start(server);
@@ -175,11 +203,18 @@ static int server_init(struct qconfig_t *config) {
   return 0;
 }
 
+static void destroy_server() {
+  qinfo("destroy_server");
+}
+
 int qserver_run(struct qconfig_t *config) {
   if (server_init(config) != 0) {
     return -1;
   }
-  qengine_loop(g_server->engine);
+  g_server->started = 1;
+  while (g_server->started && qengine_loop(g_server->engine) == 0) {
+  }
+  destroy_server();
   return 0;
 }
 

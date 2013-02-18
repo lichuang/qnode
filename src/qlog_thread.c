@@ -58,7 +58,8 @@ static void thread_log_box(int fd, int flags, void *data) {
 static void* main_loop(void *arg) {
   qlog_thread_t *thread = (qlog_thread_t*)arg;
   thread->started = 1;
-  qengine_loop(thread->engine);
+  while (thread->started && qengine_loop(thread->engine) == 0) {
+  }
   return NULL;
 }
 

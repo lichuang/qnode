@@ -32,6 +32,7 @@ typedef struct qserver_t {
   unsigned int num_actor;
   qidmap_t id_map;
   qmutex_t  id_map_mutex;
+  int               started:1;
 } qserver_t;
 
 int qserver_run(struct qconfig_t *config);

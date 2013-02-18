@@ -94,7 +94,8 @@ static void* main_loop(void *arg) {
   qthread_t *thread = (qthread_t*)arg;
   g_server->thread_log[thread->tid] = qthread_log_init(thread->engine, thread->tid);
   thread->started = 1;
-  qengine_loop(thread->engine);
+  while (thread->started && qengine_loop(thread->engine) == 0) {
+  }
   return NULL;
 }
 

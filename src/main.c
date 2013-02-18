@@ -9,7 +9,6 @@
 
 int main(int argc, char *argv[]) {
   struct qconfig_t config;
-  config.thread_num = 10;
   if (argc > 1) {
     qconfig_init(&config, argv[1]);
   } else {

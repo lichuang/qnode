@@ -103,43 +103,29 @@ int qengine_del_event(qengine_t* engine, int fd, int flags) {
   return 0;
 }
 
-/*
-static uint32_t time_minus(struct timeval *time1, struct timeval *time2) {
-  uint32_t sec  = time1->tv_sec  - time2->tv_sec;
-  uint32_t usec = time1->tv_usec - time2->tv_usec;
-  return (sec / 1000 + usec * 1000);
-}
-*/
-
 int qengine_loop(qengine_t* engine) {
-  int done = 0;
   int num, i;
-  //struct timeval now_time;
-  //uint32_t timeout_ms;
-  while (!done) {
-    init_engine_time(engine);
+  init_engine_time(engine);
 
-    //gettimeofday(&now_time, NULL);
-    int next = qtimer_next(&engine->timer_mng);
-    num = engine->dispatcher->poll(engine, next);
-    for (i = 0; i < num; i++) {
-      qevent_t *event = &(engine->events[engine->active_events[i].fd]);
-      int flags = engine->active_events[i].flags;
-      int fd = engine->active_events[i].fd;
-      int read = 0;
+  int next = qtimer_next(&engine->timer_mng);
+  num = engine->dispatcher->poll(engine, next);
+  for (i = 0; i < num; i++) {
+    qevent_t *event = &(engine->events[engine->active_events[i].fd]);
+    int flags = engine->active_events[i].flags;
+    int fd = engine->active_events[i].fd;
+    int read = 0;
 
-      if (event->flags & flags & QEVENT_READ) {
-        read = 1;
-        event->read(fd, flags, event->data);
-      }
-      if (event->flags & flags & QEVENT_WRITE) {
-        if (!read || event->write != event->read) {
-          event->write(fd, flags, event->data);
-        }
+    if (event->flags & flags & QEVENT_READ) {
+      read = 1;
+      event->read(fd, flags, event->data);
+    }
+    if (event->flags & flags & QEVENT_WRITE) {
+      if (!read || event->write != event->read) {
+        event->write(fd, flags, event->data);
       }
     }
-    qtimer_process(&(engine->timer_mng));
   }
+  qtimer_process(&(engine->timer_mng));
   return 0;
 }
 
