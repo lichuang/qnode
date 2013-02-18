@@ -33,6 +33,34 @@ lua_State* qlua_new_thread(qthread_t *thread) {
   return lua_newthread(thread->state);
 }
 
+static int err_func(lua_State * state) {
+  lua_getfield(state, LUA_GLOBALSINDEX, "debug");
+  if (!lua_istable(state, -1)) {
+    lua_pop(state, 1); 
+    return 1;
+  }
+
+  lua_getfield(state, -1, "traceback");
+  if (!lua_isfunction(state, -1)) {
+    lua_pop(state, 2); 
+    return 1;
+  }
+
+  lua_pushvalue(state, 1);  /* pass error message */
+  lua_pushinteger(state, 2);  /* skip this function and traceback */
+  lua_call(state, 2, 1);  /* call debug.traceback */
+  return 1;
+}
+
+int qlua_call(lua_State *state, int args, int results) {
+  int base = lua_gettop(state) - args;
+  lua_pushcfunction(state, &err_func);
+  lua_insert(state, base);
+  int ret = lua_pcall(state, args, results, base);
+  lua_remove(state, base);
+  return ret;
+}
+
 int qlua_get_table(lua_State *state, int idx, const char *key) {
   lua_pushvalue(state, idx);
   lua_pushstring(state, key);
@@ -211,4 +239,20 @@ int qlua_init_path(struct qactor_t *actor) {
 struct qactor_t* qlua_get_actor(lua_State *state) {
   lua_getglobal(state, "qnode");
   return (qactor_t*)lua_touserdata(state, -1);
+}
+
+void qlua_fail(lua_State *state, char *file, int line) {                                           \
+  char tmp_buff[8000+1]={0,};                                              
+  snprintf(tmp_buff, 8000, "%s:%d lua_call failed\n\t%s", file, line, lua_tostring(state, -1 )); 
+  qerror( tmp_buff ); 
+  /*
+  lua_State* L_ = g_luasvr->L();                                                  
+  assert( L_ );                                                                   
+  g_luasvr->get_lua_ref( ADD_LLUA_FAIL_LOG );                                     
+  lua_pushstring( L_,  tmp_buff );                                                
+  if( llua_call( L_, 1, 0, 0 ) )                                                  
+  {                                                                               
+    ERR(2)("[LUAWRAPPER](lmisc) %s:%d add llua fail err.", __FILE__, __LINE__ );
+  } 
+  */
 }

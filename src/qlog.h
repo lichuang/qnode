@@ -20,8 +20,8 @@
 #define QLOG_DEBUG             8
 
 #define QMAX_LOG_SIZE    1000
-#define QMAX_FORMAT_SIZE 100
-#define QMAX_FILE_SIZE 100
+#define QMAX_FORMAT_SIZE 1000
+#define QMAX_FILE_SIZE   200
 
 typedef struct qlog_t {
   qlist_t entry;

@@ -21,6 +21,8 @@ int qlua_get_table(lua_State *state, int idx, const char *key);
 int qlua_get_table_string(lua_State *state, const char *key, qstring_t *string);
 int qlua_get_table_number(lua_State *state, const char *key, int *number);
 
+int qlua_call(lua_State *state, int args, int results);
+
 void qlua_copy_table(lua_State *src, lua_State *dst, int table_idx);
 struct qactor_msg_t* qlua_copy_arg_table(lua_State *state, int table_idx);
 
@@ -29,5 +31,7 @@ int qlua_dofile(lua_State *state, const char *filename);
 int qlua_init_path(struct qactor_t *actor);
 
 struct qactor_t* qlua_get_actor(lua_State *state);
+
+void qlua_fail(lua_State *state, char *file, int line);
 
 #endif  /* __QLUAUTIL_H__ */

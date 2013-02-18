@@ -28,9 +28,24 @@ static int thread_handle_sstart_msg(qthread_t *thread, qmsg_t *msg) {
   }
   lua_State *state = actor->state;
   lua_getglobal(state, "server");
+  if (lua_isnil(state, -1)) {
+    qerror("load server start script error");
+    return -1;
+  }
   lua_getfield(state, -1, "start");
-  lua_call(state, 0, 0);
-  return 0;
+  if (lua_isnil(state, -1)) {
+    qerror("load server start script error");
+    return -1;
+  }
+  int ret = 0;
+  if (qlua_call(state, 0, 0) == 0) {
+    ret = (int)lua_tonumber(state, -1);
+    lua_pop(state, 1 );
+  } else {
+    qlua_fail(state, __FILE__, __LINE__);
+  }
+
+  return ret;
 }
 
 static int thread_handle_spawn_msg(qthread_t *thread, qmsg_t *msg) {
