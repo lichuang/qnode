@@ -23,7 +23,7 @@ typedef struct qthread_box_t {
 } qthread_box_t;
 
 typedef struct qthread_t {
-  unsigned short started;
+  int started:1;
   pthread_t id;
   qtid_t tid;
   struct qengine_t *engine;

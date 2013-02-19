@@ -22,6 +22,7 @@ typedef struct qarg_t {
     qstring_t str;
     int num;
   } val;
+  int val_type:1;   /* 0 means string, 1 means number */
 } qarg_t;
 
 typedef struct qactor_msg_t {
@@ -53,10 +54,13 @@ enum {
   MSG_FLAG  = 4,        /* both side message flag */
 };
 
-/* define messages between worker-thread and main-thread */
+/* 
+ * define messages between worker-thread and main-thread 
+ */
 typedef struct qmsg_t {
   qlist_t entry;
 
+  int handled:1;            /* whether the msg has been handler by receiver */
   unsigned short flag;
   unsigned int type;
 
@@ -88,6 +92,7 @@ typedef int (*qthread_msg_handler)(struct qthread_t *thread, struct qmsg_t *msg)
 typedef int (*qserver_msg_handler)(struct qserver_t *server, struct qmsg_t *msg);
 
 qmsg_t* qmsg_new(qtid_t sender_id, qtid_t receiver_id);
+void qmsg_destroy(qmsg_t *msg);
 qactor_msg_t* qactor_msg_new();
 void qactor_msg_destroy(qactor_msg_t *msg);
 qarg_t* qarg_new();

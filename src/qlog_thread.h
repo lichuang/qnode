@@ -11,7 +11,7 @@ struct qengine_t;
 struct qsignal_t;
 
 typedef struct qlog_thread_t {
-  unsigned short started;
+  int started:1;
   pthread_t id;
   struct qengine_t *engine;
   struct qsignal_t **signals;

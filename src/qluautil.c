@@ -57,7 +57,9 @@ int qlua_call(lua_State *state, int args, int results) {
   lua_pushcfunction(state, &err_func);
   lua_insert(state, base);
   int ret = lua_pcall(state, args, results, base);
-  lua_remove(state, base);
+  if (lua_status(state) != LUA_YIELD) {
+    lua_remove(state, base);
+  }
   return ret;
 }
 
@@ -176,8 +178,10 @@ struct qactor_msg_t* qlua_copy_arg_table(lua_State *state, int table_idx) {
       if (str_val) {
         qstring_init_str(arg->val.str); 
         qstring_assign(&(arg->val.str), str_val);
+        arg->val_type = 0;
       } else {
         arg->val.num = (int)num_val;
+        arg->val_type = 1;
       }
       qlist_add_tail(&arg->entry, &msg->arg_list);
       lua_pop(state, 1);

@@ -18,6 +18,7 @@ typedef struct qmailbox_t {
   qevent_func_t *callback; /* mailbox reader callback */
   void *reader;            /* mailbox reader */
   struct qsignal_t *signal;
+  int active:1;
 } qmailbox_t;
 
 qmailbox_t* qmailbox_new(qevent_func_t *callback, void *reader);

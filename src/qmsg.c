@@ -11,6 +11,7 @@
 #include "qmalloc.h"
 #include "qmsg.h"
 #include "qserver.h"
+#include "qstring.h"
 #include "qthread.h"
 
 qmsg_t* qmsg_new(qtid_t sender_id, qtid_t receiver_id) {
@@ -21,8 +22,25 @@ qmsg_t* qmsg_new(qtid_t sender_id, qtid_t receiver_id) {
   qlist_entry_init(&(msg->entry));
   msg->sender_id = sender_id;
   msg->receiver_id = receiver_id;
-  msg->flag = msg->type = 0;
+  msg->flag = msg->type = msg->handled = 0;
   return msg;
+}
+
+void qmsg_destroy(qmsg_t *msg) {
+  switch (msg->type) {
+    case s_start:
+      break;
+    case spawn:
+      break;
+    case t_send:
+      if (msg->handled == 0) {
+        qactor_msg_destroy(msg->args.t_send.actor_msg);
+      }
+      break;
+    default:
+      break;
+  }
+  qfree(msg);
 }
 
 qactor_msg_t* qactor_msg_new() {
@@ -33,7 +51,16 @@ qactor_msg_t* qactor_msg_new() {
 }
 
 void qactor_msg_destroy(qactor_msg_t *msg) {
-  UNUSED(msg);
+  qlist_t *pos, *next;
+  for (pos = msg->arg_list.next; pos != &(msg->arg_list); ) {
+    qarg_t *arg = qlist_entry(pos, qarg_t, entry);
+    next = pos->next;
+    qstring_destroy(&(arg->key.str));
+    if (arg->val_type == 0) {
+      qstring_destroy(&(arg->val.str));
+    }
+    pos = next;
+  }
 }
 
 qarg_t* qarg_new() {

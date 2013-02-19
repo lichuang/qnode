@@ -26,10 +26,12 @@ qmailbox_t* qmailbox_new(qevent_func_t *callback, void *reader) {
   qsignal_t *signal = qsignal_new();
   qalloc_assert(signal);
   box->signal = signal;
+  box->active = 1;
   return box;
 }
 
 void qmailbox_destroy(qmailbox_t *box) {
+  qassert(box->active == 0);
   qsignal_destroy(box->signal);
   qfree(box);
 }
@@ -42,6 +44,10 @@ int qmailbox_active(qengine_t *engine, qmailbox_t *box) {
 }
 
 void qmailbox_add(qmailbox_t *box, struct qmsg_t *msg) {
+  if (!box->active) {
+    qmsg_destroy(msg);
+    return;
+  }
   if (box->write == NULL) {
     qassert(box->write);
   }

@@ -71,7 +71,8 @@ static void server_box(int fd, int flags, void *data) {
     (g_server_msg_handlers[msg->type])(g_server, msg);
 
 next:
-    qfree(msg);
+    msg->handled = 1;
+    qmsg_destroy(msg);
     pos = next;
   }
 }
@@ -146,7 +147,7 @@ static void sig_handler(int sig) {
   case SIGINT:
   case SIGQUIT:
   case SIGABRT:
-    g_server->started = 0;
+    g_server->status = STOPPING;
     break;
   default:
     break;
@@ -199,20 +200,32 @@ static int server_init(struct qconfig_t *config) {
 
   server->thread_log[0] = qthread_log_init(server->engine, 0);
   server_start(server);
-  qinfo("qserver started...");
+  qinfo("qserver status...");
   return 0;
 }
 
+static void destroy_threads() {
+  int i;
+  for (i = 1; i <= g_server->config->thread_num; ++i) {
+    qthread_t *thread = g_server->threads[i];
+    qthread_destroy(thread);
+  }
+}
+
 static void destroy_server() {
+  if (g_server->status != STOPPING) {
+    return;
+  }
   qinfo("destroy_server");
+  destroy_threads();
 }
 
 int qserver_run(struct qconfig_t *config) {
   if (server_init(config) != 0) {
     return -1;
   }
-  g_server->started = 1;
-  while (g_server->started && qengine_loop(g_server->engine) == 0) {
+  g_server->status = RUNNING;
+  while (g_server->status == RUNNING && qengine_loop(g_server->engine) == 0) {
   }
   destroy_server();
   return 0;

@@ -48,7 +48,8 @@ static void server_box_func(int fd, int flags, void *data) {
     (g_thread_msg_handlers[msg->type])(thread, msg);
 
 next:
-    qfree(msg);
+    msg->handled = 1;
+    qmsg_destroy(msg);
     pos = next;
   }
 }
@@ -85,7 +86,8 @@ static void thread_box_func(int fd, int flags, void *data) {
     (g_thread_msg_handlers[msg->type])(thread, msg);
 
 next:
-    qfree(msg);
+    msg->handled = 1;
+    qmsg_destroy(msg);
     pos = next;
   }
 }
@@ -125,8 +127,10 @@ qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
       continue;
     }
     if (i == 0) {
+      /* communicate with main thread */
       thread->in_box[i] = qmailbox_new(server_box_func, thread);
     } else {
+      /* communicate with other worker thread */
       thread->thread_box[i] = qalloc_type(qthread_box_t);
       thread->in_box[i] = qmailbox_new(thread_box_func, thread->thread_box[i]);
       thread->thread_box[i]->thread = thread;
@@ -145,4 +149,26 @@ qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
     usleep(100);
   }
   return thread;
+}
+
+void qthread_destroy(qthread_t *thread) {
+  int i;
+  int thread_num = g_server->config->thread_num;
+
+  /* handle worker thread msg */
+  for (i = 1; i < thread_num; ++i) {
+    if (i == (int)thread->tid) {
+      continue;
+    }
+    qmailbox_t *box = thread->in_box[i];
+    box->active = 0;
+    thread_box_func(0, 0, box);
+    qmailbox_destroy(box);
+    thread->out_box[i]->active = 0;
+    qmailbox_destroy(thread->out_box[i]);
+    qfree(thread->thread_box[i]);
+  }
+  qfree(thread->in_box);
+  qfree(thread->out_box);
+  qfree(thread->thread_box);
 }
