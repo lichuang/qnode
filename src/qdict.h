@@ -64,10 +64,11 @@ typedef struct qdict_t {
   unsigned int num;
 } qdict_t;
 
-qdict_t* qdict_new(unsigned int hashsize);
-int qdict_add(qdict_t *dict, qkey_t *key, qdict_val_t *val);
-int qdict_replace(qdict_t *dict, qkey_t *key, qdict_val_t *val);
-qdict_val_t* qdict_get(qdict_t *dict, qkey_t *key);
+qdict_t*      qdict_new(unsigned int hashsize);
+void          qdict_destroy(qdict_t *dict);
+int           qdict_add(qdict_t *dict, qkey_t *key, qdict_val_t *val);
+int           qdict_replace(qdict_t *dict, qkey_t *key, qdict_val_t *val);
+qdict_val_t*  qdict_get(qdict_t *dict, qkey_t *key);
 
 int qdict_copy_lua_table(qdict_t *dict, lua_State *state, int index);
 #endif  /* __QDICT_H__ */

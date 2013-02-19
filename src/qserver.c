@@ -213,9 +213,10 @@ static void destroy_threads() {
 }
 
 static void destroy_server() {
-  if (g_server->status != STOPPING) {
+  if (g_server->status == STOPPED) {
     return;
   }
+  g_server->status = STOPPED;
   qinfo("destroy_server");
   destroy_threads();
 }

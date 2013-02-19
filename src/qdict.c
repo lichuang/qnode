@@ -25,6 +25,10 @@ qdict_t* qdict_new(unsigned int hashsize) {
   return dict;
 }
 
+void qdict_destroy(qdict_t *dict) {
+  qfree(dict);
+}
+
 static int hashstring(const char *str, size_t len) {
   unsigned int hash = 5381;
 

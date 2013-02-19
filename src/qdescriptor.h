@@ -59,7 +59,8 @@ typedef struct qdescriptor_t {
   } data;
 } qdescriptor_t;
 
-qdescriptor_t* qdescriptor_new(int fd, unsigned short type, struct qactor_t *actor);
-struct qactor_t* qdescriptor_get_actor(qdescriptor_t *desc);
+qdescriptor_t*    qdescriptor_new(int fd, unsigned short type, struct qactor_t *actor);
+void              qdescriptor_destroy(qdescriptor_t *desc);
+struct qactor_t*  qdescriptor_get_actor(qdescriptor_t *desc);
 
 #endif  /* __QDESCRIPTOR_H__ */

@@ -7,6 +7,8 @@
 #include "qapi.h"
 #include "qassert.h"
 #include "qdefines.h"
+#include "qdescriptor.h"
+#include "qdict.h"
 #include "qengine.h"
 #include "qluautil.h"
 #include "qlog.h"
@@ -46,6 +48,28 @@ qactor_t *qactor_new(qid_t aid) {
 void qactor_destroy(qactor_t *actor) {
   qassert(actor);
   lua_close(actor->state);
+  qmutex_lock(&g_server->id_map_mutex);
+  qid_free(&(g_server->id_map), actor->aid);
+  qmutex_unlock(&g_server->id_map_mutex);
+  qspinlock_lock(&(actor->desc_list_lock));
+  qlist_t *pos, *next;
+  for (pos = actor->desc_list.next; pos != &(actor->desc_list); ) {
+    qdescriptor_t *desc = qlist_entry(pos, qdescriptor_t, entry);
+    next = pos->next;
+    qdescriptor_destroy(desc);
+    pos  = next;
+  }
+  qspinlock_unlock(&(actor->desc_list_lock));
+  qspinlock_destroy(&(actor->desc_list_lock));
+  for (pos = actor->msg_list.next; pos != &(actor->msg_list); ) {
+    qmsg_t *msg = qlist_entry(pos, qmsg_t, entry);
+    next = pos->next;
+    qmsg_destroy(msg);
+    pos  = next;
+  }
+  if (actor->listen_params != NULL) {
+    qdict_destroy(actor->listen_params);
+  }
   qfree(actor);
 }
 

@@ -44,6 +44,10 @@ qdescriptor_t* qdescriptor_new(int fd, unsigned short type, qactor_t *actor) {
   return desc;
 }
 
+void qdescriptor_destroy(qdescriptor_t *desc) {
+  qfree(desc);
+}
+
 struct qactor_t* qdescriptor_get_actor(qdescriptor_t *desc) {
   if (desc->aid >= 0) {
     return g_server->actors[desc->aid];
