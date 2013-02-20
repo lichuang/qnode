@@ -1,6 +1,8 @@
 /*
  * See Copyright Notice in qnode.h
  */
+
+#include <unistd.h>
 #include "qactor.h"
 #include "qassert.h"
 #include "qdescriptor.h"
@@ -44,7 +46,26 @@ qdescriptor_t* qdescriptor_new(int fd, unsigned short type, qactor_t *actor) {
   return desc;
 }
 
+static void inet_descriptor_destroy(qinet_descriptor_t *inet) {
+  inet->state = QINET_STATE_CLOSED;
+}
+
+static void tcp_descriptor_destroy(qtcp_descriptor_t *tcp) {
+  inet_descriptor_destroy(&(tcp->inet));
+  qbuffer_free(&(tcp->buffer));
+}
+
 void qdescriptor_destroy(qdescriptor_t *desc) {
+  switch (desc->type) {
+  case QDESCRIPTOR_TCP:
+    tcp_descriptor_destroy(&(desc->data.tcp));
+    break;
+  case QDESCRIPTOR_FILE:
+    break;
+  default:
+    break;
+  }
+  close(desc->fd);
   qfree(desc);
 }
 

@@ -50,8 +50,8 @@ typedef struct qfile_descriptor_t {
 typedef struct qdescriptor_t {
   int fd;
   unsigned short type;
-  qid_t aid;
-  qlist_t entry;
+  qid_t aid;                        /* owner actor id */
+  qlist_t entry;                    /* actor desc list */
 
   union {
     struct qtcp_descriptor_t  tcp;

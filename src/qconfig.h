@@ -16,6 +16,7 @@ typedef struct qconfig_t {
   qstring_t log_handler;
 } qconfig_t;
 
-int qconfig_init(qconfig_t *config, const char *filename);
+int  qconfig_init(qconfig_t *config, const char *filename);
+void qconfig_free(qconfig_t *config);
 
 #endif  /* __QCONFIG_H__ */

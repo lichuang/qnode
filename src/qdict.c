@@ -26,6 +26,24 @@ qdict_t* qdict_new(unsigned int hashsize) {
 }
 
 void qdict_destroy(qdict_t *dict) {
+  int i;
+  for (i = 0; i < (int)dict->hashsize; ++i) {
+    qlist_t *list = dict->buckets[i];
+    qlist_t *pos, *next;
+    for (pos = list->next; pos != list; ) {
+      qdict_entry_t *entry = qlist_entry(pos, qdict_entry_t, entry);
+      next = pos->next;
+      if (entry->key.type == QDICT_KEY_STRING) {
+        qstring_destroy(entry->key.data.str);
+      }
+      if (entry->val.type == QDICT_VAL_STRING) {
+        qstring_destroy(entry->val.data.str);
+      }
+      qfree(entry);
+      pos  = next;
+    }
+  }
+  qfree(dict->buckets);
   qfree(dict);
 }
 
@@ -47,7 +65,6 @@ static int mainposition(qdict_t *dict, qkey_t *key) {
   }
   /* NEVER reach here */
   qerror("key type %d error", key->type);
-  qassert(NULL);
   return -1;
 }
 
@@ -63,7 +80,6 @@ static int compare(qdict_key_t *dict_key, qkey_t *key) {
   }
   /* NEVER reach here */
   qerror("key type %d error", key->type);
-  qassert(NULL);
   return -1;
 }
 

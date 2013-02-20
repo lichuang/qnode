@@ -18,8 +18,12 @@ int qbuffer_init(qbuffer_t *buffer) {
   return 0;
 }
 
+void qbuffer_free(qbuffer_t *buffer) {
+  qfree(buffer->data);
+}
+
 int qbuffer_extend(qbuffer_t *buffer, uint32_t size) {
-  /* align 128 bytes */
+  /* align with 128 bytes */
   uint32_t new_size = (size + 127) & 0xFF80;
   buffer->data = qrealloc(buffer->data, new_size);
   if (buffer->data) {

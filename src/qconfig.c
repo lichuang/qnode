@@ -56,3 +56,10 @@ int qconfig_init(qconfig_t *config, const char *filename) {
   lua_close(L);
   return 0;
 }
+
+void qconfig_free(qconfig_t *config) {
+  qstring_destroy(&(config->script_path));
+  qstring_destroy(&(config->log_path));
+  qstring_destroy(&(config->log_level));
+  qstring_destroy(&(config->log_handler));
+}
