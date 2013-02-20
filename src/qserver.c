@@ -210,6 +210,7 @@ static void destroy_threads() {
     qthread_t *thread = g_server->threads[i];
     qthread_destroy(thread);
   }
+  qlog_thread_destroy();
 }
 
 static void destroy_server() {

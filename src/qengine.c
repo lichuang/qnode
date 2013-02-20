@@ -29,7 +29,7 @@ static void init_engine_time(qengine_t *engine) {
   strftime(engine->time_buff, sizeof(engine->time_buff), "[%m-%d %T]", &tm);
   /*
    * convert to ms
-   * */
+   */
   engine->now = 1000 * t;
 }
 
@@ -130,6 +130,9 @@ int qengine_loop(qengine_t* engine) {
 }
 
 void qengine_destroy(qengine_t *engine) {
+  engine->dispatcher->destroy(engine);
+  qfree(engine->events);
+  qfree(engine->active_events);
   qfree(engine);
 }
 

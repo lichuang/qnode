@@ -37,6 +37,9 @@ static void log_init(qlog_t *log, int level, const char* file, long line, const 
 }
 
 void qlog(int level, const char* file, long line, const char *format, ...) {
+  if (g_log_thread == NULL) {
+    return;
+  }
   if (g_log_level < level) {
     return;
   }
@@ -48,7 +51,7 @@ void qlog(int level, const char* file, long line, const char *format, ...) {
   va_start(args, format);
   log_init(log, level, file, line, format, args);
 
-#if 1
+#if 0
   qassert(log->n > 5);
   log->n += sprintf(log->buff + log->n, " %s:%d ", log->file, log->line);
   //vsprintf(log->buff + log->n, log->format, log->args);

@@ -5,14 +5,16 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/epoll.h>
+#include <unistd.h>
 #include "qengine.h"
 #include "qlog.h"
 #include "qmalloc.h"
 
-static int epoll_init (qengine_t *engine);
-static int epoll_add  (struct qengine_t *engine, int fd, int flags);
-static int epoll_del  (struct qengine_t *engine, int fd, int flags);
-static int epoll_poll (qengine_t *engine, uint32_t timeout_ms);
+static int  epoll_init(qengine_t *engine);
+static int  epoll_add(struct qengine_t *engine, int fd, int flags);
+static int  epoll_del(struct qengine_t *engine, int fd, int flags);
+static int  epoll_poll(qengine_t *engine, uint32_t timeout_ms);
+static void epoll_destroy(qengine_t *engine);
 
 const struct qdispatcher_t epoll_dispatcher = {
   "epoll",
@@ -20,6 +22,7 @@ const struct qdispatcher_t epoll_dispatcher = {
   epoll_add,
   epoll_del,
   epoll_poll,
+  epoll_destroy,
 };
 
 typedef struct epoll_t {
@@ -111,4 +114,10 @@ static int epoll_poll (qengine_t *engine, uint32_t timeout_ms) {
     }
   }
   return num;
+}
+
+static void epoll_destroy(qengine_t *engine) {
+  epoll_t *epoll = engine->data;
+  close(epoll->fd);
+  qfree(epoll);
 }

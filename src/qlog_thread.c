@@ -37,8 +37,13 @@ static void thread_log_box(int fd, int flags, void *data) {
   qlog_t *log;
   qthread_log_t *thread_log = g_server->thread_log[idx];
   qthread_log_fetch(thread_log, &list);
-  qsignal_recv(signal);
-  qsignal_active(signal, 0);
+  /*
+   * -1 means destroy the log thread
+   */
+  if (flags != -1) {
+    qsignal_recv(signal);
+    qsignal_active(signal, 0);
+  }
 
   qlist_t *pos, *next;
   for (pos = list->next; pos != list; ) {
@@ -49,6 +54,9 @@ static void thread_log_box(int fd, int flags, void *data) {
     log->n += sprintf(log->buff + log->n, " %s:%d ", log->file, log->line);
     vsprintf(log->buff + log->n, log->format, log->args);
     printf("%s\n", log->buff);
+    if (flags == -1) {
+      /* do flush I/O work */
+    }
 
     qfree(log);
     pos = next;
@@ -80,6 +88,7 @@ int qlog_thread_new(int thread_num) {
     qfree(g_log_thread);
     return -1;
   }
+  g_log_thread->thread_num = thread_num;
   g_log_thread->signals = (qsignal_t**)qmalloc(thread_num * sizeof(qsignal_t*));
   int i = 0;
   for (i = 0; i < thread_num; ++i) {
@@ -96,6 +105,19 @@ int qlog_thread_new(int thread_num) {
     usleep(100);
   }
   return 0;
+}
+
+void qlog_thread_destroy() {
+  int i;
+  for (i = 0; i < g_log_thread->thread_num; ++i) {
+    qsignal_t *signal = g_log_thread->signals[i];
+    thread_log_box(0, -1, signal);
+    qsignal_destroy(signal);
+  }
+  qfree(g_log_thread->signals);
+  qengine_destroy(g_log_thread->engine);
+  qfree(g_log_thread);
+  g_log_thread = NULL;
 }
 
 void qlog_thread_active(int idx) {
