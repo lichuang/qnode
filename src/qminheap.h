@@ -38,5 +38,6 @@ int     qminheap_push(qminheap_t *heap, void *data);
 void*   qminheap_pop(qminheap_t *heap);
 void*   qminheap_top(qminheap_t *heap);
 int     qminheap_erase(qminheap_t *heap, int index);
+void    qminheap_destroy(qminheap_t *heap);
 
 #endif  /* __QMINHEAP_H__ */

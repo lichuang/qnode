@@ -159,7 +159,6 @@ static int qnode_tcp_recv(lua_State *state) {
     return lua_yield(state, 0); 
   }
   desc->data.tcp.buffer.pos = 0;
-  qinfo("recv: %s", desc->data.tcp.buffer.data);
   lua_pushlightuserdata(state, &(desc->data.tcp.buffer));
   return 1;
 }

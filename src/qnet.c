@@ -157,19 +157,11 @@ int qnet_tcp_send(struct qdescriptor_t *desc) {
   int nbytes = send(fd, buffer->data + buffer->pos,
                     buffer->len - buffer->pos, 0);
 
-  /*  
-   *  Several errors are OK. When speculative write is being done we may not
-   *  be able to write a single byte to the socket. Also, SIGSTOP issued
-   *  by a debugging tool can result in EINTR error.
-   */
   if (nbytes == -1 &&
       (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) {
     return 0;
   }
 
-  /* 
-   * Signalise peer failure.
-   */
   if (nbytes == -1 && (errno == ECONNRESET || errno == EPIPE)) {
     return -1;
   }

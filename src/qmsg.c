@@ -80,7 +80,8 @@ void qmsg_send(qmsg_t *msg) {
   qtid_t sender_id = msg->sender_id;
   qtid_t receiver_id = msg->receiver_id;
   qassert(msg->type > 0 && msg->type < QMAX_MSG_TYPE);
-  qinfo("add a msg %p, type: %d, sender: %d, receiver: %d, flag: %d", msg, msg->type, sender_id, receiver_id, msg->flag);
+  qinfo("add a msg %p, type: %d, sender: %d, receiver: %d, flag: %d",
+        msg, msg->type, sender_id, receiver_id, msg->flag);
  
   /* server thread send to worker thread */
   if (sender_id == QSERVER_THREAD_TID) {

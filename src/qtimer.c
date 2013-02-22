@@ -23,11 +23,15 @@ static inline int compare_timer(void *data1, void *data2) {
   return (timer1->timeout > timer2->timeout);
 }
 
-void  qtimer_manager_init(qtimer_manager_t *mng, struct qengine_t *engine) {
+void qtimer_manager_init(qtimer_manager_t *mng, struct qengine_t *engine) {
   mng->engine = engine;
   qidmap_init(&(mng->id_map));
   qlist_entry_init(&(mng->free_list));
   qminheap_init(&(mng->min_heap), compare_timer, set_timer_heap_index, get_timer_heap_index);
+}
+
+void qtimer_manager_free(qtimer_manager_t *mng) {
+  qminheap_destroy(&(mng->min_heap));
 }
 
 qid_t qtimer_add(qtimer_manager_t *mng, uint32_t timeout,

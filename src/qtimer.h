@@ -31,6 +31,7 @@ typedef struct qtimer_manager_t {
 } qtimer_manager_t;
 
 void  qtimer_manager_init(qtimer_manager_t *mng, struct qengine_t *engine);
+void  qtimer_manager_free(qtimer_manager_t *mng);
 qid_t qtimer_add(qtimer_manager_t *mng, uint32_t timeout,
                  qtimer_func_t *func, uint32_t cycle, void *arg);
 int   qtimer_del(qtimer_manager_t *mng, qid_t id);

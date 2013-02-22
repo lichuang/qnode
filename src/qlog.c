@@ -50,6 +50,7 @@ void qlog(int level, const char* file, long line, const char *format, ...) {
   va_list args;
   va_start(args, format);
   log_init(log, level, file, line, format, args);
+  va_end(args);
 
 #if 0
   qassert(log->n > 5);
@@ -61,5 +62,4 @@ void qlog(int level, const char* file, long line, const char *format, ...) {
 #else
   qlog_thread_active(log->idx);
 #endif
-  va_end(args);
 }

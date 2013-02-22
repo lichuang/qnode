@@ -122,3 +122,7 @@ int qminheap_push(qminheap_t *heap, void *data) {
   */
   return minheap_push(heap, data);
 }
+
+void qminheap_destroy(qminheap_t *heap) {
+  qfree(heap->data);
+}
