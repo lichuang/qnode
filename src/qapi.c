@@ -4,12 +4,14 @@
 
 #include "qapi.h"
 
+extern luaL_Reg buffer_apis[];
 extern luaL_Reg node_apis[];
 extern luaL_Reg net_apis[];
 
 typedef luaL_Reg* api_array;
 
 static api_array array[] = {
+  &buffer_apis[0],
   &node_apis[0],
   &net_apis[0],
   NULL

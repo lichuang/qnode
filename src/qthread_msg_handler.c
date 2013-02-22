@@ -53,8 +53,16 @@ static int thread_handle_spawn_msg(qthread_t *thread, qmsg_t *msg) {
   qactor_t *actor = msg->args.spawn.actor;
   actor->state = msg->args.spawn.state;
   actor->tid = thread->tid;
-  lua_call(actor->state, 1, 0);
-  return 0;
+  lua_State *state = actor->state;
+  int ret = 0;
+  if (qlua_call(state, 1, 0) == 0) {
+    ret = (int)lua_tonumber(state, -1);
+    lua_pop(state, 1 );
+  } else {
+    qlua_fail(state, __FILE__, __LINE__);
+  }
+
+  return ret;
 }
 
 static int thread_handle_tsend_msg(qthread_t *thread, qmsg_t *msg) {

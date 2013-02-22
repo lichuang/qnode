@@ -211,10 +211,24 @@ static int qnode_tcp_send(lua_State *state) {
   return 1;
 }
 
+static int qnode_tcp_buffer(lua_State *state) {
+  qdescriptor_t *desc = (qdescriptor_t*)lua_touserdata(state, 1);
+  qtcp_descriptor_t *tcp = &(desc->data.tcp);
+  if (tcp->inet.state != QINET_STATE_CONNECTED) {
+    lua_pushnil(state);
+    lua_pushliteral(state, "socket closed");
+    return 2;
+  }
+
+  lua_pushlightuserdata(state, &(tcp->buffer));
+  return 1;
+}
+
 luaL_Reg net_apis[] = {
   {"qnode_tcp_listen",    qnode_tcp_listen},
   {"qnode_tcp_accept",    qnode_tcp_accept},
   {"qnode_tcp_recv",      qnode_tcp_recv},
   {"qnode_tcp_send",      qnode_tcp_send},
+  {"qnode_tcp_buffer",    qnode_tcp_buffer},
   {NULL, NULL},
 };
