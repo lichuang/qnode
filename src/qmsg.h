@@ -27,7 +27,7 @@ typedef struct qarg_t {
 
 typedef struct qactor_msg_t {
   qlist_t arg_list;
-  qlist_t msg_entry;
+  qlist_t entry;
   qid_t src;
   qid_t dst;
 } qactor_msg_t;

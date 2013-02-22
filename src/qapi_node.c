@@ -73,6 +73,21 @@ static int qnode_send(lua_State *state) {
   return 1;
 }
 
+static int qnode_recv(lua_State *state) {
+  qactor_t *actor = qlua_get_actor(state);
+
+  /* 
+   * if msg list is empty, YIELD the Lua coroutine
+   */
+  if (qlist_empty(&(actor->msg_list))) {
+    actor->waiting_msg = 1;
+    return lua_yield(state, 0); 
+  }
+  qactor_msg_t *msg = qlist_entry(actor->msg_list.next, qactor_msg_t, entry); 
+  lua_pushlightuserdata(state, msg);
+  return 1;
+}
+
 static int qnode_attach(lua_State *state) {
   qdescriptor_t *desc = (qdescriptor_t*)lua_touserdata(state, 1);
   qactor_t *old_actor = qdescriptor_get_actor(desc);
@@ -99,6 +114,7 @@ static int qnode_attach(lua_State *state) {
 luaL_Reg node_apis[] = {
   {"qnode_spawn",       qnode_spawn},
   {"qnode_send",        qnode_send},
+  {"qnode_recv",        qnode_recv},
   {"qnode_attach",      qnode_attach},
   {NULL, NULL},
 };

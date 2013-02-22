@@ -73,7 +73,7 @@ static int thread_handle_tsend_msg(qthread_t *thread, qmsg_t *msg) {
   lua_State *state = actor->state;
   /*
    * if the state yield waiting for msg, push the msg into stack and resume
-   * */
+   */
   if (lua_status(state) == LUA_YIELD && actor->waiting_msg) {
     actor->waiting_msg = 0;
     lua_pushlightuserdata(state, actor_msg);
@@ -81,8 +81,8 @@ static int thread_handle_tsend_msg(qthread_t *thread, qmsg_t *msg) {
   }
   /*
    * else add the msg to the actor msg list
-   * */
-  qlist_add_tail(&actor_msg->msg_entry, &(actor->msg_list));
+   */
+  qlist_add_tail(&actor_msg->entry, &(actor->msg_list));
   return 0;
 }
 
