@@ -6,27 +6,13 @@
 #define __QMSG_H__
 
 #include "qactor.h"
+#include "qdict.h"
 #include "qlist.h"
 #include "qstring.h"
 #include "qtype.h"
 
-/* message struct pass between actor */
-typedef struct qarg_t {
-  qlist_t entry;
-  union {
-    qstring_t str;
-    int num;
-  } key;
-
-  union {
-    qstring_t str;
-    int num;
-  } val;
-  int val_type:1;   /* 0 means string, 1 means number */
-} qarg_t;
-
 typedef struct qactor_msg_t {
-  qlist_t arg_list;
+  qdict_t arg_dict;
   qlist_t entry;
   qid_t src;
   qid_t dst;
@@ -95,7 +81,6 @@ qmsg_t* qmsg_new(qtid_t sender_id, qtid_t receiver_id);
 void qmsg_destroy(qmsg_t *msg);
 qactor_msg_t* qactor_msg_new();
 void qactor_msg_destroy(qactor_msg_t *msg);
-qarg_t* qarg_new();
 qmsg_t* qmsg_clone(qmsg_t *msg);
 
 void qmsg_send(qmsg_t *msg);

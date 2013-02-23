@@ -45,28 +45,12 @@ void qmsg_destroy(qmsg_t *msg) {
 
 qactor_msg_t* qactor_msg_new() {
   qactor_msg_t *msg = qalloc_type(qactor_msg_t);
-  qlist_entry_init(&(msg->arg_list));
-  qlist_entry_init(&(msg->msg_entry));
   return msg;
 }
 
 void qactor_msg_destroy(qactor_msg_t *msg) {
-  qlist_t *pos, *next;
-  for (pos = msg->arg_list.next; pos != &(msg->arg_list); ) {
-    qarg_t *arg = qlist_entry(pos, qarg_t, entry);
-    next = pos->next;
-    qstring_destroy(&(arg->key.str));
-    if (arg->val_type == 0) {
-      qstring_destroy(&(arg->val.str));
-    }
-    pos = next;
-  }
-}
-
-qarg_t* qarg_new() {
-  qarg_t *arg = qalloc_type(qarg_t);
-  qlist_entry_init(&arg->entry);
-  return arg;
+  qdict_destroy(&msg->arg_dict);
+  qfree(msg);
 }
 
 qmsg_t* qmsg_clone(qmsg_t *msg) {

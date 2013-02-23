@@ -36,7 +36,7 @@ static int qnode_spawn(lua_State *state) {
   qstring_destroy(&string);
 
   /* copy args table */
-  qlua_copy_table(state, new_state, 3);
+  qlua_copy_state_table(state, new_state, 3);
 
   lua_getglobal(new_state, mod);
   lua_getfield(new_state, -1, fun);
@@ -62,7 +62,8 @@ static int qnode_send(lua_State *state) {
     return 2;
   }
   /* copy args table */
-  qactor_msg_t *actor_msg = qlua_copy_arg_table(state, 2);
+  qactor_msg_t *actor_msg = qactor_msg_new();
+  qlua_copy_table(state, 2, &actor_msg->arg_dict);
   actor_msg->src = src_actor->aid;
   actor_msg->dst = dst_actor->aid;
 

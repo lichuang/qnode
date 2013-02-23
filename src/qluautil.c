@@ -102,7 +102,7 @@ int qlua_get_table_number(lua_State *state, const char *key, int *number) {
   return 0;
 } 
 
-void qlua_copy_table(lua_State *src, lua_State *dst, int table_idx) {
+void qlua_copy_state_table(lua_State *src, lua_State *dst, int table_idx) {
   lua_newtable(dst);
   lua_pushvalue(dst, 1);
   if (lua_istable(src, table_idx)) {
@@ -146,8 +146,7 @@ void qlua_copy_table(lua_State *src, lua_State *dst, int table_idx) {
   }
 }
 
-struct qactor_msg_t* qlua_copy_arg_table(lua_State *state, int table_idx) {
-  struct qactor_msg_t *msg = NULL;
+int qlua_copy_table(lua_State *state, int table_idx, qdict_t *dict) {
   if (lua_istable(state, table_idx)) {
     lua_pushnil(state);
     size_t len;
@@ -155,7 +154,6 @@ struct qactor_msg_t* qlua_copy_arg_table(lua_State *state, int table_idx) {
     const char *str_val = NULL;
     double num_val = 0;
     int type;
-    msg = qactor_msg_new();
     while (lua_next(state, table_idx)) {
       int val_idx = lua_gettop(state);
       int key_idx = val_idx - 1;
@@ -166,30 +164,30 @@ struct qactor_msg_t* qlua_copy_arg_table(lua_State *state, int table_idx) {
         num_val = lua_tonumber(state, val_idx);
       } else {
         qerror("child arg table val MUST be number or string");
-        qactor_msg_destroy(msg);
-        return NULL;
+        return -1;
       }
 
-      qarg_t *arg = qarg_new();
       key = lua_tolstring(state, key_idx, &len);
-      qstring_init_str(arg->key.str); 
-      qstring_assign(&(arg->key.str), key);
+      qkey_t key_val;
+      QKEY_STRING(key_val, key);
 
+      qdict_val_t val;
       if (str_val) {
-        qstring_init_str(arg->val.str); 
-        qstring_assign(&(arg->val.str), str_val);
-        arg->val_type = 0;
+        qstring_t tmp;
+        qstring_init_str(tmp);
+        qstring_assign(&(tmp), str_val);
+        QVAL_STRING(val, &tmp);
       } else {
-        arg->val.num = (int)num_val;
-        arg->val_type = 1;
+        qdict_val_t val;
+        QVAL_NUMBER(val, num_val);
       }
-      qlist_add_tail(&arg->entry, &msg->arg_list);
+      qdict_add(dict, &key_val, &val);
       lua_pop(state, 1);
 
       str_val = NULL;
     }
   }
-  return msg;
+  return 0;
 }
 
 static void lua_init_filename(const char *filename, qstring_t *full_name) {

@@ -6,6 +6,7 @@
 #define __QLUAUTIL_H__
 
 #include <lua.h>
+#include "qdict.h"
 #include "qstring.h"
 
 struct qactor_t;
@@ -23,8 +24,8 @@ int qlua_get_table_number(lua_State *state, const char *key, int *number);
 
 int qlua_call(lua_State *state, int args, int results);
 
-void qlua_copy_table(lua_State *src, lua_State *dst, int table_idx);
-struct qactor_msg_t* qlua_copy_arg_table(lua_State *state, int table_idx);
+void qlua_copy_state_table(lua_State *src, lua_State *dst, int table_idx);
+int  qlua_copy_table(lua_State *state, int table_idx, qdict_t *dict);
 
 int qlua_threadloadfile(lua_State *state, const char *filename);
 int qlua_dofile(lua_State *state, const char *filename);
