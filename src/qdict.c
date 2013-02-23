@@ -153,45 +153,52 @@ qdict_val_t* qdict_get(qdict_t *dict, qkey_t *key) {
   return &(entry->val);
 }
 
-int qdict_copy_lua_table(qdict_t *dict, lua_State *state, int index) {
-  if (!lua_istable(state, index)) {
-    return -1;
-  }
-  lua_pushnil(state);
-  size_t len;
-  const char *key;
-  const char *str_val = NULL;
-  double num_val = 0;
-  qstring_t str = qstring_init();
-  qkey_t dict_key;
-  qdict_val_t dict_val;
-  int type;
-  while (lua_next(state, index)) {
-    int val_idx = lua_gettop(state);
-    int key_idx = val_idx - 1;
-    type = lua_type(state, val_idx);
-    if (type == LUA_TSTRING) {
-      num_val = lua_tonumber(state, val_idx);
-    } else if (type == LUA_TNUMBER) {
-      num_val = lua_tonumber(state, val_idx);
-    } else {
-      qerror("table val MUST be number or string");
-      return -1;
+qdict_iter_t* qdict_iterator(qdict_t *dict) {
+  qdict_iter_t *iter = qalloc_type(qdict_iter_t);
+  iter->dict  = dict;
+  iter->hash  = 0;
+  iter->entry = NULL;
+  return iter;
+}
+
+qdict_entry_t* qdict_next(qdict_iter_t *iter) {
+  qdict_t *dict = iter->dict;
+  qdict_entry_t *entry = NULL;
+  if (iter->entry == NULL) {
+    qlist_t *list = dict->buckets[iter->hash];
+    /*
+     * find the first non-empty hash list
+     */
+    while (qlist_empty(list)) {
+      ++(iter->hash);
+      if (iter->hash < dict->hashsize) {
+        list = dict->buckets[iter->hash];
+      } else {
+        return NULL;
+      }
     }
-
-    key = lua_tolstring(state, key_idx, &len);
-    QKEY_STRING(dict_key, key);
-
-    if (str_val) {
-      qstring_assign(&str, str_val);
-      QVAL_STRING(dict_val, &str);
-    } else {
-      QVAL_NUMBER(dict_val, num_val);
+    entry = qlist_entry(list->next, qdict_entry_t, entry);
+  } else {
+    qlist_t *pos = entry->entry.next;
+    qlist_t *list = dict->buckets[iter->hash];
+    /*
+     * if reach the hash list end, get the next non-empty hash list
+     */
+    if (pos->next == list) {
+      /*
+       * find the first non-empty hash list
+       */
+      do {
+        ++(iter->hash);
+        if (iter->hash < dict->hashsize) {
+          list = dict->buckets[iter->hash];
+        } else {
+          return NULL;
+        }
+      } while (qlist_empty(list));
+      pos = list->next;
     }
-    qdict_replace(dict, &dict_key, &dict_val);
-    lua_pop(state, 1);
-
-    str_val = NULL;
+    entry = qlist_entry(pos, qdict_entry_t, entry);
   }
-  return 0;
+  return entry;
 }

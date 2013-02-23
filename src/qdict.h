@@ -53,6 +53,7 @@ typedef struct qdict_val_t {
 #define QVAL_STRING(val, s) do { (val).data.str = (s); (val).type = QDICT_VAL_STRING; } while(0)
 
 typedef struct qdict_entry_t {
+  unsigned int hash;
   qlist_t entry;
   qdict_key_t key;
   qdict_val_t val;
@@ -64,11 +65,18 @@ typedef struct qdict_t {
   unsigned int num;
 } qdict_t;
 
-qdict_t*      qdict_new(unsigned int hashsize);
-void          qdict_destroy(qdict_t *dict);
-int           qdict_add(qdict_t *dict, qkey_t *key, qdict_val_t *val);
-int           qdict_replace(qdict_t *dict, qkey_t *key, qdict_val_t *val);
-qdict_val_t*  qdict_get(qdict_t *dict, qkey_t *key);
+typedef struct qdict_iter_t {
+  qdict_t *dict;
+  unsigned int hash;
+  qdict_entry_t *entry;
+} qdict_iter_t;
 
-int qdict_copy_lua_table(qdict_t *dict, lua_State *state, int index);
+qdict_t*        qdict_new(unsigned int hashsize);
+void            qdict_destroy(qdict_t *dict);
+int             qdict_add(qdict_t *dict, qkey_t *key, qdict_val_t *val);
+int             qdict_replace(qdict_t *dict, qkey_t *key, qdict_val_t *val);
+qdict_val_t*    qdict_get(qdict_t *dict, qkey_t *key);
+qdict_iter_t*   qdict_iterator(qdict_t *dict);
+qdict_entry_t*  qdict_next(qdict_iter_t *iter);
+
 #endif  /* __QDICT_H__ */
