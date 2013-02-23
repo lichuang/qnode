@@ -49,7 +49,7 @@ qactor_msg_t* qactor_msg_new() {
 }
 
 void qactor_msg_destroy(qactor_msg_t *msg) {
-  qdict_destroy(&msg->arg_dict);
+  qdict_destroy(msg->arg_dict);
   qfree(msg);
 }
 

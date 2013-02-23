@@ -190,6 +190,14 @@ int qlua_copy_table(lua_State *state, int table_idx, qdict_t *dict) {
   return 0;
 }
 
+void qlua_dump_dict(lua_State *state, int table_idx, qdict_t *dict) {
+  qdict_iter_t *iter = qdict_iterator(dict);
+  qdict_entry_t *entry = NULL;
+  lua_pushvalue(state, table_idx);
+  while ((entry = qdict_next(iter)) != NULL) {
+  }
+}
+
 static void lua_init_filename(const char *filename, qstring_t *full_name) {
   qserver_t *server = g_server;
   qstring_init_str(*full_name);
@@ -245,8 +253,9 @@ struct qactor_t* qlua_get_actor(lua_State *state) {
 
 void qlua_fail(lua_State *state, char *file, int line) {                                           \
   char tmp_buff[8000+1]={0,};                                              
-  snprintf(tmp_buff, 8000, "%s:%d lua_call failed\n\t%s", file, line, lua_tostring(state, -1 )); 
-  qerror( tmp_buff ); 
+  snprintf(tmp_buff, 8000, "%s:%d lua_call failed\n\t%s",
+           file, line, lua_tostring(state, -1 )); 
+  qerror(tmp_buff); 
   /*
   lua_State* L_ = g_luasvr->L();                                                  
   assert( L_ );                                                                   

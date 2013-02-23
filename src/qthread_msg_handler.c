@@ -76,6 +76,8 @@ static int thread_handle_tsend_msg(qthread_t *thread, qmsg_t *msg) {
    */
   if (lua_status(state) == LUA_YIELD && actor->waiting_msg) {
     actor->waiting_msg = 0;
+    lua_createtable(state, 0, 0);
+    qlua_dump_dict(state, 1, actor_msg->arg_dict);
     lua_pushlightuserdata(state, actor_msg);
     return lua_resume(state, 1);
   }

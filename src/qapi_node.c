@@ -63,7 +63,8 @@ static int qnode_send(lua_State *state) {
   }
   /* copy args table */
   qactor_msg_t *actor_msg = qactor_msg_new();
-  qlua_copy_table(state, 2, &actor_msg->arg_dict);
+  actor_msg->arg_dict = qdict_new(5);
+  qlua_copy_table(state, 2, actor_msg->arg_dict);
   actor_msg->src = src_actor->aid;
   actor_msg->dst = dst_actor->aid;
 
@@ -86,6 +87,7 @@ static int qnode_recv(lua_State *state) {
   }
   qactor_msg_t *msg = qlist_entry(actor->msg_list.next, qactor_msg_t, entry); 
   lua_createtable(state, 0, 0);
+  qlua_dump_dict(state, 1, msg->arg_dict);
   lua_pushlightuserdata(state, msg);
   return 1;
 }

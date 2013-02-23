@@ -179,7 +179,7 @@ qdict_entry_t* qdict_next(qdict_iter_t *iter) {
     }
     entry = qlist_entry(list->next, qdict_entry_t, entry);
   } else {
-    qlist_t *pos = entry->entry.next;
+    qlist_t *pos = iter->entry->entry.next;
     qlist_t *list = dict->buckets[iter->hash];
     /*
      * if reach the hash list end, get the next non-empty hash list
@@ -200,5 +200,6 @@ qdict_entry_t* qdict_next(qdict_iter_t *iter) {
     }
     entry = qlist_entry(pos, qdict_entry_t, entry);
   }
+  iter->entry = entry;
   return entry;
 }

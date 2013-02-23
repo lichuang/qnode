@@ -12,10 +12,10 @@
 #include "qtype.h"
 
 typedef struct qactor_msg_t {
-  qdict_t arg_dict;
+  qdict_t *arg_dict;
   qlist_t entry;
-  qid_t src;
-  qid_t dst;
+  qid_t   src;
+  qid_t   dst;
 } qactor_msg_t;
 
 struct qmailbox_t;
