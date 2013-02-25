@@ -131,7 +131,7 @@ int qdict_add(qdict_t *dict, qkey_t *key, qdict_val_t *val) {
   copy_val(entry, val);
   qlist_t *list = dict->buckets[idx];
   qlist_add_tail(&entry->entry, list);
-  dict->num = 0;
+  ++(dict->num);
   return 0;
 }
 

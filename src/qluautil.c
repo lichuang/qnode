@@ -173,10 +173,10 @@ int qlua_copy_table(lua_State *state, int table_idx, qdict_t *dict) {
 
       qdict_val_t val;
       if (str_val) {
-        qstring_t tmp;
-        qstring_init_str(tmp);
-        qstring_assign(&(tmp), str_val);
-        QVAL_STRING(val, &tmp);
+        qstring_t *tmp = qstring_new();
+        qstring_init_str(*tmp);
+        qstring_assign(tmp, str_val);
+        QVAL_STRING(val, tmp);
       } else {
         qdict_val_t val;
         QVAL_NUMBER(val, num_val);
@@ -190,11 +190,23 @@ int qlua_copy_table(lua_State *state, int table_idx, qdict_t *dict) {
   return 0;
 }
 
-void qlua_dump_dict(lua_State *state, int table_idx, qdict_t *dict) {
+void qlua_dump_dict(lua_State *state, qdict_t *dict) {
   qdict_iter_t *iter = qdict_iterator(dict);
   qdict_entry_t *entry = NULL;
-  lua_pushvalue(state, table_idx);
   while ((entry = qdict_next(iter)) != NULL) {
+    qdict_key_t *key = &(entry->key);
+    qdict_val_t *val = &(entry->val);
+    if (key->type == QDICT_KEY_STRING) {
+      lua_pushstring(state, key->data.str->data);
+    } else {
+      lua_pushnumber(state, key->data.num);
+    }
+    if (val->type == QDICT_VAL_STRING) {
+      lua_pushstring(state, val->data.str->data);
+    } else {
+      lua_pushnumber(state, val->data.num);
+    }
+    lua_settable(state, -3);
   }
 }
 

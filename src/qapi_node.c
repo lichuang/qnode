@@ -86,9 +86,8 @@ static int qnode_recv(lua_State *state) {
     return lua_yield(state, 0); 
   }
   qactor_msg_t *msg = qlist_entry(actor->msg_list.next, qactor_msg_t, entry); 
-  lua_createtable(state, 0, 0);
-  qlua_dump_dict(state, 1, msg->arg_dict);
-  lua_pushlightuserdata(state, msg);
+  lua_newtable(state);
+  qlua_dump_dict(state, msg->arg_dict);
   return 1;
 }
 
