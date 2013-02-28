@@ -3,6 +3,8 @@
  */
 
 #include "qapi.h"
+#include "qluautil.h"
+#include "qthread.h"
 
 extern luaL_Reg buffer_apis[];
 extern luaL_Reg node_apis[];
@@ -27,6 +29,32 @@ void qapi_register(lua_State *state, struct qactor_t *actor) {
     }
   }
 
+  /*
+  qthread_t *thread = qactor_get_thread(actor);
+  lua_State *thread_state = thread->state;
+  lua_pushvalue(thread_state, LUA_GLOBALSINDEX);
+  */
+
+#if 0
+  lua_createtable(state, 0, 1 + 1);
+  lua_pushvalue(state, -1);
+  lua_setfield(state, -2, "_G");
+
+  lua_createtable(state, 0, 1);
+  //qlua_copy_state_table(thread_state, state, 1);
+  lua_pushvalue(state, LUA_GLOBALSINDEX);
+  lua_setfield(state, -2, "__index");
+  lua_setmetatable(state, -2);    /*  setmetatable(newt, {__index = _G}) */
+  lua_setfenv(state, -2);    /*  set new running env for the code closure */
+#endif
+
+  /*
   lua_pushlightuserdata(state, actor);
   lua_setglobal(state, "qnode");
+  */
+
+  lua_pushlightuserdata(state, state);
+  lua_pushlightuserdata(state, actor);
+  lua_settable(state, LUA_REGISTRYINDEX);
+  //lua_setfield(state, LUA_REGISTRYINDEX, "qnode");
 }

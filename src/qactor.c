@@ -106,3 +106,8 @@ struct qengine_t* qactor_get_engine(qactor_t *actor) {
   qassert(actor->tid > 0);
   return g_server->threads[actor->tid]->engine;
 }
+
+struct qthread_t* qactor_get_thread(qactor_t *actor) {
+  qassert(actor);
+  return g_server->threads[actor->tid];
+}

@@ -43,5 +43,6 @@ void qactor_destroy(qactor_t *actor);
 qid_t qactor_spawn(qactor_t *actor, lua_State *state);
 
 struct qengine_t* qactor_get_engine(qactor_t *actor);
+struct qthread_t* qactor_get_thread(qactor_t *actor);
 
 #endif  /* __QACTOR_H__ */

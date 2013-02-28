@@ -18,7 +18,7 @@
 
 /*
  * spawn an actor, return the actor ID
- * */
+ */
 static int qnode_spawn(lua_State *state) {
   qactor_t *actor = qlua_get_actor(state);
   const char *mod = lua_tostring(state, 1);
