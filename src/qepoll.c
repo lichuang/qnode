@@ -11,8 +11,8 @@
 #include "qmempool.h"
 
 static int  epoll_init(qengine_t *engine);
-static int  epoll_add(struct qengine_t *engine, int fd, int flags);
-static int  epoll_del(struct qengine_t *engine, int fd, int flags);
+static int  epoll_add(qengine_t *engine, int fd, int flags);
+static int  epoll_del(qengine_t *engine, int fd, int flags);
 static int  epoll_poll(qengine_t *engine, uint32_t timeout_ms);
 static void epoll_destroy(qengine_t *engine);
 
@@ -57,6 +57,7 @@ static int epoll_add(struct qengine_t *engine, int fd, int flags) {
   op = engine->events[fd].flags == QEVENT_NONE ?  EPOLL_CTL_ADD : EPOLL_CTL_MOD;
 
   flags |= engine->events[fd].flags;
+  events = 0;
   if (flags & QEVENT_READ) {
     events |= EPOLLIN;
   }

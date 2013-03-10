@@ -55,6 +55,7 @@ static void server_box(int fd, int flags, void *data) {
   UNUSED(flags);
 
   box = (qmailbox_t*)data;
+  qmailbox_get(box, &list);
   for (pos = list->next; pos != list; ) {
     msg = qlist_entry(pos, qmsg_t, entry);
     next = pos->next;

@@ -18,4 +18,6 @@
 
 *.swp
 cscope*.
+cscope.files
 *.tags*.
+tags
