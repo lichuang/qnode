@@ -27,7 +27,7 @@ qid_t qactor_new_id() {
   return id;
 }
 
-qactor_t *qactor_new(qid_t aid) {
+qactor_t* qactor_new(qid_t aid) {
   qactor_t *actor = qalloc_type(qactor_t);
   if (actor == NULL) {
     return NULL;
