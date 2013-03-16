@@ -5,6 +5,9 @@
 #ifndef __QALLOC_H__
 #define __QALLOC_H__
 
+#include <stddef.h>
+#include <stdlib.h>
+
 void* qalloc(size_t size);
 void* qcalloc(size_t size);
 
