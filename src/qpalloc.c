@@ -13,13 +13,13 @@ qpool_t *qpool_create(size_t size) {
     return NULL;
   }
 
-  p->d.last = (char *) p + sizeof(qpool_t);
-  p->d.end  = (char *) p + size;
+  p->d.last = (char *)p + sizeof(qpool_t);
+  p->d.end  = (char *)p + size;
   p->d.next = NULL;
   p->d.failed = 0;
 
   size = size - sizeof(qpool_t);
-  //p->max = (size < NGX_MAX_ALLOC_FROM_POOL) ? size : NGX_MAX_ALLOC_FROM_POOL;
+  p->max = (size < QMAX_ALLOC_FROM_POOL) ? size : QMAX_ALLOC_FROM_POOL;
 
   p->current = p;
   p->large = NULL;
@@ -81,7 +81,7 @@ static void* palloc_block(qpool_t *pool, size_t size) {
   new->d.failed = 0;
 
   m += sizeof(qpool_data_t);
-  //m = qalign_ptr(m, QALIGNMENT);
+  m = qalign_ptr(m, QALIGNMENT);
   new->d.last = m + size;
 
   current = pool->current;
@@ -134,6 +134,7 @@ static void* palloc_large(qpool_t *pool, size_t size) {
 
   return p;
 }
+
 void *qpalloc(qpool_t *pool, size_t size) {
   char      *m;
   qpool_t   *p;
@@ -143,7 +144,8 @@ void *qpalloc(qpool_t *pool, size_t size) {
     p = pool->current;
 
     do {
-      m = p->d.last;
+      //m = p->d.last;
+      m = qalign_ptr(p->d.last, QALIGNMENT);
 
       if ((size_t) (p->d.end - m) >= size) {
         p->d.last = m + size;
@@ -166,10 +168,6 @@ int qpfree(qpool_t *pool, void *p) {
 
   for (l = pool->large; l; l = l->next) {
     if (p == l->data) {
-      /*
-      ngx_log_debug1(NGX_LOG_DEBUG_ALLOC, pool->log, 0,
-        "free: %p", l->alloc);
-      */
       qfree(l->data);
       l->data = NULL;
 

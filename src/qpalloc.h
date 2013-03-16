@@ -8,13 +8,15 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define QMAX_ALLOC_FROM_POOL  4095
+
 #ifndef QALIGNMENT
 #define QALIGNMENT   sizeof(unsigned long)
 #endif
 
 #define qalign(d, a)     (((d) + (a - 1)) & ~(a - 1))
 #define qalign_ptr(p, a)                                                   \
-      (u_char *) (((uintptr_t) (p) + ((uintptr_t) a - 1)) & ~((uintptr_t) a - 1))
+      (char *) (((uintptr_t) (p) + ((uintptr_t) a - 1)) & ~((uintptr_t) a - 1))
 
 typedef struct qpool_large_t {
   struct qpool_large_t   *next;
