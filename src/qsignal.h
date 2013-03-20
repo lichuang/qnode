@@ -15,7 +15,6 @@ typedef struct qsignal_t {
 } qsignal_t;
 
 qsignal_t* qsignal_new(qmem_pool_t *pool);
-void qsignal_destroy(qsignal_t *signal);
 int qsignal_get_fd(qsignal_t *signal);
 void qsignal_send(qsignal_t *signal);
 void qsignal_recv(qsignal_t *signal);

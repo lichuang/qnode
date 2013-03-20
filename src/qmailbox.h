@@ -23,7 +23,6 @@ typedef struct qmailbox_t {
 } qmailbox_t;
 
 qmailbox_t* qmailbox_new(qmem_pool_t *pool, qevent_func_t *callback, void *reader);
-void        qmailbox_destroy(qmailbox_t *box);
 int         qmailbox_active(qengine_t *engine, qmailbox_t *box);
 void        qmailbox_add(qmailbox_t *box, struct qmsg_t *msg);
 int         qmailbox_get(qmailbox_t *box, qlist_t **list);

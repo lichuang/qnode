@@ -30,13 +30,6 @@ qsignal_new(qmem_pool_t *pool) {
   return signal;
 }
 
-void
-qsignal_destroy(qsignal_t *signal) {
-  close(signal->rfd);
-  close(signal->wfd);
-  //qfree(signal);
-}
-
 int
 qsignal_get_fd(qsignal_t *signal) {
   return signal->rfd;

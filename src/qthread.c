@@ -13,12 +13,13 @@
 #include "qlog.h"
 #include "qluautil.h"
 #include "qmailbox.h"
-#include "qmalloc.h"
+#include "qmempool.h"
 #include "qserver.h"
 #include "qthread.h"
 #include "qthread_log.h"
 
-static void server_box_func(int fd, int flags, void *data) {
+static void
+server_box_func(int fd, int flags, void *data) {
   UNUSED(fd);
   UNUSED(flags);
   qinfo("server box");
@@ -54,7 +55,8 @@ next:
   }
 }
 
-static void thread_box_func(int fd, int flags, void *data) {
+static void
+thread_box_func(int fd, int flags, void *data) {
   qinfo("in thread_box_func");
   UNUSED(fd);
   UNUSED(flags);
@@ -92,7 +94,8 @@ next:
   }
 }
 
-static void* main_loop(void *arg) {
+static void*
+main_loop(void *arg) {
   qthread_t *thread = (qthread_t*)arg;
   g_server->thread_log[thread->tid] = qthread_log_init(thread->engine, thread->tid);
   thread->started = 1;
@@ -101,25 +104,38 @@ static void* main_loop(void *arg) {
   return NULL;
 }
 
-qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
+qthread_t*
+qthread_new(struct qserver_t *server, qtid_t tid) {
+  qmem_pool_t *pool = qmem_pool_create();
+  if (pool == NULL) {
+    return NULL;
+  }
   int thread_num = server->config->thread_num;
-  qthread_t *thread = qalloc_type(qthread_t);
+  qthread_t *thread = qalloc(pool, sizeof(qthread_t));
   int i;
   if (thread == NULL) {
     qerror("create thread error");
     return NULL;
   }
-  thread->engine = qengine_new();
+  thread->engine = qengine_new(pool);
   if (thread->engine == NULL) {
     qerror("create thread engine error");
-    qfree(thread);
     return NULL;
   }
   thread->tid = tid;
 
-  thread->thread_box = (qthread_box_t**)qmalloc((thread_num + 1) * sizeof(qthread_box_t*));
-  thread->in_box  = (qmailbox_t**)qmalloc((thread_num + 1) * sizeof(qmailbox_t*));
-  thread->out_box = (qmailbox_t**)qmalloc((thread_num + 1) * sizeof(qmailbox_t*));
+  thread->thread_box = qalloc(pool, (thread_num + 1) * sizeof(qthread_box_t*));
+  if (thread->thread_box == NULL) {
+    return NULL;
+  }
+  thread->in_box  = qalloc(pool, (thread_num + 1) * sizeof(qmailbox_t*));
+  if (thread->in_box == NULL) {
+    return NULL;
+  }
+  thread->out_box = qalloc(pool, (thread_num + 1) * sizeof(qmailbox_t*));
+  if (thread->out_box == NULL) {
+    return NULL;
+  }
   for (i = 0; i < thread_num + 1; ++i) {
     thread->out_box[i] = NULL;
     if (i == (int)tid) {
@@ -128,11 +144,11 @@ qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
     }
     if (i == 0) {
       /* communicate with main thread */
-      thread->in_box[i] = qmailbox_new(server_box_func, thread);
+      thread->in_box[i] = qmailbox_new(pool, server_box_func, thread);
     } else {
       /* communicate with other worker thread */
-      thread->thread_box[i] = qalloc_type(qthread_box_t);
-      thread->in_box[i] = qmailbox_new(thread_box_func, thread->thread_box[i]);
+      thread->thread_box[i] = qalloc(pool, sizeof(qthread_box_t));
+      thread->in_box[i] = qmailbox_new(pool, thread_box_func, thread->thread_box[i]);
       thread->thread_box[i]->thread = thread;
       thread->thread_box[i]->box = thread->in_box[i];
     }
@@ -151,7 +167,8 @@ qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
   return thread;
 }
 
-void qthread_destroy(qthread_t *thread) {
+void
+qthread_destroy(qthread_t *thread) {
   int i;
   int thread_num = g_server->config->thread_num;
 
@@ -163,12 +180,6 @@ void qthread_destroy(qthread_t *thread) {
     qmailbox_t *box = thread->in_box[i];
     box->active = 0;
     thread_box_func(0, 0, box);
-    qmailbox_destroy(box);
     thread->out_box[i]->active = 0;
-    qmailbox_destroy(thread->out_box[i]);
-    qfree(thread->thread_box[i]);
   }
-  qfree(thread->in_box);
-  qfree(thread->out_box);
-  qfree(thread->thread_box);
 }

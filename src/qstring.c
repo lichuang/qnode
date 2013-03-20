@@ -18,7 +18,7 @@ qstring_t* qstring_new() {
 void qstring_destroy(qstring_t *string) {
   qassert(string);
   qassert(string->data);
-  qfree(string->data);
+  //qfree(string->data);
 }
 
 static int string_reserve(qstring_t *string, size_t len, int need_copy) {
@@ -33,7 +33,7 @@ static int string_reserve(qstring_t *string, size_t len, int need_copy) {
         strncpy(data, string->data, string->len);
       }
       if (string->data) {
-        qfree(string->data);
+        //qfree(string->data);
       }
     }
     string->data = data;

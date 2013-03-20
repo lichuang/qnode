@@ -81,6 +81,9 @@ log_key_destroy(void *value) {
 
 int
 qlog_thread_new(qmem_pool_t *pool, int thread_num) {
+  int i;
+  int result;
+
   g_log_thread = qalloc(pool, sizeof(qlog_thread_t));
   if (g_log_thread == NULL) {
     return -1;
@@ -102,14 +105,12 @@ qlog_thread_new(qmem_pool_t *pool, int thread_num) {
     g_log_thread = NULL;
     return -1;
   }
-  int i = 0;
   for (i = 0; i < thread_num; ++i) {
-    g_log_thread->signals[i] = qsignal_new();
+    g_log_thread->signals[i] = qsignal_new(pool);
     int fd = qsignal_get_fd(g_log_thread->signals[i]);
     qengine_add_event(g_log_thread->engine, fd, QEVENT_READ, thread_log_box, g_log_thread->signals[i]);
   }
   g_log_thread->started = 0;
-  int result;
   result = pthread_create(&g_log_thread->id, NULL, main_loop, g_log_thread);
   qassert(result == 0);
   /* ugly, but works */
@@ -128,11 +129,8 @@ qlog_thread_destroy() {
   for (i = 0; i < g_log_thread->thread_num; ++i) {
     qsignal_t *signal = g_log_thread->signals[i];
     thread_log_box(0, -1, signal);
-    qsignal_destroy(signal);
   }
-  //qfree(g_log_thread->signals);
   qengine_destroy(g_log_thread->engine);
-  //qfree(g_log_thread);
 }
 
 void

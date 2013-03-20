@@ -36,17 +36,6 @@ qmailbox_new(qmem_pool_t *pool, qevent_func_t *callback, void *reader) {
   return box;
 }
 
-void
-qmailbox_destroy(qmailbox_t *box) {
-  qassert(box->active == 0);
-  qsignal_destroy(box->signal);
-  /*
-   * no need to free the box,cause now is end of the server,
-   * the mempool in server will do it
-   */
-  //qfree(box);
-}
-
 int
 qmailbox_active(qengine_t *engine, qmailbox_t *box) {
   int fd = qsignal_get_fd(box->signal);
