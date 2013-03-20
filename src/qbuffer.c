@@ -4,33 +4,37 @@
 
 #include "qbuffer.h"
 #include "qlog.h"
-#include "qmalloc.h"
+#include "qmempool.h"
 
 #define QBUFFER_SIZE 1024
 
-int qbuffer_init(qbuffer_t *buffer) {
-  buffer->data = (char*)qmalloc(sizeof(char) * QBUFFER_SIZE);
+int qbuffer_init(qmem_pool_t *pool, qbuffer_t *buffer) {
+  buffer->data = qalloc(pool, sizeof(char) * QBUFFER_SIZE);
   if (buffer->data == NULL) {
     return -1;
   }
   buffer->pos  = buffer->len = 0;
   buffer->size = QBUFFER_SIZE;
+  buffer->pool = pool;
   return 0;
 }
 
 void qbuffer_free(qbuffer_t *buffer) {
-  buffer = NULL;
-  //qfree(buffer->data);
+  qfree(buffer->pool, buffer->data, buffer->size);
 }
 
 int qbuffer_extend(qbuffer_t *buffer, uint32_t size) {
+  qmem_pool_t *pool = buffer->pool;
   /* align with 128 bytes */
   uint32_t new_size = (size + 127) & 0xFF80;
-  buffer->data = qrealloc(buffer->data, new_size);
-  if (buffer->data) {
-    buffer->size = new_size;
-    return 0;
+  char *data = qalloc(pool, sizeof(char) * new_size);
+  if (data == NULL) {
+    return -1;
   }
-  qerror("extend buffer error");
-  return -1;
+  memcpy(data, buffer->data, buffer->size);
+  qfree(pool, buffer->data, buffer->size);
+  buffer->data = data;
+  buffer->size = new_size;
+
+  return 0;
 }

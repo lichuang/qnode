@@ -14,30 +14,28 @@
 #include "qmutex.h"
 
 struct qdict_t;
-struct qengine_t;
-struct qserver_t;
 struct qthread_t;
 
 struct qactor_t {
-  lua_State *state;
+  lua_State       *state;
   /*
    * lua thread YIELD reason
    */
-  unsigned waiting_netio:1;
-  unsigned waiting_msg:1;
-  qmem_pool_t   *pool;
-  qtid_t tid;
-  qid_t aid;
-  qid_t parent;
-  qlist_t entry;
-  qlist_t desc_list;              /* descriptor list */
-  qspinlock_t desc_list_lock;     /* descriptor list lock */
-  qlist_t msg_list;               /* message list */
+  unsigned        waiting_netio:1;
+  unsigned        waiting_msg:1;
+  qmem_pool_t     *pool;
+  qtid_t          tid;
+  qid_t           aid;
+  qid_t           parent;
+  qlist_t         entry;
+  qlist_t         desc_list;          /* descriptor list */
+  qspinlock_t     desc_list_lock;     /* descriptor list lock */
+  qlist_t         msg_list;           /* message list */
   struct qdict_t *listen_params;
 };
 
 qid_t     qactor_new_id();
-qactor_t* qactor_new(qid_t aid);
+qactor_t* qactor_new(qmem_pool_t *pool, qid_t aid);
 void      qactor_attach(qactor_t *actor, lua_State *state);
 void      qactor_destroy(qactor_t *actor);
 

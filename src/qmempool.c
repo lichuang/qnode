@@ -2,7 +2,6 @@
  * See Copyright Notice in qnode.h
  */
 
-#include <stdlib.h>
 #include <string.h>
 #include "qmempool.h"
 

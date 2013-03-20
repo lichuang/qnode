@@ -7,20 +7,22 @@
 #include "qassert.h"
 #include "qdescriptor.h"
 #include "qlog.h"
-#include "qmalloc.h"
+#include "qmempool.h"
 #include "qmutex.h"
 #include "qserver.h"
 
-static void init_tcp_descriptor(qdescriptor_t *desc) {
+static void
+init_tcp_descriptor(qdescriptor_t *desc) {
   qtcp_descriptor_t  *tcp  = &(desc->data.tcp);
   qinet_descriptor_t *inet = &(tcp->inet);
   inet->state = QINET_STATE_OPEN;
-  if (qbuffer_init(&(tcp->buffer)) < 0) {
+  if (qbuffer_init(desc->pool, &(tcp->buffer)) < 0) {
     qerror("create descriptor buffer error");
   }
 }
 
-qdescriptor_t* qdescriptor_new(int fd, unsigned short type, qactor_t *actor) {
+qdescriptor_t*
+qdescriptor_new(qmem_pool_t *pool, int fd, unsigned short type, qactor_t *actor) {
   qassert(fd < QID_MAX);
   qdescriptor_t *desc = g_server->descriptors[fd];
   if (desc) {
@@ -28,7 +30,7 @@ qdescriptor_t* qdescriptor_new(int fd, unsigned short type, qactor_t *actor) {
     qassert(desc->aid == -1);
     qassert(desc->fd == fd);
   } else {
-    desc = qalloc_type(qdescriptor_t);
+    desc = qalloc(pool, sizeof(qdescriptor_t));
     desc->aid = -1;
     desc->fd = fd;
     g_server->descriptors[fd] = desc;
@@ -36,6 +38,7 @@ qdescriptor_t* qdescriptor_new(int fd, unsigned short type, qactor_t *actor) {
   }
   desc->aid  = actor->aid;
   desc->type = type;
+  desc->pool = pool;
   qspinlock_lock(&(actor->desc_list_lock));
   qlist_add_tail(&desc->entry, &actor->desc_list);
   qspinlock_unlock(&(actor->desc_list_lock));
@@ -46,16 +49,19 @@ qdescriptor_t* qdescriptor_new(int fd, unsigned short type, qactor_t *actor) {
   return desc;
 }
 
-static void inet_descriptor_destroy(qinet_descriptor_t *inet) {
+static void
+inet_descriptor_destroy(qinet_descriptor_t *inet) {
   inet->state = QINET_STATE_CLOSED;
 }
 
-static void tcp_descriptor_destroy(qtcp_descriptor_t *tcp) {
+static void
+tcp_descriptor_destroy(qtcp_descriptor_t *tcp) {
   inet_descriptor_destroy(&(tcp->inet));
   qbuffer_free(&(tcp->buffer));
 }
 
-void qdescriptor_destroy(qdescriptor_t *desc) {
+void
+qdescriptor_destroy(qdescriptor_t *desc) {
   switch (desc->type) {
   case QDESCRIPTOR_TCP:
     tcp_descriptor_destroy(&(desc->data.tcp));
@@ -66,10 +72,11 @@ void qdescriptor_destroy(qdescriptor_t *desc) {
     break;
   }
   close(desc->fd);
-  //qfree(desc);
+  //qfree(desc->pool, desc, sizeof(qdescriptor_t));
 }
 
-struct qactor_t* qdescriptor_get_actor(qdescriptor_t *desc) {
+qactor_t*
+qdescriptor_get_actor(qdescriptor_t *desc) {
   if (desc->aid >= 0) {
     return g_server->actors[desc->aid];
   }

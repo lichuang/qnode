@@ -14,26 +14,28 @@
 #include "qlog.h"
 #include "qidmap.h"
 #include "qmailbox.h"
-#include "qmalloc.h"
 #include "qmempool.h"
 #include "qmsg.h"
 #include "qnet.h"
 #include "qserver.h"
 #include "qthread.h"
 
-qid_t qactor_new_id() {
+qid_t
+qactor_new_id() {
   qmutex_lock(&g_server->id_map_mutex);
   qid_t id = qid_new(&g_server->id_map);
   qmutex_unlock(&g_server->id_map_mutex);
   return id;
 }
 
-qactor_t* qactor_new(qid_t aid) {
-  qactor_t *actor = qalloc_type(qactor_t);
+qactor_t*
+qactor_new(qmem_pool_t *pool, qid_t aid) {
+  qactor_t *actor = qcalloc(pool, sizeof(qactor_t));
   if (actor == NULL) {
     return NULL;
   }
   actor->state = NULL;
+  actor->pool  = pool;
   qlist_entry_init(&(actor->entry));
   qlist_entry_init(&(actor->desc_list));
   qlist_entry_init(&(actor->msg_list));
@@ -46,7 +48,8 @@ qactor_t* qactor_new(qid_t aid) {
   return actor;
 }
 
-void qactor_destroy(qactor_t *actor) {
+void
+qactor_destroy(qactor_t *actor) {
   qassert(actor);
   lua_close(actor->state);
   qmutex_lock(&g_server->id_map_mutex);
@@ -71,16 +74,18 @@ void qactor_destroy(qactor_t *actor) {
   if (actor->listen_params != NULL) {
     qdict_destroy(actor->listen_params);
   }
-  //qfree(actor);
+  qfree(actor->pool, actor, sizeof(qactor_t));
 }
 
-void qactor_attach(qactor_t *actor, lua_State *state) {
+void
+qactor_attach(qactor_t *actor, lua_State *state) {
   qassert(actor->state == NULL);
   qapi_register(state, actor);
   actor->state = state;
 }
 
-qid_t qactor_spawn(qactor_t *actor, lua_State *state) {
+qid_t
+qactor_spawn(qactor_t *actor, lua_State *state) {
   qassert(actor);
   qtid_t receiver_id = qserver_worker_thread();
   qmsg_t *msg = qmsg_new(actor->tid, receiver_id);
@@ -89,12 +94,15 @@ qid_t qactor_spawn(qactor_t *actor, lua_State *state) {
   }
   qid_t aid = qactor_new_id();
   if (aid == QID_INVALID) {
-    //qfree(msg);
+    free(msg);
     return -1;
   }
   qid_t parent = actor->aid;
   qmsg_init_spawn(msg, aid, parent, state);
-  qactor_t *new_actor = qactor_new(aid);
+  qactor_t *new_actor = qactor_new(actor->pool, aid);
+  if (new_actor == NULL) {
+    return -1;
+  }
   qactor_attach(new_actor, state);
   new_actor->parent = actor->aid;
   msg->args.spawn.actor = new_actor;
@@ -102,13 +110,15 @@ qid_t qactor_spawn(qactor_t *actor, lua_State *state) {
   return aid;
 }
 
-struct qengine_t* qactor_get_engine(qactor_t *actor) {
+qengine_t*
+qactor_get_engine(qactor_t *actor) {
   qassert(actor);
   qassert(actor->tid > 0);
   return g_server->threads[actor->tid]->engine;
 }
 
-struct qthread_t* qactor_get_thread(qactor_t *actor) {
+qthread_t*
+qactor_get_thread(qactor_t *actor) {
   qassert(actor);
   return g_server->threads[actor->tid];
 }

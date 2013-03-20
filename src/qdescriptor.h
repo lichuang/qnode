@@ -7,6 +7,7 @@
 
 #include <ifaddrs.h>
 #include <netinet/in.h>
+#include "qcore.h"
 #include "qbuffer.h"
 #include "qlist.h"
 #include "qtype.h"
@@ -48,19 +49,21 @@ typedef struct qfile_descriptor_t {
 #define QDESCRIPTOR_FILE  2 
 
 typedef struct qdescriptor_t {
-  int fd;
-  unsigned short type;
-  qid_t aid;                        /* owner actor id */
-  qlist_t entry;                    /* actor desc list */
+  int             fd;
+  unsigned short  type;
+  qid_t           aid;              /* owner actor id */
+  qlist_t         entry;            /* actor desc list */
 
   union {
     struct qtcp_descriptor_t  tcp;
     struct qfile_descriptor_t file;
   } data;
+
+  qmem_pool_t     *pool;
 } qdescriptor_t;
 
-qdescriptor_t*    qdescriptor_new(int fd, unsigned short type, struct qactor_t *actor);
+qdescriptor_t*    qdescriptor_new(qmem_pool_t *pool, int fd, unsigned short type, qactor_t *actor);
 void              qdescriptor_destroy(qdescriptor_t *desc);
-struct qactor_t*  qdescriptor_get_actor(qdescriptor_t *desc);
+qactor_t*         qdescriptor_get_actor(qdescriptor_t *desc);
 
 #endif  /* __QDESCRIPTOR_H__ */
