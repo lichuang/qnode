@@ -173,22 +173,6 @@ error:
    * when server start, just end the server wiil be fine
    */
   return -1;
-  /*
-  if (server->threads != NULL) {
-    qfree(pool, server->threads, thread_num * sizeof(qthread_t*));
-  }
-  for (i = 1; i < thread_num; ++i) {
-  }
-  if (server->in_box != NULL) {
-    qfree(pool, server->in_box, thread_num * sizeof(qmailbox_t*));
-  }
-  if (server->out_box != NULL) {
-    qfree(pool, server->out_box, thread_num * sizeof(qmailbox_t*));
-  }
-  if (server->thread_log != NULL) {
-    qfree(pool, server->thread_log, thread_num * sizeof(qthread_log_t*));
-  }
-  */
 }
 
 static void
@@ -262,18 +246,6 @@ server_init(qmem_pool_t *pool, struct qconfig_t *config) {
   return 0;
 
 error:
-  /*
-  qlog_thread_destroy();
-  if (server->engine != NULL) {
-    qengine_destroy(server->engine);
-  }
-  if (server->actors != NULL) {
-    qfree(pool, server->actors, sizeof(qactor_t *) * QID_MAX);
-  }
-  if (server != NULL) {
-    qfree(pool, server, sizeof(qserver_t));
-  }
-  */
   return -1;
 }
 

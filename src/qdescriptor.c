@@ -30,7 +30,7 @@ qdescriptor_new(qmem_pool_t *pool, int fd, unsigned short type, qactor_t *actor)
     qassert(desc->aid == -1);
     qassert(desc->fd == fd);
   } else {
-    desc = qalloc(pool, sizeof(qdescriptor_t));
+    desc = malloc(sizeof(qdescriptor_t));
     desc->aid = -1;
     desc->fd = fd;
     g_server->descriptors[fd] = desc;
@@ -72,7 +72,7 @@ qdescriptor_destroy(qdescriptor_t *desc) {
     break;
   }
   close(desc->fd);
-  //qfree(desc->pool, desc, sizeof(qdescriptor_t));
+  desc->pool = NULL;
 }
 
 qactor_t*
