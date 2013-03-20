@@ -9,20 +9,23 @@
 #include "qengine.h"
 #include "qlog.h"
 #include "qmalloc.h"
+#include "qmempool.h"
 #include "qthread_log.h"
 
 #define QRETIRED_FD -1
 
 extern const struct qdispatcher_t epoll_dispatcher;
 
-static void init_qevent(qevent_t *event) {
+static void
+init_qevent(qevent_t *event) {
   event->fd = QRETIRED_FD;
   event->flags = 0;
   event->read = event->write = NULL;
   event->data = NULL;
 }
 
-static void init_engine_time(qengine_t *engine) {
+static void
+init_engine_time(qengine_t *engine) {
   struct tm tm;
   time_t t = time(NULL);
   localtime_r(&t, &tm);
@@ -33,16 +36,26 @@ static void init_engine_time(qengine_t *engine) {
   engine->now = 1000 * t;
 }
 
-qengine_t* qengine_new() {
-  qengine_t *engine = qalloc_type(qengine_t);
+qengine_t*
+qengine_new(qmem_pool_t *pool) {
+  qengine_t *engine = qcalloc(pool, sizeof(qengine_t));
+  if (engine == NULL) {
+    goto error;
+  }
+  engine->pool = pool;
   engine->max_fd = 0;
   engine->dispatcher = &(epoll_dispatcher);
   if (engine->dispatcher->init(engine) < 0) {
-    qfree(engine);
-    return NULL;
+    goto error;
   }
-  engine->events = qalloc_array(qevent_t, QMAX_EVENTS);
-  engine->active_events = qalloc_array(qevent_t, QMAX_EVENTS);
+  engine->events = qalloc(pool, sizeof(qevent_t) * QMAX_EVENTS);
+  if (engine->events == NULL) {
+    goto error;
+  }
+  engine->active_events = qalloc(pool, sizeof(qevent_t) * QMAX_EVENTS);
+  if (engine->active_events == NULL) {
+    goto error;
+  }
   int i = 0;
   for (i = 0; i < QMAX_EVENTS; ++i) {
     qevent_t *event = &(engine->events[i]);
@@ -53,9 +66,24 @@ qengine_t* qengine_new() {
   qtimer_manager_init(&engine->timer_mng, engine);
   init_engine_time(engine);
   return engine;
+
+error:
+  if (engine->events) {
+    qfree(pool, engine->events, sizeof(qevent_t) * QMAX_EVENTS);
+  }
+  if (engine->active_events) {
+    qfree(pool, engine->active_events, sizeof(qevent_t) * QMAX_EVENTS);
+  }
+  if (engine) {
+    engine->dispatcher->destroy(engine);
+    qfree(pool, engine, sizeof(qengine_t));
+  }
+  return NULL;
 }
 
-int qengine_add_event(qengine_t *engine, int fd, int flags, qevent_func_t *callback, void *data) {
+int
+qengine_add_event(qengine_t *engine, int fd, int flags,
+                  qevent_func_t *callback, void *data) {
   if (fd > QMAX_EVENTS) {
     qerror("extends max fd");
     return -1;
@@ -80,7 +108,8 @@ int qengine_add_event(qengine_t *engine, int fd, int flags, qevent_func_t *callb
   return 0;
 }
 
-int qengine_del_event(qengine_t* engine, int fd, int flags) {
+int
+qengine_del_event(qengine_t* engine, int fd, int flags) {
   if (fd > QMAX_EVENTS) {
     qerror("extends max fd");
     return -1;
@@ -103,7 +132,8 @@ int qengine_del_event(qengine_t* engine, int fd, int flags) {
   return 0;
 }
 
-int qengine_loop(qengine_t* engine) {
+int
+qengine_loop(qengine_t* engine) {
   int num, i;
   init_engine_time(engine);
 
@@ -129,17 +159,22 @@ int qengine_loop(qengine_t* engine) {
   return 0;
 }
 
-void qengine_destroy(qengine_t *engine) {
+void
+qengine_destroy(qengine_t *engine) {
+  qmem_pool_t *pool = engine->pool;
   engine->dispatcher->destroy(engine);
-  qfree(engine->events);
-  qfree(engine->active_events);
-  qfree(engine);
+  qfree(pool, engine->events, sizeof(qevent_t) * QMAX_EVENTS);
+  qfree(pool, engine->active_events, sizeof(qevent_t) * QMAX_EVENTS);
+  qfree(pool, engine, sizeof(qengine_t));
 }
 
-qid_t qengine_add_timer(qengine_t* engine, uint32_t timeout_ms, qtimer_func_t *func, int type, void *data) {
+qid_t
+qengine_add_timer(qengine_t* engine, uint32_t timeout_ms,
+                  qtimer_func_t *func, int type, void *data) {
   return qtimer_add(&engine->timer_mng, timeout_ms, func, type, data);
 }
 
-int qengine_del_timer(qengine_t* engine, qid_t id) {
+int
+qengine_del_timer(qengine_t* engine, qid_t id) {
   return qtimer_del(&engine->timer_mng, id);
 }

@@ -124,5 +124,6 @@ int qminheap_push(qminheap_t *heap, void *data) {
 }
 
 void qminheap_destroy(qminheap_t *heap) {
-  qfree(heap->data);
+  heap = NULL;
+  //qfree(heap->data);
 }

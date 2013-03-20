@@ -39,12 +39,12 @@ void qdict_destroy(qdict_t *dict) {
       if (entry->val.type == QDICT_VAL_STRING) {
         qstring_destroy(entry->val.data.str);
       }
-      qfree(entry);
+      //qfree(entry);
       pos  = next;
     }
   }
-  qfree(dict->buckets);
-  qfree(dict);
+  //qfree(dict->buckets);
+  //qfree(dict);
 }
 
 static int hashstring(const char *str, size_t len) {

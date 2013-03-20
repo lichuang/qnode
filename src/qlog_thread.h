@@ -6,19 +6,20 @@
 #define __QLOG_THREAD_H__
 
 #include <pthread.h>
+#include "qcore.h"
 
 struct qengine_t;
 struct qsignal_t;
 
 typedef struct qlog_thread_t {
-  int started:1;
-  pthread_t id;
-  int thread_num;
-  struct qengine_t *engine;
-  struct qsignal_t **signals;
+  int               started:1;
+  pthread_t         id;
+  int               thread_num;
+  struct qengine_t  *engine;
+  struct qsignal_t  **signals;
 } qlog_thread_t;
 
-int  qlog_thread_new(int thread_num);
+int  qlog_thread_new(qmem_pool_t *pool, int thread_num);
 void qlog_thread_destroy();
 void qlog_thread_active(int idx);
 

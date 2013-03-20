@@ -33,7 +33,7 @@ qmailbox_t* qmailbox_new(qevent_func_t *callback, void *reader) {
 void qmailbox_destroy(qmailbox_t *box) {
   qassert(box->active == 0);
   qsignal_destroy(box->signal);
-  qfree(box);
+  //qfree(box);
 }
 
 int qmailbox_active(qengine_t *engine, qmailbox_t *box) {

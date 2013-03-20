@@ -119,5 +119,5 @@ static int epoll_poll (qengine_t *engine, uint32_t timeout_ms) {
 static void epoll_destroy(qengine_t *engine) {
   epoll_t *epoll = engine->data;
   close(epoll->fd);
-  qfree(epoll);
+  //qfree(epoll);
 }

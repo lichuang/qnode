@@ -13,6 +13,7 @@
 #include "qlog_thread.h"
 #include "qmalloc.h"
 #include "qmailbox.h"
+#include "qmempool.h"
 #include "qmsg.h"
 #include "qnet.h"
 #include "qserver.h"
@@ -23,14 +24,16 @@ extern qserver_msg_handler g_server_msg_handlers[];
 
 struct qserver_t *g_server;
 
-static void server_accept(int fd, int flags, void *data) {
+static void
+server_accept(int fd, int flags, void *data) {
   UNUSED(fd);
   UNUSED(flags);
   UNUSED(data);
   qinfo("add a socket....");
 }
 
-static int init_server_event(struct qserver_t *server) {
+static int
+init_server_event(struct qserver_t *server) {
   return 0;
   int fd = qnet_tcp_listen(22222, "127.0.0.1");
   if (fd < 0) {
@@ -44,7 +47,8 @@ static int init_server_event(struct qserver_t *server) {
   return 0;
 }
 
-static void server_box(int fd, int flags, void *data) {
+static void
+server_box(int fd, int flags, void *data) {
   UNUSED(fd);
   UNUSED(flags);
   qinfo("handle server msg");
@@ -77,17 +81,20 @@ next:
   }
 }
 
-qtid_t qserver_worker_thread() {
+qtid_t
+qserver_worker_thread() {
   static qtid_t i = 1;
   i = (i + 1) % g_server->config->thread_num + 1;
   return i;
 }
 
-qactor_t* qserver_get_actor(qid_t id) {
+qactor_t*
+qserver_get_actor(qid_t id) {
   return g_server->actors[id];
 }
 
-static void server_start(qserver_t *server) {
+static void
+server_start(qserver_t *server) {
   UNUSED(server);
   qid_t aid = qactor_new_id();
   qassert(aid != QID_INVALID);
@@ -101,7 +108,8 @@ static void server_start(qserver_t *server) {
   qmsg_send(msg);
 }
 
-static void init_thread(qserver_t *server) {
+static void
+init_thread(qserver_t *server) {
   int i, j;
   qconfig_t *config = server->config;
   server->threads = (qthread_t**)qmalloc(config->thread_num * sizeof(qthread_t*));
@@ -140,7 +148,8 @@ static void init_thread(qserver_t *server) {
   }
 }
 
-static void sig_handler(int sig) {
+static void
+sig_handler(int sig) {
   qinfo("caught signal %d", sig);
   switch (sig) {
   case SIGTERM:
@@ -154,7 +163,8 @@ static void sig_handler(int sig) {
   }
 }
 
-static void setup_signal() {
+static void
+setup_signal() {
   struct sigaction act;
 
   sigemptyset(&act.sa_mask);
@@ -166,31 +176,34 @@ static void setup_signal() {
   sigaction(SIGABRT, &act, NULL);
 }
 
-static int server_init(struct qconfig_t *config) {
+static int
+server_init(qmem_pool_t *pool, struct qconfig_t *config) {
   qassert(config);
   qassert(config->thread_num > 0);
   qassert(g_server == NULL);
-  int i;
-  qlog_thread_new(config->thread_num + 1);
-  qserver_t *server = qalloc_type(qserver_t);
-  g_server = server;
-  server->config = config;
-  server->engine = qengine_new();
-  if (init_server_event(server) < 0) {
-    qengine_destroy(server->engine);
-    qfree(server);
-    return -1;
+
+  qserver_t *server = qcalloc(pool, sizeof(qserver_t));
+  if (server == NULL) {
+    goto error;
   }
-  server->actors = (qactor_t**)qmalloc(QID_MAX * sizeof(qactor_t*));
+  g_server = server;
+  g_server->pool = pool;
+  if (qlog_thread_new(pool, config->thread_num + 1) < 0) {
+    goto error;
+  }
+  server->config = config;
+  server->engine = qengine_new(g_server->pool);
+  if (init_server_event(server) < 0) {
+    goto error;
+  }
+  server->actors = (qactor_t**)qalloc(pool, QID_MAX * sizeof(qactor_t*));
   if (server->actors == NULL) {
-    qengine_destroy(server->engine);
-    qfree(server);
-    return -1;
+    goto error;
   }
 
-  server->descriptors = (qdescriptor_t**)qmalloc(QID_MAX * sizeof(qdescriptor_t*));
-  for (i = 0; i < QID_MAX; ++i) {
-    server->descriptors[i] = NULL;
+  server->descriptors = (qdescriptor_t**)qcalloc(pool, QID_MAX * sizeof(qdescriptor_t*));
+  if (server->descriptors == NULL) {
+    goto error;
   }
 
   init_thread(server);
@@ -202,9 +215,23 @@ static int server_init(struct qconfig_t *config) {
   server_start(server);
   qinfo("qserver status...");
   return 0;
+
+error:
+  qlog_thread_destroy();
+  if (server->engine != NULL) {
+    qengine_destroy(server->engine);
+  }
+  if (server->actors != NULL) {
+    qfree(pool, server->actors, sizeof(qactor_t *) * QID_MAX);
+  }
+  if (server != NULL) {
+    qfree(pool, server, sizeof(qserver_t));
+  }
+  return -1;
 }
 
-static void destroy_threads() {
+static void
+destroy_threads() {
   int i;
   for (i = 1; i <= g_server->config->thread_num; ++i) {
     qthread_t *thread = g_server->threads[i];
@@ -213,17 +240,24 @@ static void destroy_threads() {
   qlog_thread_destroy();
 }
 
-static void destroy_server() {
+static void
+destroy_server() {
   if (g_server->status == STOPPED) {
     return;
   }
   g_server->status = STOPPED;
   qinfo("destroy_server");
   destroy_threads();
+  qmem_pool_destroy(g_server->pool);
 }
 
-int qserver_run(struct qconfig_t *config) {
-  if (server_init(config) != 0) {
+int
+qserver_run(struct qconfig_t *config) {
+  qmem_pool_t *pool = qmem_pool_create();
+  if (pool == NULL) {
+    return -1;
+  }
+  if (server_init(pool, config) != 0) {
     return -1;
   }
   g_server->status = RUNNING;
@@ -233,7 +267,8 @@ int qserver_run(struct qconfig_t *config) {
   return 0;
 }
 
-void qserver_new_actor(struct qactor_t *actor) {
+void
+qserver_new_actor(struct qactor_t *actor) {
   qassert(g_server->actors[actor->aid] == NULL);
   g_server->actors[actor->aid] = actor;
   g_server->num_actor++;

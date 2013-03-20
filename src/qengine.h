@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 #include <sys/time.h>
+#include "qcore.h"
 #include "qtimer.h"
 
 #define QMAX_EVENTS  (1024 * 10)
@@ -44,18 +45,19 @@ typedef struct qdispatcher_t {
   void (*destroy)(struct qengine_t *);
 } qdispatcher_t;
 
-typedef struct qengine_t {
-  struct qevent_t *events;
-  struct qevent_t *active_events;
-  int max_fd;
-  const struct qdispatcher_t *dispatcher;
-  void *data;
-  qtimer_manager_t timer_mng;
-  uint64_t now;
+struct qengine_t {
+  struct qevent_t     *events;
+  struct qevent_t     *active_events;
+  const qdispatcher_t *dispatcher;
+  void                *data;
+  int                 max_fd;
+  qmem_pool_t         *pool;
+  qtimer_manager_t    timer_mng;
+  uint64_t            now;
   char time_buff[20];
-} qengine_t;
+};
 
-qengine_t* qengine_new();
+qengine_t* qengine_new(qmem_pool_t *pool);
 int qengine_loop(qengine_t* engine);
 void qengine_destroy(qengine_t *engine);
 

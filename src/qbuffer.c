@@ -19,7 +19,8 @@ int qbuffer_init(qbuffer_t *buffer) {
 }
 
 void qbuffer_free(qbuffer_t *buffer) {
-  qfree(buffer->data);
+  buffer = NULL;
+  //qfree(buffer->data);
 }
 
 int qbuffer_extend(qbuffer_t *buffer, uint32_t size) {

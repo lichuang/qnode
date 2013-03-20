@@ -13,6 +13,7 @@
 #include "qlog_thread.h"
 #include "qmailbox.h"
 #include "qmalloc.h"
+#include "qmempool.h"
 #include "qmsg.h"
 #include "qserver.h"
 #include "qsignal.h"
@@ -21,7 +22,8 @@
 pthread_key_t g_thread_log_key = PTHREAD_ONCE_INIT;
 qlog_thread_t *g_log_thread = NULL;
 
-static void thread_log_box(int fd, int flags, void *data) {
+static void
+thread_log_box(int fd, int flags, void *data) {
   UNUSED(fd);
   UNUSED(flags);
   qsignal_t *signal = (qsignal_t*)data;
@@ -58,12 +60,13 @@ static void thread_log_box(int fd, int flags, void *data) {
       /* do flush I/O work */
     }
 
-    qfree(log);
+    //qfree(log);
     pos = next;
   }
 }
 
-static void* main_loop(void *arg) {
+static void*
+main_loop(void *arg) {
   qlog_thread_t *thread = (qlog_thread_t*)arg;
   thread->started = 1;
   while (thread->started && qengine_loop(thread->engine) == 0) {
@@ -71,25 +74,34 @@ static void* main_loop(void *arg) {
   return NULL;
 }
 
-void log_key_destroy(void *value) {
+void
+log_key_destroy(void *value) {
   UNUSED(value);
 }
 
-int qlog_thread_new(int thread_num) {
-  g_log_thread = qalloc_type(qlog_thread_t);
+int
+qlog_thread_new(qmem_pool_t *pool, int thread_num) {
+  g_log_thread = qalloc(pool, sizeof(qlog_thread_t));
   if (g_log_thread == NULL) {
     return -1;
   }
   if (pthread_key_create(&g_thread_log_key, log_key_destroy) < 0) {
     return -1;
   }
-  g_log_thread->engine = qengine_new();
+  g_log_thread->engine = qengine_new(pool);
   if (g_log_thread->engine == NULL) {
-    qfree(g_log_thread);
+    qfree(pool, g_log_thread, sizeof(qlog_thread_t));
+    g_log_thread = NULL;
     return -1;
   }
   g_log_thread->thread_num = thread_num;
-  g_log_thread->signals = (qsignal_t**)qmalloc(thread_num * sizeof(qsignal_t*));
+  g_log_thread->signals = qalloc(pool, thread_num * sizeof(qsignal_t*));
+  if (g_log_thread->signals == NULL) {
+    qengine_destroy(g_log_thread->engine);
+    qfree(pool, g_log_thread, sizeof(qlog_thread_t));
+    g_log_thread = NULL;
+    return -1;
+  }
   int i = 0;
   for (i = 0; i < thread_num; ++i) {
     g_log_thread->signals[i] = qsignal_new();
@@ -107,20 +119,24 @@ int qlog_thread_new(int thread_num) {
   return 0;
 }
 
-void qlog_thread_destroy() {
+void
+qlog_thread_destroy() {
+  if (g_log_thread == NULL) {
+    return;
+  }
   int i;
   for (i = 0; i < g_log_thread->thread_num; ++i) {
     qsignal_t *signal = g_log_thread->signals[i];
     thread_log_box(0, -1, signal);
     qsignal_destroy(signal);
   }
-  qfree(g_log_thread->signals);
+  //qfree(g_log_thread->signals);
   qengine_destroy(g_log_thread->engine);
-  qfree(g_log_thread);
-  g_log_thread = NULL;
+  //qfree(g_log_thread);
 }
 
-void qlog_thread_active(int idx) {
+void
+qlog_thread_active(int idx) {
   if (qsignal_active(g_log_thread->signals[idx], 1) == 0) {
     qsignal_send(g_log_thread->signals[idx]);
   }

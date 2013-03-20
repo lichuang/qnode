@@ -11,6 +11,6 @@
 
 void *qmalloc(size_t size);
 void *qrealloc(void *ptr, size_t size);
-void qfree(void *ptr);
+//void qfree(void *ptr);
 
 #endif  /* __QMALLOC_H__ */

@@ -66,7 +66,7 @@ void qdescriptor_destroy(qdescriptor_t *desc) {
     break;
   }
   close(desc->fd);
-  qfree(desc);
+  //qfree(desc);
 }
 
 struct qactor_t* qdescriptor_get_actor(qdescriptor_t *desc) {

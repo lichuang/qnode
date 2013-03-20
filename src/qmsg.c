@@ -40,7 +40,7 @@ void qmsg_destroy(qmsg_t *msg) {
     default:
       break;
   }
-  qfree(msg);
+  //qfree(msg);
 }
 
 qactor_msg_t* qactor_msg_new() {
@@ -50,7 +50,7 @@ qactor_msg_t* qactor_msg_new() {
 
 void qactor_msg_destroy(qactor_msg_t *msg) {
   qdict_destroy(msg->arg_dict);
-  qfree(msg);
+  //qfree(msg);
 }
 
 qmsg_t* qmsg_clone(qmsg_t *msg) {
@@ -86,7 +86,7 @@ void qmsg_send(qmsg_t *msg) {
     qassert(sender_id != QSERVER_THREAD_TID);
     qthread_t *thread = g_server->threads[sender_id];
     g_thread_msg_handlers[msg->type](thread, msg);
-    qfree(msg);
+    //qfree(msg);
     return;
   } 
   

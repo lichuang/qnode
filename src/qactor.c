@@ -15,6 +15,7 @@
 #include "qidmap.h"
 #include "qmailbox.h"
 #include "qmalloc.h"
+#include "qmempool.h"
 #include "qmsg.h"
 #include "qnet.h"
 #include "qserver.h"
@@ -70,7 +71,7 @@ void qactor_destroy(qactor_t *actor) {
   if (actor->listen_params != NULL) {
     qdict_destroy(actor->listen_params);
   }
-  qfree(actor);
+  //qfree(actor);
 }
 
 void qactor_attach(qactor_t *actor, lua_State *state) {
@@ -88,7 +89,7 @@ qid_t qactor_spawn(qactor_t *actor, lua_State *state) {
   }
   qid_t aid = qactor_new_id();
   if (aid == QID_INVALID) {
-    qfree(msg);
+    //qfree(msg);
     return -1;
   }
   qid_t parent = actor->aid;

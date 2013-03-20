@@ -25,6 +25,8 @@ void *qrealloc(void *ptr, size_t size) {
   return realloc(ptr, size);
 }
 
+/*
 void qfree(void *ptr) {
   free(ptr);
 }
+*/

@@ -3,17 +3,21 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include "qmempool.h"
 
-static inline size_t round_up(size_t bytes) {
+static inline size_t
+round_up(size_t bytes) {
   return (((bytes + QALIGN - 1) & ~(QALIGN - 1)));
 }
 
-static inline size_t free_list_index(size_t bytes) {
+static inline size_t
+free_list_index(size_t bytes) {
   return (((bytes + QALIGN - 1) / QALIGN - 1));
 }
 
-static int new_mem_data(qmem_pool_t *pool) {
+static int
+new_mem_data(qmem_pool_t *pool) {
   qmem_data_t *data = (qmem_data_t *)malloc(sizeof(qmem_data_t));
   if (data == NULL) {
     return -1;
@@ -25,7 +29,8 @@ static int new_mem_data(qmem_pool_t *pool) {
   return 0;
 }
 
-static char* chunk_alloc(qmem_pool_t *pool, size_t size, int *nobjs) {
+static char*
+chunk_alloc(qmem_pool_t *pool, size_t size, int *nobjs) {
   char *result;
   size_t total_bytes = size * (*nobjs);
   size_t bytes_left  = pool->end_free - pool->start_free;
@@ -71,7 +76,8 @@ static char* chunk_alloc(qmem_pool_t *pool, size_t size, int *nobjs) {
   return chunk_alloc(pool, size, nobjs);
 }
 
-static void* refill(qmem_pool_t *pool, size_t n) {
+static void*
+refill(qmem_pool_t *pool, size_t n) {
   int nobjs = 10;
   char *chunk = chunk_alloc(pool, n, &nobjs);
 
@@ -101,7 +107,8 @@ static void* refill(qmem_pool_t *pool, size_t n) {
   return (result);
 }
 
-qmem_pool_t* qmem_pool_create() {
+qmem_pool_t*
+qmem_pool_create() {
   qmem_pool_t *pool = (qmem_pool_t*)malloc(sizeof(qmem_pool_t));
 
   if (pool == NULL) {
@@ -126,7 +133,8 @@ qmem_pool_t* qmem_pool_create() {
   return pool;
 }
 
-void qmem_pool_destroy(qmem_pool_t *pool) {
+void
+qmem_pool_destroy(qmem_pool_t *pool) {
   qmem_data_t *data, *tmp;
   for (data = pool->data; data; ) {
     tmp = data;
@@ -137,7 +145,8 @@ void qmem_pool_destroy(qmem_pool_t *pool) {
   free(pool);
 }
 
-void* qalloc(qmem_pool_t *pool, size_t size) {
+void*
+qalloc(qmem_pool_t *pool, size_t size) {
   if (size > QMAX_BYTES) {
     return malloc(size);
   }
@@ -153,7 +162,17 @@ void* qalloc(qmem_pool_t *pool, size_t size) {
   return result;
 }
 
-void qfree(qmem_pool_t *pool, void *p, size_t size) {
+void*
+qcalloc(qmem_pool_t *pool, size_t size) {
+  void *result = qalloc(pool, size);
+  if (result) {
+    bzero(result, size);
+  }
+  return result;
+}
+
+void
+qfree(qmem_pool_t *pool, void *p, size_t size) {
   qmem_node_t *node = (qmem_node_t*)p;
   qmem_node_t **list;
 

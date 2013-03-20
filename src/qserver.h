@@ -6,6 +6,7 @@
 #define __QSERVER_H__
 
 #include "qconfig.h"
+#include "qcore.h"
 #include "qidmap.h"
 #include "qmutex.h"
 #include "qtype.h"
@@ -16,9 +17,10 @@ struct qactor_t;
 struct qdescriptor_t;
 struct qengine_t;
 struct qevent_t;
-struct qthread_t;
 struct qmailbox_t;
+struct qmem_pool_t;
 struct qmsg_t;
+struct qthread_t;
  
 enum {
   STOPPED   = 0,
@@ -26,20 +28,21 @@ enum {
   STOPPING  = 2,
 };
 
-typedef struct qserver_t {
+struct qserver_t {
+  struct qactor_t       **actors;
   struct qconfig_t      *config;
+  struct qdescriptor_t  **descriptors;
   struct qengine_t      *engine;
-  struct qthread_t      **threads;
   struct qmailbox_t     **in_box;
   struct qmailbox_t     **out_box;
+  struct qmem_pool_t    *pool;
+  struct qthread_t      **threads;
   struct qthread_log_t  **thread_log;
-  struct qactor_t       **actors;
-  struct qdescriptor_t  **descriptors;
   unsigned int          num_actor;
   qidmap_t              id_map;
   qmutex_t              id_map_mutex;
   int                   status;
-} qserver_t;
+};
 
 int qserver_run(struct qconfig_t *config);
 

@@ -6,6 +6,7 @@
 #define __QMEMPOOL_H__
 
 #include <stddef.h>
+#include "qcore.h"
 
 #define QALIGN      8
 #define QMAX_BYTES  128
@@ -22,17 +23,18 @@ typedef struct qmem_data_t {
   struct qmem_data_t  *next;
 } qmem_data_t;
 
-typedef struct qmem_pool_t {
+struct qmem_pool_t {
   qmem_node_t         *free_list[QFREE_LISTS];
   char                *start_free;
   char                *end_free;
   qmem_data_t         *data;
-} qmem_pool_t;
+};
 
 qmem_pool_t*  qmem_pool_create();
 void          qmem_pool_destroy(qmem_pool_t *pool);
 
 void*         qalloc(qmem_pool_t *pool, size_t size);
+void*         qcalloc(qmem_pool_t *pool, size_t size);
 void          qfree(qmem_pool_t *pool, void *p, size_t size);
 
 #endif  /* __QMEMPOOL_H__ */
