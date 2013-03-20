@@ -11,7 +11,6 @@
 #include "qdefines.h"
 #include "qlog.h"
 #include "qlog_thread.h"
-#include "qmalloc.h"
 #include "qmailbox.h"
 #include "qmempool.h"
 #include "qmsg.h"
@@ -108,35 +107,55 @@ server_start(qserver_t *server) {
   qmsg_send(msg);
 }
 
-static void
-init_thread(qserver_t *server) {
+static int
+init_worker_threads(qserver_t *server) {
   int i, j;
   qconfig_t *config = server->config;
-  server->threads = (qthread_t**)qmalloc(config->thread_num * sizeof(qthread_t*));
-  qalloc_assert(server->threads);
+  int thread_num = config->thread_num;
+  qmem_pool_t *pool = server->pool;
+  
+  server->threads = qalloc(pool, thread_num * sizeof(qthread_t*));
+  if (server->threads == NULL) {
+    goto error;
+  }
   server->threads[0] = NULL;
-  server->in_box = (qmailbox_t**)qmalloc(config->thread_num * sizeof(qmailbox_t*));
-  qalloc_assert(server->in_box);
+
+  server->in_box = qalloc(pool, thread_num * sizeof(qmailbox_t*));
+  if (server->in_box == NULL) {
+    goto error;
+  }
   server->in_box[0] = NULL;
-  server->thread_log = (qthread_log_t**)qmalloc(config->thread_num * sizeof(qthread_t*));
-  qalloc_assert(server->thread_log);
-  server->out_box = (qmailbox_t**)qmalloc(config->thread_num * sizeof(qmailbox_t*));
-  qalloc_assert(server->out_box);
+
+  server->thread_log = qalloc(pool, thread_num * sizeof(qthread_log_t*));
+  if (server->thread_log == NULL) {
+    goto error;
+  }
+
+  server->out_box = qalloc(pool, thread_num * sizeof(qmailbox_t*));
+  if (server->out_box == NULL) {
+    goto error;
+  }
   server->out_box[0] = NULL;
-  for (i = 1; i <= config->thread_num; ++i) {
-    qmailbox_t *box = qmailbox_new(server_box, NULL);
+
+  for (i = 1; i <= thread_num; ++i) {
+    qmailbox_t *box = qmailbox_new(pool, server_box, NULL);
+    if (box == NULL) {
+      goto error;
+    }
     box->reader = box;
     qmailbox_active(server->engine, box);
     server->in_box[i] = box;
     server->threads[i] = qthread_new(server, i); 
-    qassert(server->threads[i]);
+    if (server->threads[i] == NULL) {
+      goto error;
+    }
     server->out_box[i] = server->threads[i]->in_box[0];
     server->threads[i]->out_box[0] = box;
   }
 
-  for (i = 1; i <= config->thread_num; ++i) {
+  for (i = 1; i <= thread_num; ++i) {
     qthread_t *thread1 = server->threads[i];
-    for (j = 1; j <= config->thread_num; ++j) {
+    for (j = 1; j <= thread_num; ++j) {
       if (j == i) {
         continue;
       }
@@ -146,6 +165,30 @@ init_thread(qserver_t *server) {
       thread2->out_box[i] = thread1->in_box[j];
     }
   }
+  return 0;
+
+error:
+  /*
+   * no need to free memory, cause this function called
+   * when server start, just end the server wiil be fine
+   */
+  return -1;
+  /*
+  if (server->threads != NULL) {
+    qfree(pool, server->threads, thread_num * sizeof(qthread_t*));
+  }
+  for (i = 1; i < thread_num; ++i) {
+  }
+  if (server->in_box != NULL) {
+    qfree(pool, server->in_box, thread_num * sizeof(qmailbox_t*));
+  }
+  if (server->out_box != NULL) {
+    qfree(pool, server->out_box, thread_num * sizeof(qmailbox_t*));
+  }
+  if (server->thread_log != NULL) {
+    qfree(pool, server->thread_log, thread_num * sizeof(qthread_log_t*));
+  }
+  */
 }
 
 static void
@@ -206,7 +249,9 @@ server_init(qmem_pool_t *pool, struct qconfig_t *config) {
     goto error;
   }
 
-  init_thread(server);
+  if (init_worker_threads(server) < 0) {
+    goto error;
+  }
   qidmap_init(&server->id_map);
   qmutex_init(&server->id_map_mutex);
   setup_signal();

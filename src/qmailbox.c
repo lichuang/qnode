@@ -11,39 +11,52 @@
 #include "qlog.h"
 #include "qmsg.h"
 #include "qmailbox.h"
-#include "qmalloc.h"
+#include "qmempool.h"
 #include "qsignal.h"
 
-qmailbox_t* qmailbox_new(qevent_func_t *callback, void *reader) {
-  qmailbox_t *box = qalloc_type(qmailbox_t);
-  qalloc_assert(box);
+qmailbox_t* 
+qmailbox_new(qmem_pool_t *pool, qevent_func_t *callback, void *reader) {
+  qmailbox_t *box = qalloc(pool, sizeof(qmailbox_t));
+  if (box == NULL) {
+    return NULL;
+  }
   qlist_entry_init(&(box->lists[0]));
   qlist_entry_init(&(box->lists[1]));
   box->write  = &(box->lists[0]);
   box->read   = &(box->lists[1]);
   box->callback = callback;
   box->reader = reader;
-  qsignal_t *signal = qsignal_new();
-  qalloc_assert(signal);
+  qsignal_t *signal = qsignal_new(pool);
+  if (signal == NULL) {
+    qfree(pool, box, sizeof(qmailbox_t));
+    return NULL;
+  }
   box->signal = signal;
   box->active = 1;
   return box;
 }
 
-void qmailbox_destroy(qmailbox_t *box) {
+void
+qmailbox_destroy(qmailbox_t *box) {
   qassert(box->active == 0);
   qsignal_destroy(box->signal);
+  /*
+   * no need to free the box,cause now is end of the server,
+   * the mempool in server will do it
+   */
   //qfree(box);
 }
 
-int qmailbox_active(qengine_t *engine, qmailbox_t *box) {
+int
+qmailbox_active(qengine_t *engine, qmailbox_t *box) {
   int fd = qsignal_get_fd(box->signal);
   qevent_func_t *callback = box->callback;
   void *data = box->reader;
   return qengine_add_event(engine, fd, QEVENT_READ, callback, data);
 }
 
-void qmailbox_add(qmailbox_t *box, struct qmsg_t *msg) {
+void
+qmailbox_add(qmailbox_t *box, struct qmsg_t *msg) {
   if (!box->active) {
     qmsg_destroy(msg);
     return;
@@ -63,7 +76,8 @@ void qmailbox_add(qmailbox_t *box, struct qmsg_t *msg) {
   qassert(box->signal->active == 1 || box->signal->active == 0);
 }
 
-int qmailbox_get(qmailbox_t *box, qlist_t **list) {
+int
+qmailbox_get(qmailbox_t *box, qlist_t **list) {
   qassert(box->write);
   *list = NULL;
   /* first save the read ptr */
