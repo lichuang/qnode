@@ -25,7 +25,7 @@ static int qnode_spawn(lua_State *state) {
   const char *fun = lua_tostring(state, 2);
   qthread_t *thread = g_server->threads[actor->tid];
   lua_State *new_state = qlua_new_thread(thread);
-  qstring_t string = qstring_init();
+  qstring_t string = qstring_null(actor->pool);
   qstring_assign(&string, mod);
   qstring_append(&string, ".lua");
   if (qlua_threadloadfile(new_state, string.data) != 0) {
@@ -63,7 +63,7 @@ static int qnode_send(lua_State *state) {
   }
   /* copy args table */
   qactor_msg_t *actor_msg = qactor_msg_new();
-  actor_msg->arg_dict = qdict_new(5);
+  actor_msg->arg_dict = qdict_new(dst_actor->pool, 5);
   qlua_copy_table(state, 2, actor_msg->arg_dict);
   actor_msg->src = src_actor->aid;
   actor_msg->dst = dst_actor->aid;

@@ -169,16 +169,14 @@ int qlua_copy_table(lua_State *state, int table_idx, qdict_t *dict) {
 
       key = lua_tolstring(state, key_idx, &len);
       qkey_t key_val;
-      QKEY_STRING(key_val, key);
+      QKEY_STRING(key_val, (char*)key, NULL);
 
-      qdict_val_t val;
+      qval_t val;
       if (str_val) {
-        qstring_t *tmp = qstring_new();
-        qstring_init_str(*tmp);
+        qstring_t *tmp = &(val.data.str);
+        qstring_null_set(tmp, dict->pool);
         qstring_assign(tmp, str_val);
-        QVAL_STRING(val, tmp);
       } else {
-        qdict_val_t val;
         QVAL_NUMBER(val, num_val);
       }
       qdict_add(dict, &key_val, &val);
@@ -194,15 +192,15 @@ void qlua_dump_dict(lua_State *state, qdict_t *dict) {
   qdict_iter_t *iter = qdict_iterator(dict);
   qdict_entry_t *entry = NULL;
   while ((entry = qdict_next(iter)) != NULL) {
-    qdict_key_t *key = &(entry->key);
-    qdict_val_t *val = &(entry->val);
+    qkey_t *key = &(entry->key);
+    qval_t *val = &(entry->val);
     if (key->type == QDICT_KEY_STRING) {
-      lua_pushstring(state, key->data.str->data);
+      lua_pushstring(state, key->data.str.data);
     } else {
       lua_pushnumber(state, key->data.num);
     }
     if (val->type == QDICT_VAL_STRING) {
-      lua_pushstring(state, val->data.str->data);
+      lua_pushstring(state, val->data.str.data);
     } else {
       lua_pushnumber(state, val->data.num);
     }
@@ -212,7 +210,7 @@ void qlua_dump_dict(lua_State *state, qdict_t *dict) {
 
 static void lua_init_filename(const char *filename, qstring_t *full_name) {
   qserver_t *server = g_server;
-  qstring_init_str(*full_name);
+  //qstring_init_str(*full_name);
   qstring_assign(full_name, server->config->script_path.data);
   qstring_append(full_name, "/");
   qstring_append(full_name, filename);
@@ -245,7 +243,7 @@ int qlua_init_path(struct qactor_t *actor) {
   lua_getfield(state, -1, "path" );
   const char* cur_path = lua_tostring( state, -1 );
   qstring_t full_path;
-  qstring_init_str(full_path);
+  qstring_null_set(&full_path, actor->pool);
   qstring_assign(&full_path, cur_path);
   qstring_append(&full_path, ";");
   qstring_append(&full_path, path);

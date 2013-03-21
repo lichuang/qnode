@@ -2,7 +2,7 @@
  * See Copyright Notice in qnode.h
  */
 
-#include "qmalloc.h"
+#include "qmempool.h"
 #include "qdefines.h"
 #include "qengine.h"
 #include "qtimer.h"
@@ -25,9 +25,10 @@ static inline int compare_timer(void *data1, void *data2) {
 
 void qtimer_manager_init(qtimer_manager_t *mng, struct qengine_t *engine) {
   mng->engine = engine;
+  mng->pool   = engine->pool;
   qidmap_init(&(mng->id_map));
   qlist_entry_init(&(mng->free_list));
-  qminheap_init(&(mng->min_heap), compare_timer, set_timer_heap_index, get_timer_heap_index);
+  qminheap_init(&(mng->min_heap), engine->pool, compare_timer, set_timer_heap_index, get_timer_heap_index);
 }
 
 void qtimer_manager_free(qtimer_manager_t *mng) {
@@ -42,7 +43,7 @@ qid_t qtimer_add(qtimer_manager_t *mng, uint32_t timeout,
     qlist_del_init(pos);
     timer = qlist_entry(pos, qtimer_t, entry);
   } else {
-    timer = qalloc_type(qtimer_t);
+    timer = qalloc(mng->pool, sizeof(timer_t));
   }
   timer->id       = qid_new(&(mng->id_map));
   timer->timeout  = timeout + mng->engine->now;

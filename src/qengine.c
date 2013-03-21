@@ -8,7 +8,6 @@
 #include "qassert.h"
 #include "qengine.h"
 #include "qlog.h"
-#include "qmalloc.h"
 #include "qmempool.h"
 #include "qthread_log.h"
 

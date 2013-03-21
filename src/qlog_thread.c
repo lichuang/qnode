@@ -12,7 +12,6 @@
 #include "qlog.h"
 #include "qlog_thread.h"
 #include "qmailbox.h"
-#include "qmalloc.h"
 #include "qmempool.h"
 #include "qmsg.h"
 #include "qserver.h"

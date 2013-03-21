@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include "qconfig.h"
 #include "qluautil.h"
+#include "qserver.h"
 
 static void config_init_log(qconfig_t *config, lua_State *L) {
   qlua_get_table(L, -1, "log");
@@ -31,7 +32,7 @@ static void config_init_script(qconfig_t *config, lua_State *L) {
 
 static void config_set_default(qconfig_t *config) {
   config->thread_num = 2;
-  qstring_init_str(config->script_path);
+  qstring_null_set(&(config->script_path), g_server->pool);
   qstring_assign(&(config->script_path), "./script");
 }
 

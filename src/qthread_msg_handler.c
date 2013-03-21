@@ -10,14 +10,19 @@
 #include "qlog.h"
 #include "qluautil.h"
 #include "qmailbox.h"
-#include "qmalloc.h"
+#include "qmempool.h"
 #include "qmsg.h"
 #include "qserver.h"
 #include "qthread.h"
 
 static int thread_handle_sstart_msg(qthread_t *thread, qmsg_t *msg) {
   qinfo("handle start msg");
-  qactor_t *actor = msg->args.s_start.actor;
+  qid_t aid = msg->args.s_start.aid;
+  qactor_t *actor = qactor_new(aid);
+  if (actor == NULL) {
+    qerror("new actor: %d error", aid);
+    return -1;
+  }
   qassert(actor->state == NULL);
   qactor_attach(actor, qlua_new_thread(thread));
   actor->tid = thread->tid;

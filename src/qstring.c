@@ -4,27 +4,31 @@
 
 #include <string.h>
 #include "qassert.h"
+#include "qmempool.h"
 #include "qstring.h"
 #include "qlog.h"
-#include "qmalloc.h"
 
+/*
 qstring_t* qstring_new() {
   qstring_t *str  = qalloc_type(qstring_t); 
   str->len = str->size = 0;
   str->data = NULL;
   return str;
 }
+*/
 
 void qstring_destroy(qstring_t *string) {
   qassert(string);
   qassert(string->data);
-  //qfree(string->data);
+  if (string->pool) {
+    qfree(string->pool, string->data, string->size);
+  }
 }
 
 static int string_reserve(qstring_t *string, size_t len, int need_copy) {
   size_t new_len = len + string->len;
   if (string->size < new_len) {
-    char *data = qalloc_array(char, new_len * sizeof(char));
+    char *data = qalloc(string->pool, new_len * sizeof(char));
     if (data == NULL) {
       return -1;
     }
@@ -33,7 +37,7 @@ static int string_reserve(qstring_t *string, size_t len, int need_copy) {
         strncpy(data, string->data, string->len);
       }
       if (string->data) {
-        //qfree(string->data);
+        qfree(string->pool, string->data, string->size);
       }
     }
     string->data = data;

@@ -3,36 +3,47 @@
  */
 
 #include <stdio.h>
-#include "qmalloc.h"
+#include "qmempool.h"
 #include "qminheap.h"
 
-void qminheap_init(qminheap_t *heap, cmp_func_t cmp, set_func_t set, get_func_t get) {
+int
+qminheap_init(qminheap_t *heap, qmem_pool_t *pool,
+              cmp_func_t cmp, set_func_t set, get_func_t get) {
   int i = 0;
-  heap->data = (void**)qmalloc(QID_MAX * sizeof(void*)); 
+  heap->data = (void**)qalloc(pool, QID_MAX * sizeof(void*)); 
+  if (heap->data == NULL) {
+    return -1;
+  }
   for (i = 0; i < QID_MAX; ++i) {
     heap->data[i] = NULL;
   }
-  heap->size = heap->num = 0;
+  heap->size = QID_MAX;
+  heap->num  = 0;
   heap->cmp  = cmp;
   heap->set  = set;
   heap->get  = get;
+  heap->pool = pool;
+  return 0;
 }
 
-static int minheap_reserve(qminheap_t* heap, unsigned int size) {
+static int
+minheap_reserve(qminheap_t* heap, unsigned int size) {
   if (heap->size >= size) {
     return 0;
   }
   size = heap->size + 128;
-  void *data = qrealloc(heap->data, sizeof(void*) * size);
+  void *data = qalloc(heap->pool, sizeof(void*) * size);
   if (data == NULL) {
     return -1;
   }
+  qfree(heap->pool, heap->data, sizeof(void*) * heap->size);
   heap->data = data;
   heap->size = size;
   return 0;
 }
 
-static int minheap_shift_up(qminheap_t* heap, unsigned hole_index, void* data) {
+static int 
+minheap_shift_up(qminheap_t* heap, unsigned hole_index, void* data) {
   unsigned parent = (hole_index - 1) / 2;
   while (hole_index && (heap->cmp)(heap->data[parent], data)) {
     heap->data[hole_index] = heap->data[parent];
@@ -45,7 +56,8 @@ static int minheap_shift_up(qminheap_t* heap, unsigned hole_index, void* data) {
   return hole_index;
 }
 
-static void minheap_shift_down(qminheap_t* heap, unsigned hole_index, void* data) {
+static void
+minheap_shift_down(qminheap_t* heap, unsigned hole_index, void* data) {
   unsigned min_child = 2 * (hole_index + 1);
   while(min_child <= heap->num) {
     if (min_child == heap->num ||
@@ -63,7 +75,8 @@ static void minheap_shift_down(qminheap_t* heap, unsigned hole_index, void* data
   minheap_shift_up(heap, hole_index, data);
 }
 
-static int minheap_push(qminheap_t *heap, void *data) {
+static int
+minheap_push(qminheap_t *heap, void *data) {
   if (minheap_reserve(heap, heap->num + 1) == -1) {
     return -1;
   }
@@ -71,7 +84,8 @@ static int minheap_push(qminheap_t *heap, void *data) {
   return minheap_shift_up(heap, heap->num, data);
 }
 
-static int minheap_erase(qminheap_t* heap, void *data) {
+static int
+minheap_erase(qminheap_t* heap, void *data) {
   if(heap->get(data) != -1) {
     void *last = heap->data[--heap->size];
     int index = heap->get(data);
@@ -87,7 +101,8 @@ static int minheap_erase(qminheap_t* heap, void *data) {
   return -1;
 }
 
-int qminheap_erase(qminheap_t *heap, int index) {
+int
+qminheap_erase(qminheap_t *heap, int index) {
   void *data = heap->data[index];
   if (data == NULL) {
     return -1;
@@ -96,7 +111,8 @@ int qminheap_erase(qminheap_t *heap, int index) {
   return minheap_erase(heap, data);
 }
 
-void* qminheap_pop(qminheap_t *heap) {
+void*
+qminheap_pop(qminheap_t *heap) {
   if (heap->num > 0) {
     void *data = heap->data[0];
     heap->num -= 1;
@@ -106,7 +122,8 @@ void* qminheap_pop(qminheap_t *heap) {
   return NULL;
 }
 
-void* qminheap_top(qminheap_t *heap) {
+void*
+qminheap_top(qminheap_t *heap) {
   if (heap->num > 0) {
     void *data = heap->data[0];
     return data;
@@ -114,16 +131,12 @@ void* qminheap_top(qminheap_t *heap) {
   return NULL;
 }
 
-int qminheap_push(qminheap_t *heap, void *data) {
-  /*
-  if () {
-    return -1;
-  }
-  */
+int
+qminheap_push(qminheap_t *heap, void *data) {
   return minheap_push(heap, data);
 }
 
-void qminheap_destroy(qminheap_t *heap) {
-  heap = NULL;
-  //qfree(heap->data);
+void
+qminheap_destroy(qminheap_t *heap) {
+  qfree(heap->pool, heap->data, sizeof(void*) * heap->size);
 }

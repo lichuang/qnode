@@ -2,20 +2,20 @@
  * See Copyright Notice in qnode.h
  */
 
-#include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "qassert.h"
 #include "qdefines.h"
 #include "qlog.h"
 #include "qmailbox.h"
-#include "qmalloc.h"
 #include "qmsg.h"
 #include "qserver.h"
 #include "qstring.h"
 #include "qthread.h"
 
 qmsg_t* qmsg_new(qtid_t sender_id, qtid_t receiver_id) {
-  qmsg_t *msg = qalloc_type(qmsg_t);
+  qmsg_t *msg = malloc(sizeof(qmsg_t));
   if (msg == NULL) {
     return NULL;
   }
@@ -40,17 +40,17 @@ void qmsg_destroy(qmsg_t *msg) {
     default:
       break;
   }
-  //qfree(msg);
+  free(msg);
 }
 
 qactor_msg_t* qactor_msg_new() {
-  qactor_msg_t *msg = qalloc_type(qactor_msg_t);
+  qactor_msg_t *msg = malloc(sizeof(qactor_msg_t));
   return msg;
 }
 
 void qactor_msg_destroy(qactor_msg_t *msg) {
   qdict_destroy(msg->arg_dict);
-  //qfree(msg);
+  free(msg);
 }
 
 qmsg_t* qmsg_clone(qmsg_t *msg) {
@@ -86,7 +86,7 @@ void qmsg_send(qmsg_t *msg) {
     qassert(sender_id != QSERVER_THREAD_TID);
     qthread_t *thread = g_server->threads[sender_id];
     g_thread_msg_handlers[msg->type](thread, msg);
-    //qfree(msg);
+    free(msg);
     return;
   } 
   

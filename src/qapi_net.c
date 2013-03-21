@@ -18,12 +18,12 @@
 #include "qthread.h"
 
 static void init_tcp_listen_params(qactor_t *actor) {
-  actor->listen_params = qdict_new(5);
+  actor->listen_params = qdict_new(actor->pool, 5);
 
   {
     qkey_t key;
-    QKEY_STRING(key, "packet");
-    qdict_val_t val;
+    QKEY_STRING(key, "packet", actor->pool);
+    qval_t val;
     QVAL_NUMBER(val, 0);
     qdict_add(actor->listen_params, &key, &val);
   }
@@ -41,7 +41,7 @@ static int qnode_tcp_listen(lua_State *state) {
     lua_pushfstring(state, "listen on %s:%d error", addr, port);
     return 2;
   }
-  qdescriptor_t *desc = qdescriptor_new(fd, QDESCRIPTOR_TCP, actor);
+  qdescriptor_t *desc = qdescriptor_new(actor->pool, fd, QDESCRIPTOR_TCP, actor);
   desc->data.tcp.inet.state = QINET_STATE_LISTENING;
 
   init_tcp_listen_params(actor);  
@@ -73,7 +73,7 @@ static void socket_accept(int fd, int flags, void *data) {
   qengine_del_event(engine, desc->fd, QEVENT_READ);
   desc->data.tcp.inet.state = QINET_STATE_LISTENING;
 
-  qdescriptor_t *accept_desc = qdescriptor_new(sock, QDESCRIPTOR_TCP, actor);
+  qdescriptor_t *accept_desc = qdescriptor_new(actor->pool, sock, QDESCRIPTOR_TCP, actor);
   accept_desc->data.tcp.inet.state = QINET_STATE_CONNECTED;
   lua_pushlightuserdata(state, accept_desc);
   lua_resume(state, 1);
@@ -105,7 +105,7 @@ static int qnode_tcp_accept(lua_State *state) {
     tcp->inet.state = QINET_STATE_ACCEPTING;
     return lua_yield(state, 0); 
   }
-  qdescriptor_t *accept_desc = qdescriptor_new(fd, QDESCRIPTOR_TCP, actor);
+  qdescriptor_t *accept_desc = qdescriptor_new(actor->pool, fd, QDESCRIPTOR_TCP, actor);
   accept_desc->data.tcp.inet.state = QINET_STATE_CONNECTED;
   UNUSED(timeout);
   lua_pushlightuserdata(state, accept_desc);

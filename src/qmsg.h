@@ -55,7 +55,7 @@ typedef struct qmsg_t {
 
   union {
     struct {
-      struct qactor_t *actor;
+      qid_t aid;
     } s_start;
 
     struct {
@@ -90,11 +90,11 @@ void qmsg_send(qmsg_t *msg);
 
 #define qmsg_invalid_type(type)   ((type) <= 0 || (type) >= QMAX_MSG_TYPE)
 
-#define qmsg_init_sstart(msg, actor)              \
+#define qmsg_init_sstart(msg, aid)                \
   qlist_entry_init(&((msg)->entry));              \
   (msg)->type = s_start;                          \
   (msg)->flag = SMSG_FLAG;                        \
-  (msg)->args.s_start.actor = (actor);            \
+  (msg)->args.s_start.aid = (aid);                \
 
 #define qmsg_init_spawn(msg, aid, parent, state)  \
   qlist_entry_init(&((msg)->entry));              \

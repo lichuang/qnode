@@ -23,7 +23,6 @@ struct qactor_t {
    */
   unsigned        waiting_netio:1;
   unsigned        waiting_msg:1;
-  qmem_pool_t     *pool;
   qtid_t          tid;
   qid_t           aid;
   qid_t           parent;
@@ -31,11 +30,12 @@ struct qactor_t {
   qlist_t         desc_list;          /* descriptor list */
   qspinlock_t     desc_list_lock;     /* descriptor list lock */
   qlist_t         msg_list;           /* message list */
+  qmem_pool_t     *pool;
   struct qdict_t *listen_params;
 };
 
 qid_t     qactor_new_id();
-qactor_t* qactor_new(qmem_pool_t *pool, qid_t aid);
+qactor_t* qactor_new(qid_t aid);
 void      qactor_attach(qactor_t *actor, lua_State *state);
 void      qactor_destroy(qactor_t *actor);
 

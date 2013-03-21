@@ -6,12 +6,11 @@
 #define __QTIMER_H__
 
 #include <stdint.h>
+#include "qcore.h"
 #include "qidmap.h"
 #include "qminheap.h"
 #include "qlist.h"
 #include "qtype.h"
-
-struct qengine_t;
 
 typedef struct qtimer_t {
   qtimer_func_t*  handler;
@@ -28,9 +27,10 @@ typedef struct qtimer_manager_t {
   qidmap_t          id_map;
   qlist_t           free_list;
   qminheap_t        min_heap;
+  qmem_pool_t     *pool;
 } qtimer_manager_t;
 
-void  qtimer_manager_init(qtimer_manager_t *mng, struct qengine_t *engine);
+void  qtimer_manager_init(qtimer_manager_t *mng, qengine_t *engine);
 void  qtimer_manager_free(qtimer_manager_t *mng);
 qid_t qtimer_add(qtimer_manager_t *mng, uint32_t timeout,
                  qtimer_func_t *func, uint32_t cycle, void *arg);

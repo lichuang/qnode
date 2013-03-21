@@ -29,13 +29,17 @@ qactor_new_id() {
 }
 
 qactor_t*
-qactor_new(qmem_pool_t *pool, qid_t aid) {
-  qactor_t *actor = qcalloc(pool, sizeof(qactor_t));
+qactor_new(qid_t aid) {
+  qactor_t *actor = malloc(sizeof(qactor_t));
   if (actor == NULL) {
     return NULL;
   }
+  actor->pool  = qmem_pool_create();
+  if (actor->pool == NULL) {
+    free(actor);
+    return NULL;
+  }
   actor->state = NULL;
-  actor->pool  = pool;
   qlist_entry_init(&(actor->entry));
   qlist_entry_init(&(actor->desc_list));
   qlist_entry_init(&(actor->msg_list));
@@ -99,7 +103,7 @@ qactor_spawn(qactor_t *actor, lua_State *state) {
   }
   qid_t parent = actor->aid;
   qmsg_init_spawn(msg, aid, parent, state);
-  qactor_t *new_actor = qactor_new(actor->pool, aid);
+  qactor_t *new_actor = qactor_new(aid);
   if (new_actor == NULL) {
     return -1;
   }
