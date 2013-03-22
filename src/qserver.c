@@ -203,11 +203,12 @@ setup_signal() {
 }
 
 static int
-server_init(qmem_pool_t *pool, struct qconfig_t *config) {
+server_init(qconfig_t *config) {
   qassert(config);
   qassert(config->thread_num > 0);
   qassert(g_server == NULL);
 
+  qmem_pool_t *pool = config->pool;
   qserver_t *server = qcalloc(pool, sizeof(qserver_t));
   if (server == NULL) {
     goto error;
@@ -271,11 +272,7 @@ destroy_server() {
 
 int
 qserver_run(struct qconfig_t *config) {
-  qmem_pool_t *pool = qmem_pool_create();
-  if (pool == NULL) {
-    return -1;
-  }
-  if (server_init(pool, config) != 0) {
+  if (server_init(config) != 0) {
     return -1;
   }
   g_server->status = RUNNING;

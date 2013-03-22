@@ -145,20 +145,29 @@ qthread_new(struct qserver_t *server, qtid_t tid) {
     if (i == 0) {
       /* communicate with main thread */
       thread->in_box[i] = qmailbox_new(pool, server_box_func, thread);
+      qassert(thread->in_box[i]->signal);
     } else {
       /* communicate with other worker thread */
-      thread->thread_box[i] = qalloc(pool, sizeof(qthread_box_t));
+      thread->thread_box[i] = qcalloc(pool, sizeof(qthread_box_t));
       thread->in_box[i] = qmailbox_new(pool, thread_box_func, thread->thread_box[i]);
+
+      qassert(thread->in_box[i]->signal);
       thread->thread_box[i]->thread = thread;
+      qassert((char*)(thread->in_box[i]) != (char*)thread);
+      qassert(thread->in_box[i]->signal);
+
       thread->thread_box[i]->box = thread->in_box[i];
+      qassert(thread->in_box[i]->signal);
+    }
+    if (thread->in_box[i] == NULL) {
+      return NULL;
     }
     qmailbox_active(thread->engine, thread->in_box[i]);
   }
 
   thread->state = qlua_new_state();
   qlist_entry_init(&(thread->actor_list));
-  int result;
-  result = pthread_create(&thread->id, NULL, main_loop, thread);
+  int result = pthread_create(&thread->id, NULL, main_loop, thread);
   qassert(result == 0);
   /* ugly, but works */
   while (thread->started == 0) {

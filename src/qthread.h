@@ -18,20 +18,20 @@ struct qserver_t;
 struct qthread_t;
 
 typedef struct qthread_box_t {
-  struct qthread_t *thread;
-  struct qmailbox_t *box;
+  struct qthread_t    *thread;
+  struct qmailbox_t   *box;
 } qthread_box_t;
 
 typedef struct qthread_t {
-  int started:1;
-  pthread_t id;
-  qtid_t tid;
-  struct qengine_t *engine;
-  struct qmailbox_t **in_box;
-  struct qmailbox_t **out_box;
-  qthread_box_t **thread_box;
-  qlist_t actor_list;
-  lua_State *state;
+  unsigned            started:1;
+  pthread_t           id;
+  qtid_t              tid;
+  struct qengine_t    *engine;
+  struct qmailbox_t   **in_box;
+  struct qmailbox_t   **out_box;
+  qthread_box_t       **thread_box;
+  qlist_t             actor_list;
+  lua_State           *state;
 } qthread_t;
 
 qthread_t* qthread_new(struct qserver_t *server, qtid_t tid);

@@ -17,7 +17,7 @@ free_list_index(size_t bytes) {
 
 static int
 new_mem_data(qmem_pool_t *pool) {
-  qmem_data_t *data = (qmem_data_t *)malloc(sizeof(qmem_data_t));
+  qmem_data_t *data = malloc(sizeof(qmem_data_t));
   if (data == NULL) {
     return -1;
   }
@@ -52,7 +52,7 @@ chunk_alloc(qmem_pool_t *pool, size_t size, int *nobjs) {
     *list = ((qmem_node_t*)pool->start_free);
   }
 
-  pool->start_free = (char*)malloc(QINIT_BYTES);
+  pool->start_free = malloc(QINIT_BYTES);
   if (pool->start_free == NULL) {
     int i;
     qmem_node_t **list, *p;
@@ -108,13 +108,13 @@ refill(qmem_pool_t *pool, size_t n) {
 
 qmem_pool_t*
 qmem_pool_create() {
-  qmem_pool_t *pool = (qmem_pool_t*)malloc(sizeof(qmem_pool_t));
+  qmem_pool_t *pool = malloc(sizeof(qmem_pool_t));
 
   if (pool == NULL) {
     return NULL;
   }
 
-  pool->start_free = (char *)malloc(QINIT_BYTES);
+  pool->start_free = malloc(QINIT_BYTES);
   if (pool->start_free == NULL) {
     free(pool);
     return NULL;
@@ -125,10 +125,7 @@ qmem_pool_create() {
     free(pool);
     return NULL;
   }
-  int i;
-  for (i = 0; i < QFREE_LISTS; ++i) {
-    pool->free_list[i] = NULL;
-  }
+  memset(pool->free_list, 0, sizeof(pool->free_list));
   return pool;
 }
 

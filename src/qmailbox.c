@@ -16,7 +16,7 @@
 
 qmailbox_t* 
 qmailbox_new(qmem_pool_t *pool, qevent_func_t *callback, void *reader) {
-  qmailbox_t *box = qalloc(pool, sizeof(qmailbox_t));
+  qmailbox_t *box = qcalloc(pool, sizeof(qmailbox_t));
   if (box == NULL) {
     return NULL;
   }

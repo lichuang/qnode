@@ -16,7 +16,7 @@
 
 typedef union qmem_node_t {
   union qmem_node_t   *next;
-  char                *data;
+  char                data[1];
 } qmem_node_t;
 
 typedef struct qmem_data_t {
