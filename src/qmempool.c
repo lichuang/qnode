@@ -41,8 +41,10 @@ chunk_alloc(qmem_pool_t *pool, size_t size, int *nobjs) {
   }
 
   if (bytes_left > size) {
+    *nobjs = bytes_left / size;
+    total_bytes = size * (*nobjs);
     result = pool->start_free;
-    pool->start_free += size;
+    pool->start_free += total_bytes;
     return result;
   }
 
@@ -109,7 +111,6 @@ refill(qmem_pool_t *pool, size_t n) {
 qmem_pool_t*
 qmem_pool_create() {
   qmem_pool_t *pool = malloc(sizeof(qmem_pool_t));
-
   if (pool == NULL) {
     return NULL;
   }

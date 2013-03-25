@@ -6,6 +6,7 @@
 #define __QMSG_H__
 
 #include "qactor.h"
+#include "qcore.h"
 #include "qdict.h"
 #include "qlist.h"
 #include "qstring.h"
@@ -17,8 +18,6 @@ typedef struct qactor_msg_t {
   qid_t   src;
   qid_t   dst;
 } qactor_msg_t;
-
-struct qmailbox_t;
 
 /* 
  * s_* means server thread -> worker thread
@@ -72,10 +71,10 @@ typedef struct qmsg_t {
 } qmsg_t;
 
 /* handler for worker thread msg */
-typedef int (*qthread_msg_handler)(struct qthread_t *thread, struct qmsg_t *msg);
+typedef int (*qthread_msg_handler)(qthread_t *thread, qmsg_t *msg);
 
 /* handler for server thread msg */
-typedef int (*qserver_msg_handler)(struct qserver_t *server, struct qmsg_t *msg);
+typedef int (*qserver_msg_handler)(qserver_t *server, qmsg_t *msg);
 
 qmsg_t* qmsg_new(qtid_t sender_id, qtid_t receiver_id);
 void qmsg_destroy(qmsg_t *msg);

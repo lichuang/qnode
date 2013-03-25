@@ -12,7 +12,7 @@
 struct qmsg_t;
 struct qsignal_t;
 
-typedef struct qmailbox_t {
+struct qmailbox_t {
   struct qlist_t    lists[2];   /* one for read, one for write */
   struct qlist_t    *write;     /* current write list */
   struct qlist_t    *read;      /* current write list */
@@ -20,7 +20,7 @@ typedef struct qmailbox_t {
   void              *reader;    /* mailbox reader */
   struct qsignal_t  *signal;
   unsigned          active:1;
-} qmailbox_t;
+};
 
 qmailbox_t* qmailbox_new(qmem_pool_t *pool, qevent_func_t *callback, void *reader);
 int         qmailbox_active(qengine_t *engine, qmailbox_t *box);

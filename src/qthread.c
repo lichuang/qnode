@@ -111,7 +111,7 @@ qthread_new(struct qserver_t *server, qtid_t tid) {
     return NULL;
   }
   int thread_num = server->config->thread_num;
-  qthread_t *thread = qalloc(pool, sizeof(qthread_t));
+  qthread_t *thread = qcalloc(pool, sizeof(qthread_t));
   int i;
   if (thread == NULL) {
     qerror("create thread error");
@@ -124,15 +124,15 @@ qthread_new(struct qserver_t *server, qtid_t tid) {
   }
   thread->tid = tid;
 
-  thread->thread_box = qalloc(pool, (thread_num + 1) * sizeof(qthread_box_t*));
+  thread->thread_box = qcalloc(pool, (thread_num + 1) * sizeof(qthread_box_t*));
   if (thread->thread_box == NULL) {
     return NULL;
   }
-  thread->in_box  = qalloc(pool, (thread_num + 1) * sizeof(qmailbox_t*));
+  thread->in_box  = qcalloc(pool, (thread_num + 1) * sizeof(qmailbox_t*));
   if (thread->in_box == NULL) {
     return NULL;
   }
-  thread->out_box = qalloc(pool, (thread_num + 1) * sizeof(qmailbox_t*));
+  thread->out_box = qcalloc(pool, (thread_num + 1) * sizeof(qmailbox_t*));
   if (thread->out_box == NULL) {
     return NULL;
   }
@@ -151,10 +151,8 @@ qthread_new(struct qserver_t *server, qtid_t tid) {
       thread->thread_box[i] = qcalloc(pool, sizeof(qthread_box_t));
       thread->in_box[i] = qmailbox_new(pool, thread_box_func, thread->thread_box[i]);
 
-      qassert(thread->in_box[i]->signal);
       thread->thread_box[i]->thread = thread;
       qassert((char*)(thread->in_box[i]) != (char*)thread);
-      qassert(thread->in_box[i]->signal);
 
       thread->thread_box[i]->box = thread->in_box[i];
       qassert(thread->in_box[i]->signal);

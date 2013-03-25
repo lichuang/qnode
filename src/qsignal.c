@@ -50,7 +50,7 @@ qsignal_send(qsignal_t *signal) {
     if (n == -1 && errno == EINTR) {
       continue;
     }
-    qassert(n == sizeof(dummy));
+    //qassert(n == sizeof(dummy));
     break;
   }
 }
