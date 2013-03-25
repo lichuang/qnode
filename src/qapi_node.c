@@ -28,7 +28,7 @@ static int qnode_spawn(lua_State *state) {
   qstring_t string = qstring_null(actor->pool);
   qstring_assign(&string, mod);
   qstring_append(&string, ".lua");
-  if (qlua_threadloadfile(new_state, string.data) != 0) {
+  if (qlua_threadloadfile(actor, new_state, string.data) != 0) {
     lua_pushnil(state);
     lua_pushfstring(state, "load file %s error", string.data);
     return 2;

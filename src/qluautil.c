@@ -216,9 +216,9 @@ static void lua_init_filename(const char *filename, qstring_t *full_name) {
   qstring_append(full_name, filename);
 }
 
-int qlua_threadloadfile(lua_State *state, const char *filename) {
+int qlua_threadloadfile(qactor_t *actor, lua_State *state, const char *filename) {
   /* TODO: check the state is a lua thread */
-  qstring_t full_name;
+  qstring_t full_name = qstring_null(actor->pool);
   lua_init_filename(filename, &full_name);
   int ret = luaL_loadfile(state, full_name.data);
   qstring_destroy(&full_name);

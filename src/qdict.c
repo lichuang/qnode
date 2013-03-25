@@ -31,6 +31,7 @@ qdict_t* qdict_new(qmem_pool_t *pool, int hashsize) {
     qlist_entry_init(list);
     dict->buckets[i] = list;
   }
+  dict->pool = pool;
   return dict;
 
 error:

@@ -28,7 +28,7 @@ void qlua_copy_state_table(lua_State *src, lua_State *dst, int table_idx);
 int  qlua_copy_table(lua_State *state, int table_idx, qdict_t *dict);
 void qlua_dump_dict(lua_State *state, qdict_t *dict);
 
-int qlua_threadloadfile(lua_State *state, const char *filename);
+int qlua_threadloadfile(qactor_t *actor, lua_State *state, const char *filename);
 int qlua_dofile(lua_State *state, const char *filename);
 int qlua_init_path(struct qactor_t *actor);
 
