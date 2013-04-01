@@ -24,10 +24,14 @@ void qbuffer_free(qbuffer_t *buffer) {
 }
 
 int qbuffer_extend(qbuffer_t *buffer, uint32_t size) {
-  qmem_pool_t *pool = buffer->pool;
+  uint32_t      new_size;
+  char         *data;
+  qmem_pool_t  *pool;
+
+  pool = buffer->pool;
   /* align with 128 bytes */
-  uint32_t new_size = (size + 127) & 0xFF80;
-  char *data = qalloc(pool, sizeof(char) * new_size);
+  new_size = (size + 127) & 0xFF80;
+  data = qalloc(pool, sizeof(char) * new_size);
   if (data == NULL) {
     return -1;
   }

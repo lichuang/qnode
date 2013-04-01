@@ -55,7 +55,10 @@ void qapi_register(lua_State *state, struct qactor_t *);
  *      [OUT]0
  *      [ERROR]nil, error message
  *
- *  2) timer
+ *  3) buffer
+ *  qnode_buffer_find: 
+ *      [IN]buffer, ch
+ *      [OUT]pos(-1 if not find)
  *
  */
 

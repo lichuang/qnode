@@ -21,6 +21,7 @@ static api_array array[] = {
 
 void qapi_register(lua_State *state, struct qactor_t *actor) {
   int i, j;
+
   for (i = 0; array[i] != NULL; ++i) {
     for (j = 0; array[i][j].name != NULL; ++j) {
       const char *name = array[i][j].name;

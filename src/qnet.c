@@ -146,6 +146,8 @@ int qnet_tcp_recv(struct qdescriptor_t *desc, uint32_t size) {
   if (buffer->len == 0) {
     buffer->len =  buffer->pos;
   }
+  buffer->data[buffer->pos] = '\0';
+  //qinfo("recv: %s", buffer->data);
   return nbytes;
 }
 

@@ -23,7 +23,9 @@ static int panic(lua_State *state) {
 }
 
 lua_State* qlua_new_state() {
-  lua_State *state = lua_open();
+  lua_State *state;
+
+  state = lua_open();
   lua_atpanic(state, panic);
   luaL_openlibs(state);
   return state;
@@ -53,10 +55,12 @@ static int err_func(lua_State * state) {
 }
 
 int qlua_call(lua_State *state, int args, int results) {
-  int base = lua_gettop(state) - args;
+  int base, ret;
+
+  base = lua_gettop(state) - args;
   lua_pushcfunction(state, &err_func);
   lua_insert(state, base);
-  int ret = lua_pcall(state, args, results, base);
+  ret = lua_pcall(state, args, results, base);
   if (lua_status(state) != LUA_YIELD) {
     lua_remove(state, base);
   }
@@ -103,19 +107,25 @@ int qlua_get_table_number(lua_State *state, const char *key, int *number) {
 } 
 
 void qlua_copy_state_table(lua_State *src, lua_State *dst, int table_idx) {
+  int         type;
+  int         val_idx;
+  int         key_idx;
+  size_t      len;
+  double      num_val;
+  const char *key;
+  const char *str_val;
+  void       *user_data;
+
   lua_newtable(dst);
   lua_pushvalue(dst, 1);
   if (lua_istable(src, table_idx)) {
     lua_pushnil(src);
-    size_t len;
-    const char *key;
-    const char *str_val = NULL;
-    double num_val = 0;
-    void *user_data = NULL;
-    int type;
+    str_val = NULL;
+    num_val = 0;
+    user_data = NULL;
     while (lua_next(src, table_idx)) {
-      int val_idx = lua_gettop(src);
-      int key_idx = val_idx - 1;
+      val_idx = lua_gettop(src);
+      key_idx = val_idx - 1;
       type = lua_type(src, val_idx);
       if (type == LUA_TSTRING) {
         str_val = lua_tolstring(src, val_idx, &len);
@@ -147,16 +157,24 @@ void qlua_copy_state_table(lua_State *src, lua_State *dst, int table_idx) {
 }
 
 int qlua_copy_table(lua_State *state, int table_idx, qdict_t *dict) {
+  int         type;
+  int         val_idx;
+  int         key_idx;
+  size_t      len;
+  const char *key;
+  const char *str_val;
+  double      num_val;
+  qkey_t      key_val;
+  qval_t      val;
+  qstring_t  *tmp;
+
   if (lua_istable(state, table_idx)) {
     lua_pushnil(state);
-    size_t len;
-    const char *key;
-    const char *str_val = NULL;
-    double num_val = 0;
-    int type;
+    str_val = NULL;
+    num_val = 0;
     while (lua_next(state, table_idx)) {
-      int val_idx = lua_gettop(state);
-      int key_idx = val_idx - 1;
+      val_idx = lua_gettop(state);
+      key_idx = val_idx - 1;
       type = lua_type(state, val_idx);
       if (type == LUA_TSTRING) {
         str_val = lua_tolstring(state, val_idx, &len);
@@ -168,12 +186,10 @@ int qlua_copy_table(lua_State *state, int table_idx, qdict_t *dict) {
       }
 
       key = lua_tolstring(state, key_idx, &len);
-      qkey_t key_val;
       QKEY_STRING(key_val, (char*)key, NULL);
 
-      qval_t val;
       if (str_val) {
-        qstring_t *tmp = &(val.data.str);
+        tmp = &(val.data.str);
         qstring_null_set(tmp, dict->pool);
         qstring_assign(tmp, str_val);
       } else {
@@ -189,11 +205,15 @@ int qlua_copy_table(lua_State *state, int table_idx, qdict_t *dict) {
 }
 
 void qlua_dump_dict(lua_State *state, qdict_t *dict) {
-  qdict_iter_t *iter = qdict_iterator(dict);
-  qdict_entry_t *entry = NULL;
+  qdict_iter_t  *iter;
+  qdict_entry_t *entry;
+  qkey_t        *key;
+  qval_t        *val;
+
+  iter = qdict_iterator(dict);
   while ((entry = qdict_next(iter)) != NULL) {
-    qkey_t *key = &(entry->key);
-    qval_t *val = &(entry->val);
+    key = &(entry->key);
+    val = &(entry->val);
     if (key->type == QDICT_KEY_STRING) {
       lua_pushstring(state, key->data.str.data);
     } else {
@@ -209,7 +229,9 @@ void qlua_dump_dict(lua_State *state, qdict_t *dict) {
 }
 
 static void lua_init_filename(const char *filename, qstring_t *full_name) {
-  qserver_t *server = g_server;
+  qserver_t *server;
+
+  server = g_server;
   //qstring_init_str(*full_name);
   qstring_assign(full_name, server->config->script_path.data);
   qstring_append(full_name, "/");
@@ -217,32 +239,42 @@ static void lua_init_filename(const char *filename, qstring_t *full_name) {
 }
 
 int qlua_threadloadfile(qactor_t *actor, lua_State *state, const char *filename) {
+  int       ret;
+  qstring_t full_name = qstring_null(actor->pool);;
+
   /* TODO: check the state is a lua thread */
-  qstring_t full_name = qstring_null(actor->pool);
   lua_init_filename(filename, &full_name);
-  int ret = luaL_loadfile(state, full_name.data);
+  ret = luaL_loadfile(state, full_name.data);
   qstring_destroy(&full_name);
-  // start the coroutine
+  /* start the coroutine */
   lua_resume(state, 0);
   return ret;
 }
 
 int qlua_dofile(lua_State *state, const char *filename) {
   qstring_t full_name;
+  int ret;
+
   lua_init_filename(filename, &full_name);
-  int ret = luaL_dofile(state, full_name.data);
+  ret = luaL_dofile(state, full_name.data);
   qstring_destroy(&full_name);
   return ret;
 }
 
 int qlua_init_path(struct qactor_t *actor) {
-  lua_State *state = actor->state;
-  qserver_t *server = g_server;
-  const char *path = server->config->script_path.data;
+  const char *path;
+  const char *cur_path;
+  qstring_t   full_path;
+  lua_State  *state;
+  qserver_t  *server;
+
+  state = actor->state;
+  server = g_server;
+  path = server->config->script_path.data;
+
   lua_getglobal(state, "package" );
   lua_getfield(state, -1, "path" );
-  const char* cur_path = lua_tostring( state, -1 );
-  qstring_t full_path;
+  cur_path = lua_tostring( state, -1 );
   qstring_null_set(&full_path, actor->pool);
   qstring_assign(&full_path, cur_path);
   qstring_append(&full_path, ";");
@@ -253,6 +285,7 @@ int qlua_init_path(struct qactor_t *actor) {
   lua_setfield(state, -2, "path");
   lua_pop(state, 1);
   qstring_destroy(&full_path);
+
   return 0;
 }
 

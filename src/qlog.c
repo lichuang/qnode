@@ -37,6 +37,8 @@ static void log_init(qlog_t *log, int level, const char* file, long line, const 
 }
 
 void qlog(int level, const char* file, long line, const char *format, ...) {
+  va_list args;
+
   if (g_log_thread == NULL) {
     return;
   }
@@ -47,7 +49,7 @@ void qlog(int level, const char* file, long line, const char *format, ...) {
   if (log == NULL) {
     return;
   }
-  va_list args;
+  
   va_start(args, format);
   log_init(log, level, file, line, format, args);
   va_end(args);

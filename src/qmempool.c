@@ -5,19 +5,18 @@
 #include <string.h>
 #include "qmempool.h"
 
-static inline size_t
-round_up(size_t bytes) {
+static inline size_t round_up(size_t bytes) {
   return (((bytes + QALIGN - 1) & ~(QALIGN - 1)));
 }
 
-static inline size_t
-free_list_index(size_t bytes) {
+static inline size_t free_list_index(size_t bytes) {
   return (((bytes + QALIGN - 1) / QALIGN - 1));
 }
 
-static int
-new_mem_data(qmem_pool_t *pool) {
-  qmem_data_t *data = malloc(sizeof(qmem_data_t));
+static int new_mem_data(qmem_pool_t *pool) {
+  qmem_data_t *data;
+
+  data = malloc(sizeof(qmem_data_t));
   if (data == NULL) {
     return -1;
   }
@@ -28,12 +27,15 @@ new_mem_data(qmem_pool_t *pool) {
   return 0;
 }
 
-static char*
-chunk_alloc(qmem_pool_t *pool, size_t size, int *nobjs) {
-  char *result;
-  size_t total_bytes = size * (*nobjs);
-  size_t bytes_left  = pool->end_free - pool->start_free;
+static char* chunk_alloc(qmem_pool_t *pool, size_t size, int *nobjs) {
+  int           i;
+  char         *result;
+  size_t        total_bytes;
+  size_t        bytes_left;
+  qmem_node_t **list, *p;
 
+  total_bytes = size * (*nobjs);
+  bytes_left  = pool->end_free - pool->start_free;
   if (bytes_left > total_bytes) {
     result = pool->start_free;
     pool->start_free += total_bytes;
@@ -49,15 +51,13 @@ chunk_alloc(qmem_pool_t *pool, size_t size, int *nobjs) {
   }
 
   if (bytes_left > 0) {
-    qmem_node_t **list = pool->free_list + free_list_index(bytes_left);
+    list = pool->free_list + free_list_index(bytes_left);
     ((qmem_node_t*)pool->start_free)->next = *list;
     *list = ((qmem_node_t*)pool->start_free);
   }
 
   pool->start_free = malloc(QINIT_BYTES);
   if (pool->start_free == NULL) {
-    int i;
-    qmem_node_t **list, *p;
     for (i = size; i < QMAX_BYTES; i += QALIGN) {
       list = pool->free_list + free_list_index(i);
       p = *list;
@@ -74,22 +74,24 @@ chunk_alloc(qmem_pool_t *pool, size_t size, int *nobjs) {
     return NULL;
   }
   pool->end_free = pool->start_free + QINIT_BYTES;
+
   return chunk_alloc(pool, size, nobjs);
 }
 
-static void*
-refill(qmem_pool_t *pool, size_t n) {
-  int nobjs = 10;
-  char *chunk = chunk_alloc(pool, n, &nobjs);
+static void* refill(qmem_pool_t *pool, size_t n) {
+  int          i, nobjs;
+  char        *chunk;
+  qmem_node_t **list;
+  qmem_node_t *result;
+  qmem_node_t *current, *next;
+
+  nobjs = 10;
+  chunk = chunk_alloc(pool, n, &nobjs);
 
   if (nobjs == 1) {
     return chunk;
   }
 
-  qmem_node_t **list;
-  qmem_node_t *result;
-  qmem_node_t *current, *next;
-  int i;
 
   list = pool->free_list + free_list_index(n);
   result = (qmem_node_t *)chunk;
@@ -108,9 +110,10 @@ refill(qmem_pool_t *pool, size_t n) {
   return (result);
 }
 
-qmem_pool_t*
-qmem_pool_create() {
-  qmem_pool_t *pool = malloc(sizeof(qmem_pool_t));
+qmem_pool_t* qmem_pool_create() {
+  qmem_pool_t *pool;
+
+  pool = malloc(sizeof(qmem_pool_t));
   if (pool == NULL) {
     return NULL;
   }
@@ -130,9 +133,9 @@ qmem_pool_create() {
   return pool;
 }
 
-void
-qmem_pool_destroy(qmem_pool_t *pool) {
+void qmem_pool_destroy(qmem_pool_t *pool) {
   qmem_data_t *data, *tmp;
+
   for (data = pool->data; data; ) {
     tmp = data;
     data = data->next;
@@ -142,37 +145,42 @@ qmem_pool_destroy(qmem_pool_t *pool) {
   free(pool);
 }
 
-void*
-qalloc(qmem_pool_t *pool, size_t size) {
+void* qalloc(qmem_pool_t *pool, size_t size) {
+  void        *p;
+  qmem_node_t **list, *result;
+
   if (size > QMAX_BYTES) {
     return malloc(size);
   }
 
-  qmem_node_t **list = pool->free_list + free_list_index(size);
-  qmem_node_t *result = *list;
+  list = pool->free_list + free_list_index(size);
+  result = *list;
 
   if (result == NULL) {
-    void *p = refill(pool, round_up(size));
+    p = refill(pool, round_up(size));
     return p;
   }
   *list = result->next;
+
   return result;
 }
 
-void*
-qcalloc(qmem_pool_t *pool, size_t size) {
-  void *result = qalloc(pool, size);
+void* qcalloc(qmem_pool_t *pool, size_t size) {
+  void *result;
+
+  result = qalloc(pool, size);
   if (result) {
     bzero(result, size);
   }
+
   return result;
 }
 
-void
-qfree(qmem_pool_t *pool, void *p, size_t size) {
-  qmem_node_t *node = (qmem_node_t*)p;
+void qfree(qmem_pool_t *pool, void *p, size_t size) {
+  qmem_node_t *node;
   qmem_node_t **list;
 
+  node = (qmem_node_t*)p;
   if (size > QMAX_BYTES) {
     free(p);
     return;

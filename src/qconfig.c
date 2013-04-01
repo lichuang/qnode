@@ -38,7 +38,10 @@ static void config_set_default(qconfig_t *config) {
 }
 
 int qconfig_init(qconfig_t *config, const char *filename) {
-  qmem_pool_t *pool = qmem_pool_create();
+  qmem_pool_t *pool;
+  lua_State   *L;
+
+  pool = qmem_pool_create();
   if (pool == NULL) {
     return -1;
   }
@@ -47,7 +50,8 @@ int qconfig_init(qconfig_t *config, const char *filename) {
   if (filename == NULL) {
     return -1;
   }
-  lua_State *L = lua_open();
+
+  L = lua_open();
   if (luaL_dofile(L, filename) != 0) {
     return -1;
   }

@@ -14,9 +14,11 @@
 #include "qmempool.h"
 #include "qsignal.h"
 
-qmailbox_t* 
-qmailbox_new(qmem_pool_t *pool, qevent_func_t *callback, void *reader) {
-  qmailbox_t *box = qcalloc(pool, sizeof(qmailbox_t));
+qmailbox_t* qmailbox_new(qmem_pool_t *pool, qevent_func_t *callback, void *reader) {
+  qmailbox_t  *box;
+  qsignal_t   *signal;
+
+  box = qcalloc(pool, sizeof(qmailbox_t));
   if (box == NULL) {
     return NULL;
   }
@@ -26,7 +28,7 @@ qmailbox_new(qmem_pool_t *pool, qevent_func_t *callback, void *reader) {
   box->read   = &(box->lists[1]);
   box->callback = callback;
   box->reader = reader;
-  qsignal_t *signal = qsignal_new(pool);
+  signal = qsignal_new(pool);
   if (signal == NULL) {
     qfree(pool, box, sizeof(qmailbox_t));
     return NULL;
@@ -36,16 +38,21 @@ qmailbox_new(qmem_pool_t *pool, qevent_func_t *callback, void *reader) {
   return box;
 }
 
-int
-qmailbox_active(qengine_t *engine, qmailbox_t *box) {
-  int fd = qsignal_get_fd(box->signal);
-  qevent_func_t *callback = box->callback;
-  void *data = box->reader;
+int qmailbox_active(qengine_t *engine, qmailbox_t *box) {
+  int            fd;
+  void          *data;
+  qevent_func_t *callback;
+
+  fd = qsignal_get_fd(box->signal);
+  callback = box->callback;
+  data = box->reader;
+
   return qengine_add_event(engine, fd, QEVENT_READ, callback, data);
 }
 
-void
-qmailbox_add(qmailbox_t *box, struct qmsg_t *msg) {
+void qmailbox_add(qmailbox_t *box, struct qmsg_t *msg) {
+  qlist_t *p;
+
   if (!box->active) {
     qmsg_destroy(msg);
     return;
@@ -57,7 +64,7 @@ qmailbox_add(qmailbox_t *box, struct qmsg_t *msg) {
    * save the write ptr first cause add_tail below
    * is-not atomic operation and the write ptr maybe changed 
    */
-  qlist_t *p = box->write;
+  p = box->write;
   qlist_add_tail(&(msg->entry), p);
   if (qsignal_active(box->signal, 1) == 0) {
     qsignal_send(box->signal);
@@ -65,12 +72,13 @@ qmailbox_add(qmailbox_t *box, struct qmsg_t *msg) {
   qassert(box->signal->active == 1 || box->signal->active == 0);
 }
 
-int
-qmailbox_get(qmailbox_t *box, qlist_t **list) {
+int qmailbox_get(qmailbox_t *box, qlist_t **list) {
   qassert(box->write);
+  qlist_t *read;
+
   *list = NULL;
   /* first save the read ptr */
-  qlist_t *read = box->read;
+  read = box->read;
   /* second change the read ptr to the write ptr */
   qatomic_ptr_xchg(&(box->read), box->write);
   /* last change the write ptr to the read ptr saved before and return to list */
