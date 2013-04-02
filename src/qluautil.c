@@ -160,10 +160,10 @@ int qlua_copy_table(lua_State *state, int table_idx, qdict_t *dict) {
   int         type;
   int         val_idx;
   int         key_idx;
+  double      num_val;
   size_t      len;
   const char *key;
   const char *str_val;
-  double      num_val;
   qkey_t      key_val;
   qval_t      val;
   qstring_t  *tmp;
@@ -192,6 +192,7 @@ int qlua_copy_table(lua_State *state, int table_idx, qdict_t *dict) {
         tmp = &(val.data.str);
         qstring_null_set(tmp, dict->pool);
         qstring_assign(tmp, str_val);
+        val.type = QDICT_VAL_STRING;
       } else {
         QVAL_NUMBER(val, num_val);
       }
@@ -226,6 +227,7 @@ void qlua_dump_dict(lua_State *state, qdict_t *dict) {
     }
     lua_settable(state, -3);
   }
+  qdict_iterator_destroy(iter);
 }
 
 static void lua_init_filename(const char *filename, qstring_t *full_name) {

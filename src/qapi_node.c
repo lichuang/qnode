@@ -104,12 +104,13 @@ static int qnode_recv(lua_State *state) {
   msg = qlist_entry(actor->msg_list.next, qactor_msg_t, entry); 
   lua_newtable(state);
   qlua_dump_dict(state, msg->arg_dict);
+
   return 1;
 }
 
 static int qnode_attach(lua_State *state) {
   qdescriptor_t *desc;
-  qactor_t *old_actor, *actor;
+  qactor_t      *old_actor, *actor;
 
   desc = (qdescriptor_t*)lua_touserdata(state, 1);
   old_actor = qdescriptor_get_actor(desc);

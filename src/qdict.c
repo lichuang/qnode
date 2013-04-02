@@ -244,7 +244,7 @@ qdict_entry_t* qdict_next(qdict_iter_t *iter) {
     /*
      * if reach the hash list end, get the next non-empty hash list
      */
-    if (pos->next == list) {
+    if (pos == list) {
       /*
        * find the first non-empty hash list
        */
