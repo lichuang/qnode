@@ -7,6 +7,7 @@
 
 #include <stdarg.h>
 #include <string.h>
+#include "qcore.h"
 #include "qlist.h"
 
 #define QLOG_STDERR      0
@@ -23,7 +24,7 @@
 #define QMAX_FORMAT_SIZE 1000
 #define QMAX_FILE_SIZE   200
 
-typedef struct qlog_t {
+struct qlog_t {
   qlist_t entry;
   int     level;
   char    file[QMAX_FILE_SIZE];
@@ -35,7 +36,7 @@ typedef struct qlog_t {
   char    format[QMAX_FORMAT_SIZE];
   size_t  fmt_len;
   va_list args;
-} qlog_t;
+};
 
 extern int g_log_level;
 void qlog(int level, const char* file, long line, const char *format, ...);

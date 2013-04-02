@@ -8,8 +8,6 @@
 #include "qcore.h"
 #include "qlist.h"
 
-struct qlog_t;
-
 /* per-thread log struct */
 typedef struct qthread_log_t {
   struct qlist_t  lists[2];
@@ -19,8 +17,8 @@ typedef struct qthread_log_t {
   int             idx;
 } qthread_log_t;
 
-qthread_log_t* qthread_log_init(qengine_t* engine, int idx);
-struct qlog_t* qthread_log_get();
-void qthread_log_fetch(qthread_log_t *log, qlist_t **list);
+qthread_log_t*  qthread_log_init(qengine_t* engine, int idx);
+qlog_t*         qthread_log_get();
+void            qthread_log_fetch(qthread_log_t *log, qlist_t **list);
 
 #endif  /* __QTHREAD_LOG_H__ */

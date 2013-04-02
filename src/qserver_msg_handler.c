@@ -21,11 +21,18 @@ static int server_handle_wrong_msg(qserver_t *server, qmsg_t *msg) {
 }
 
 static int server_handle_spawn_msg(qserver_t *server, qmsg_t *msg) {
+  qmsg_t     *new_msg;
+  qid_t       aid;
+  lua_State  *state;
+  qactor_t   *actor;
+
   qinfo("handle spawn msg");
-  qmsg_t *new_msg = qmsg_clone(msg);
-  qid_t aid = msg->args.spawn.aid;
-  lua_State *state = msg->args.spawn.state;
-  qactor_t *actor = qactor_new(aid);
+
+  new_msg = qmsg_clone(msg);
+  aid = msg->args.spawn.aid;
+  state = msg->args.spawn.state;
+  actor = qactor_new(aid);
+
   qactor_attach(actor, state);
   actor->parent = msg->args.spawn.parent;
   new_msg->args.spawn.actor = actor;
@@ -33,6 +40,7 @@ static int server_handle_spawn_msg(qserver_t *server, qmsg_t *msg) {
   new_msg->receiver_id = qserver_worker_thread();
   qmsg_send(new_msg);
   server->actors[aid] = actor;
+
   return 0;
 }
 

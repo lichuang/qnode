@@ -26,7 +26,7 @@ static int qnode_spawn(lua_State *state) {
   qactor_t   *actor;
   qthread_t  *thread;
   lua_State  *new_state;
-  qstring_t   string = qstring_null(actor->pool);
+  qstring_t   string;
 
   actor = qlua_get_actor(state);
   mod = lua_tostring(state, 1);
@@ -34,6 +34,7 @@ static int qnode_spawn(lua_State *state) {
   thread = g_server->threads[actor->tid];
   new_state = qlua_new_thread(thread);
 
+  qstring_null_set(&string, actor->pool);
   qstring_assign(&string, mod);
   qstring_append(&string, ".lua");
   if (qlua_threadloadfile(actor, new_state, string.data) != 0) {

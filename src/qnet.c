@@ -18,7 +18,9 @@
 #include "qnet.h"
 
 static int create_socket() {
-  int fd, on = 1;
+  int fd, on;
+
+  on = 1;
   if ((fd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
     qerror("creating socket: %s", strerror(errno));
     return -1;
@@ -28,6 +30,7 @@ static int create_socket() {
     qerror("setsockopt SO_REUSEADDR: %s", strerror(errno));
     return -1;
   }
+
   return fd;
 }
 
@@ -63,8 +66,9 @@ int set_nonblocking(int fd) {
 
 int qnet_tcp_listen(int port, const char *bindaddr) {
   UNUSED(bindaddr);
-  int fd;
-  struct sockaddr_in sa;
+
+  int                 fd;
+  struct sockaddr_in  sa;
 
   if ((fd = create_socket()) < 0) {
     return -1;
@@ -87,12 +91,15 @@ int qnet_tcp_listen(int port, const char *bindaddr) {
     close(fd);
     return -1;
   }
+
   return fd;
 }
 
 int qnet_tcp_accept(int listen_fd,
                     struct sockaddr *addr, socklen_t *addrlen) {
-  int fd = accept(listen_fd, addr, addrlen);
+  int fd;
+
+  fd = accept(listen_fd, addr, addrlen);
   if (fd == -1) { 
     if (errno == EAGAIN || errno == EWOULDBLOCK) {
       return 0;
@@ -104,16 +111,21 @@ int qnet_tcp_accept(int listen_fd,
 }
 
 int qnet_tcp_recv(struct qdescriptor_t *desc, uint32_t size) {
-  qtcp_descriptor_t *tcp = &(desc->data.tcp);
-  int fd = desc->fd;
-  qbuffer_t *buffer = &(tcp->buffer);
+  int                 fd, nbytes;
+  qbuffer_t          *buffer;
+  qtcp_descriptor_t  *tcp;
+
+  tcp = &(desc->data.tcp);
+  fd = desc->fd;
+  buffer = &(tcp->buffer);
+
   qbuffer_reserve(buffer, size);
   if (buffer->data == NULL) {
     return -1;
   }
   buffer->len = size;
-  int nbytes = recv(fd, buffer->data + buffer->pos,
-                        buffer->size - buffer->pos, 0);
+  nbytes = recv(fd, buffer->data + buffer->pos,
+                buffer->size - buffer->pos, 0);
 
   /*
    * Several errors are OK. When speculative read is being done we may not
@@ -152,12 +164,16 @@ int qnet_tcp_recv(struct qdescriptor_t *desc, uint32_t size) {
 }
 
 int qnet_tcp_send(struct qdescriptor_t *desc) {
-  qtcp_descriptor_t *tcp = &(desc->data.tcp);
-  int fd = desc->fd;
-  qbuffer_t *buffer = &(tcp->buffer);
+  int                 fd, nbytes;
+  qbuffer_t          *buffer;
+  qtcp_descriptor_t  *tcp;
 
-  int nbytes = send(fd, buffer->data + buffer->pos,
-                    buffer->len - buffer->pos, 0);
+  tcp = &(desc->data.tcp);
+  fd = desc->fd;
+  buffer = &(tcp->buffer);
+
+  nbytes = send(fd, buffer->data + buffer->pos,
+                buffer->len - buffer->pos, 0);
 
   if (nbytes == -1 &&
       (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) {

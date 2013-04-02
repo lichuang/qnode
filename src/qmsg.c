@@ -15,7 +15,9 @@
 #include "qthread.h"
 
 qmsg_t* qmsg_new(qtid_t sender_id, qtid_t receiver_id) {
-  qmsg_t *msg = malloc(sizeof(qmsg_t));
+  qmsg_t *msg;
+
+  msg = malloc(sizeof(qmsg_t));
   if (msg == NULL) {
     return NULL;
   }
@@ -44,8 +46,7 @@ void qmsg_destroy(qmsg_t *msg) {
 }
 
 qactor_msg_t* qactor_msg_new() {
-  qactor_msg_t *msg = malloc(sizeof(qactor_msg_t));
-  return msg;
+  return malloc(sizeof(qactor_msg_t));
 }
 
 void qactor_msg_destroy(qactor_msg_t *msg) {
@@ -54,15 +55,21 @@ void qactor_msg_destroy(qactor_msg_t *msg) {
 }
 
 qmsg_t* qmsg_clone(qmsg_t *msg) {
-  qmsg_t *new_msg = qmsg_new(msg->sender_id, msg->receiver_id);
+  qmsg_t *new_msg;
+
+  new_msg = qmsg_new(msg->sender_id, msg->receiver_id);
   memcpy(new_msg, msg, sizeof(qmsg_t));
+
   return new_msg;
 }
 
 void qmsg_send(qmsg_t *msg) {
-  qassert(msg);
-  qtid_t sender_id = msg->sender_id;
-  qtid_t receiver_id = msg->receiver_id;
+  qtid_t      sender_id, receiver_id;
+  qthread_t  *thread;
+
+  sender_id = msg->sender_id;
+  receiver_id = msg->receiver_id;
+
   qassert(msg->type > 0 && msg->type < QMAX_MSG_TYPE);
   qinfo("add a msg %p, type: %d, sender: %d, receiver: %d, flag: %d",
         msg, msg->type, sender_id, receiver_id, msg->flag);
@@ -84,13 +91,13 @@ void qmsg_send(qmsg_t *msg) {
   /* sender and receiver is the same worker thread */
   if (sender_id == receiver_id) {
     qassert(sender_id != QSERVER_THREAD_TID);
-    qthread_t *thread = g_server->threads[sender_id];
+    thread = g_server->threads[sender_id];
     g_thread_msg_handlers[msg->type](thread, msg);
     free(msg);
     return;
   } 
   
   /* worker thread send to worker thread */
-  qthread_t *thread = g_server->threads[sender_id];
+  thread = g_server->threads[sender_id];
   qmailbox_add(thread->out_box[receiver_id], msg);
 }

@@ -18,17 +18,20 @@
 #include "qthread.h"
 #include "qthread_log.h"
 
-static void
-server_box_func(int fd, int flags, void *data) {
+static void server_box_func(int fd, int flags, void *data) {
   UNUSED(fd);
   UNUSED(flags);
   qinfo("server box");
-  qlist_t *list;
-  qthread_t *thread = (qthread_t*)data;
+
+  qmsg_t      *msg;
+  qlist_t     *list;
+  qlist_t     *pos, *next;
+  qthread_t   *thread;
+
+  thread = (qthread_t*)data;
   qmailbox_get(thread->in_box[0], &list);
-  qlist_t *pos, *next;
   for (pos = list->next; pos != list; ) {
-    qmsg_t *msg = qlist_entry(pos, qmsg_t, entry);
+    msg = qlist_entry(pos, qmsg_t, entry);
     qassert(msg);
     next = pos->next;
     qlist_del_init(&(msg->entry));
@@ -55,19 +58,24 @@ next:
   }
 }
 
-static void
-thread_box_func(int fd, int flags, void *data) {
+static void thread_box_func(int fd, int flags, void *data) {
   qinfo("in thread_box_func");
   UNUSED(fd);
   UNUSED(flags);
-  qlist_t *list;
-  qthread_box_t *thread_box = (qthread_box_t*)data;
-  qthread_t *thread = thread_box->thread;
-  qmailbox_t *box = thread_box->box;
+
+  qlist_t       *list, *pos, *next;
+  qmailbox_t    *box;
+  qmsg_t        *msg;
+  qthread_box_t *thread_box;
+  qthread_t     *thread;
+
+  thread_box = (qthread_box_t*)data;
+  thread = thread_box->thread;
+  box = thread_box->box;
   qmailbox_get(box, &list);
-  qlist_t *pos, *next;
+
   for (pos = list->next; pos != list; ) {
-    qmsg_t *msg = qlist_entry(pos, qmsg_t, entry);
+    msg = qlist_entry(pos, qmsg_t, entry);
     qassert(msg);
     next = pos->next;
     qlist_del_init(&(msg->entry));
@@ -94,9 +102,10 @@ next:
   }
 }
 
-static void*
-main_loop(void *arg) {
-  qthread_t *thread = (qthread_t*)arg;
+static void* main_loop(void *arg) {
+  qthread_t *thread;
+
+  thread = (qthread_t*)arg;
   g_server->thread_log[thread->tid] = qthread_log_init(thread->engine, thread->tid);
   thread->started = 1;
   while (thread->started && qengine_loop(thread->engine) == 0) {
@@ -104,15 +113,18 @@ main_loop(void *arg) {
   return NULL;
 }
 
-qthread_t*
-qthread_new(struct qserver_t *server, qtid_t tid) {
-  qmem_pool_t *pool = qmem_pool_create();
+qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
+  int           i, thread_num, result;
+  qthread_t    *thread;
+  qmem_pool_t  *pool;
+
+  pool = qmem_pool_create();
   if (pool == NULL) {
     return NULL;
   }
-  int thread_num = server->config->thread_num;
-  qthread_t *thread = qcalloc(pool, sizeof(qthread_t));
-  int i;
+
+  thread_num = server->config->thread_num;
+  thread = qcalloc(pool, sizeof(qthread_t));
   if (thread == NULL) {
     qerror("create thread error");
     return NULL;
@@ -165,7 +177,7 @@ qthread_new(struct qserver_t *server, qtid_t tid) {
 
   thread->state = qlua_new_state();
   qlist_entry_init(&(thread->actor_list));
-  int result = pthread_create(&thread->id, NULL, main_loop, thread);
+  result = pthread_create(&thread->id, NULL, main_loop, thread);
   qassert(result == 0);
   /* ugly, but works */
   while (thread->started == 0) {
@@ -174,17 +186,17 @@ qthread_new(struct qserver_t *server, qtid_t tid) {
   return thread;
 }
 
-void
-qthread_destroy(qthread_t *thread) {
-  int i;
-  int thread_num = g_server->config->thread_num;
+void qthread_destroy(qthread_t *thread) {
+  int         i, thread_num;
+  qmailbox_t *box;
 
+  thread_num = g_server->config->thread_num;
   /* handle worker thread msg */
   for (i = 1; i < thread_num; ++i) {
     if (i == (int)thread->tid) {
       continue;
     }
-    qmailbox_t *box = thread->in_box[i];
+    box = thread->in_box[i];
     box->active = 0;
     thread_box_func(0, 0, box);
     thread->out_box[i]->active = 0;
