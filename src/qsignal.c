@@ -62,7 +62,9 @@ void qsignal_recv(qsignal_t *signal) {
   ssize_t n;
 
   n = recv(signal->rfd, &dummy, sizeof(dummy), 0);
+  /*
   qassert(n >= 0);
   qassert(n == sizeof(dummy));
   qassert(dummy == 0);
+  */
 }

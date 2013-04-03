@@ -66,12 +66,26 @@ static void thread_log_box(int fd, int flags, void *data) {
 }
 
 static void* main_loop(void *arg) {
+  int         i, fd;
+  qsignal_t  *signal;
   qlog_thread_t *thread;
 
   thread = (qlog_thread_t*)arg;
   thread->started = 1;
-  while (thread->started && qengine_loop(thread->engine) == 0) {
+  while (!thread->stop && qengine_loop(thread->engine) == 0) {
   }
+
+  /*
+   * now the server terminate, do the clean work
+   */
+  for (i = 0; i < g_log_thread->thread_num; ++i) {
+    signal = g_log_thread->signals[i];
+    fd = qsignal_get_fd(signal);
+    qengine_del_event(g_log_thread->engine, fd, QEVENT_READ);
+    thread_log_box(0, -1, signal);
+  }
+  qengine_destroy(g_log_thread->engine);
+
   return NULL;
 }
 
@@ -107,7 +121,8 @@ int qlog_thread_new(qmem_pool_t *pool, int thread_num) {
   for (i = 0; i < thread_num; ++i) {
     g_log_thread->signals[i] = qsignal_new(pool);
     fd = qsignal_get_fd(g_log_thread->signals[i]);
-    qengine_add_event(g_log_thread->engine, fd, QEVENT_READ, thread_log_box, g_log_thread->signals[i]);
+    qengine_add_event(g_log_thread->engine, fd, QEVENT_READ,
+                      thread_log_box, g_log_thread->signals[i]);
   }
   g_log_thread->started = 0;
   result = pthread_create(&g_log_thread->id, NULL, main_loop, g_log_thread);
@@ -120,16 +135,15 @@ int qlog_thread_new(qmem_pool_t *pool, int thread_num) {
 }
 
 void qlog_thread_destroy() {
-  int i;
-
-  if (g_log_thread == NULL) {
-    return;
-  }
-  for (i = 0; i < g_log_thread->thread_num; ++i) {
-    qsignal_t *signal = g_log_thread->signals[i];
-    thread_log_box(0, -1, signal);
-  }
-  qengine_destroy(g_log_thread->engine);
+  /*
+   * set the stop flag and wake up the log thread
+   */
+  g_log_thread->stop = 1;
+  qlog_thread_active(0);
+  /*
+   * wait for the thread
+   */
+  pthread_join(g_log_thread->id, NULL);
 }
 
 void qlog_thread_active(int idx) {

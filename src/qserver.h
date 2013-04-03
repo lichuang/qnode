@@ -13,15 +13,6 @@
 
 #define QSERVER_THREAD_TID 0
 
-struct qactor_t;
-struct qdescriptor_t;
-struct qengine_t;
-struct qevent_t;
-struct qmailbox_t;
-struct qmem_pool_t;
-struct qmsg_t;
-struct qthread_t;
- 
 enum {
   STOPPED   = 0,
   RUNNING   = 1,
@@ -29,19 +20,19 @@ enum {
 };
 
 struct qserver_t {
-  struct qactor_t       **actors;
-  struct qconfig_t      *config;
-  struct qdescriptor_t  **descriptors;
-  struct qengine_t      *engine;
-  struct qmailbox_t     **in_box;
-  struct qmailbox_t     **out_box;
-  struct qmem_pool_t    *pool;
-  struct qthread_t      **threads;
-  struct qthread_log_t  **thread_log;
-  unsigned int          num_actor;
-  qidmap_t              id_map;
-  qmutex_t              id_map_mutex;
-  int                   status;
+  qactor_t        **actors;
+  qconfig_t        *config;
+  qdescriptor_t   **descriptors;
+  qengine_t        *engine;
+  qmailbox_t      **in_box;
+  qmailbox_t      **out_box;
+  qmem_pool_t      *pool;
+  qthread_t       **threads;
+  qthread_log_t   **thread_log;
+  unsigned int      num_actor;
+  qidmap_t          id_map;
+  qmutex_t          id_map_mutex;
+  int               status;
 };
 
 int qserver_run(struct qconfig_t *config);

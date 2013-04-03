@@ -18,6 +18,7 @@ typedef struct qthread_box_t {
 
 struct qthread_t {
   unsigned            started:1;
+  unsigned            stop:1;
   pthread_t           id;
   qtid_t              tid;
   qengine_t           *engine;

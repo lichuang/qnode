@@ -108,7 +108,7 @@ static void* main_loop(void *arg) {
   thread = (qthread_t*)arg;
   g_server->thread_log[thread->tid] = qthread_log_init(thread->engine, thread->tid);
   thread->started = 1;
-  while (thread->started && qengine_loop(thread->engine) == 0) {
+  while (!thread->stop && qengine_loop(thread->engine) == 0) {
   }
   return NULL;
 }
@@ -187,18 +187,11 @@ qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
 }
 
 void qthread_destroy(qthread_t *thread) {
-  int         i, thread_num;
-  qmailbox_t *box;
+  qmsg_t *msg;
 
-  thread_num = g_server->config->thread_num;
-  /* handle worker thread msg */
-  for (i = 1; i < thread_num; ++i) {
-    if (i == (int)thread->tid) {
-      continue;
-    }
-    box = thread->in_box[i];
-    box->active = 0;
-    thread_box_func(0, 0, box);
-    thread->out_box[i]->active = 0;
-  }
+  msg = qmsg_new(0, thread->tid);
+  qmsg_init_sstop(msg);
+  qmsg_send(msg);
+
+  pthread_join(thread->id, NULL);
 }

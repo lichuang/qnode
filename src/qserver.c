@@ -260,9 +260,10 @@ error:
 
 static void destroy_threads() {
   int i;
+  qthread_t *thread;
 
   for (i = 1; i <= g_server->config->thread_num; ++i) {
-    qthread_t *thread = g_server->threads[i];
+    thread = g_server->threads[i];
     qthread_destroy(thread);
   }
   qlog_thread_destroy();
@@ -273,7 +274,6 @@ static void destroy_server() {
     return;
   }
   g_server->status = STOPPED;
-  qinfo("destroy_server");
   destroy_threads();
   qmem_pool_destroy(g_server->pool);
 }

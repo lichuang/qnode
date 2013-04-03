@@ -9,13 +9,13 @@
 #include "qlist.h"
 
 /* per-thread log struct */
-typedef struct qthread_log_t {
+struct qthread_log_t {
   struct qlist_t  lists[2];
   struct qlist_t  *write;
   struct qlist_t  *read;
   qengine_t       *engine;
   int             idx;
-} qthread_log_t;
+};
 
 qthread_log_t*  qthread_log_init(qengine_t* engine, int idx);
 qlog_t*         qthread_log_get();

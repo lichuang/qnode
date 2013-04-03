@@ -12,8 +12,6 @@
 #include "qlist.h"
 #include "qtype.h"
 
-struct qactor_t;
-
 #define QINET_F_OPEN         0x0001
 #define QINET_F_BOUND        0x0002
 #define QINET_F_ACTIVE       0x0004
@@ -48,9 +46,9 @@ typedef struct qfile_descriptor_t {
 #define QDESCRIPTOR_TCP   1
 #define QDESCRIPTOR_FILE  2 
 
-typedef struct qdescriptor_t {
+struct qdescriptor_t {
   int             fd;
-  unsigned short  type;
+  unsigned        type;
   qid_t           aid;              /* owner actor id */
   qlist_t         entry;            /* actor desc list */
 
@@ -60,7 +58,7 @@ typedef struct qdescriptor_t {
   } data;
 
   qmem_pool_t     *pool;
-} qdescriptor_t;
+};
 
 qdescriptor_t*    qdescriptor_new(qmem_pool_t *pool, int fd, unsigned short type, qactor_t *actor);
 void              qdescriptor_destroy(qdescriptor_t *desc);

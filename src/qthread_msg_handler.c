@@ -58,6 +58,12 @@ static int thread_handle_sstart_msg(qthread_t *thread, qmsg_t *msg) {
   return ret;
 }
 
+static int thread_handle_sstop_msg(qthread_t *thread, qmsg_t *msg) {
+  UNUSED(msg);
+  thread->stop = 1;
+  return 0;
+}
+
 static int thread_handle_spawn_msg(qthread_t *thread, qmsg_t *msg) {
   qinfo("handle spawn msg");
 
@@ -117,6 +123,7 @@ static int thread_handle_wrong_msg(qthread_t *thread, qmsg_t *msg) {
 qthread_msg_handler g_thread_msg_handlers[] = {
   &thread_handle_wrong_msg,     /* WRONG */
   &thread_handle_sstart_msg,    /* s_start */
+  &thread_handle_sstop_msg,     /* s_stop */
   &thread_handle_spawn_msg,     /* spawn */
   &thread_handle_tsend_msg,     /* t_send */
 };

@@ -27,8 +27,9 @@ typedef struct qactor_msg_t {
  * */
 enum {
   s_start = 1,
-  spawn   = 2,
-  t_send  = 3,
+  s_stop  = 2,
+  spawn   = 3,
+  t_send  = 4,
   QMAX_MSG_TYPE
 };
 
@@ -94,6 +95,11 @@ void qmsg_send(qmsg_t *msg);
   (msg)->type = s_start;                          \
   (msg)->flag = SMSG_FLAG;                        \
   (msg)->args.s_start.aid = (aid);                \
+
+#define qmsg_init_sstop(msg)                      \
+  qlist_entry_init(&((msg)->entry));              \
+  (msg)->type = s_stop;                           \
+  (msg)->flag = SMSG_FLAG;
 
 #define qmsg_init_spawn(msg, aid, parent, state)  \
   qlist_entry_init(&((msg)->entry));              \
