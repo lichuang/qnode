@@ -99,7 +99,8 @@ qid_t qid_new(qidmap_t *idmap) {
   return alloc_qid(idmap);
 }
 
-void   qid_attach(qidmap_t *idmap, qid_t id, void *data) {
+void qid_attach(qidmap_t *idmap, qid_t id, void *data) {
   qassert(idmap->data[id] == NULL);
+
   idmap->data[id] = data;
 }

@@ -10,7 +10,6 @@
 #include "qlog.h"
 #include "qluautil.h"
 #include "qmailbox.h"
-#include "qmempool.h"
 #include "qmsg.h"
 #include "qserver.h"
 #include "qthread.h"

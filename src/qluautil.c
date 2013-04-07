@@ -186,11 +186,11 @@ int qlua_copy_table(lua_State *state, int table_idx, qdict_t *dict) {
       }
 
       key = lua_tolstring(state, key_idx, &len);
-      QKEY_STRING(key_val, (char*)key, NULL);
+      QKEY_STRING(key_val, (char*)key);
 
       if (str_val) {
         tmp = &(val.data.str);
-        qstring_null_set(tmp, dict->pool);
+        qstring_null_set(tmp);
         qstring_assign(tmp, str_val);
         val.type = QDICT_VAL_STRING;
       } else {
@@ -242,7 +242,9 @@ static void lua_init_filename(const char *filename, qstring_t *full_name) {
 
 int qlua_threadloadfile(qactor_t *actor, lua_State *state, const char *filename) {
   int       ret;
-  qstring_t full_name = qstring_null(actor->pool);;
+  qstring_t full_name = qstring_null();;
+
+  UNUSED(actor);
 
   /* TODO: check the state is a lua thread */
   lua_init_filename(filename, &full_name);
@@ -250,6 +252,7 @@ int qlua_threadloadfile(qactor_t *actor, lua_State *state, const char *filename)
   qstring_destroy(&full_name);
   /* start the coroutine */
   lua_resume(state, 0);
+
   return ret;
 }
 
@@ -277,7 +280,7 @@ int qlua_init_path(struct qactor_t *actor) {
   lua_getglobal(state, "package" );
   lua_getfield(state, -1, "path" );
   cur_path = lua_tostring( state, -1 );
-  qstring_null_set(&full_path, actor->pool);
+  qstring_null_set(&full_path);
   qstring_assign(&full_path, cur_path);
   qstring_append(&full_path, ";");
   qstring_append(&full_path, path);

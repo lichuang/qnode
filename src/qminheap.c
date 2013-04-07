@@ -2,13 +2,12 @@
  * See Copyright Notice in qnode.h
  */
 
-#include <stdio.h>
-#include "qmempool.h"
+#include "qalloc.h"
 #include "qminheap.h"
 
-int qminheap_init(qminheap_t *heap, qmem_pool_t *pool,
-                  cmp_func_t cmp, set_func_t set, get_func_t get) {
-  heap->data = (void**)qcalloc(pool, QID_MAX * sizeof(void*)); 
+int qminheap_init(qminheap_t *heap, cmp_func_t cmp,
+                  set_func_t set, get_func_t get) {
+  heap->data = qcalloc(QID_MAX * sizeof(void*)); 
   if (heap->data == NULL) {
     return -1;
   }
@@ -17,31 +16,31 @@ int qminheap_init(qminheap_t *heap, qmem_pool_t *pool,
   heap->cmp  = cmp;
   heap->set  = set;
   heap->get  = get;
-  heap->pool = pool;
 
   return 0;
 }
 
 static int minheap_reserve(qminheap_t* heap, unsigned int size) {
-  void *data;
+  void **data;
 
   if (heap->size >= size) {
     return 0;
   }
   size = heap->size + 128;
-  data = qalloc(heap->pool, sizeof(void*) * size);
+  data = qrealloc(heap->data, sizeof(void*) * size);
   if (data == NULL) {
     return -1;
   }
-  qfree(heap->pool, heap->data, sizeof(void*) * heap->size);
+
   heap->data = data;
   heap->size = size;
 
   return 0;
 }
 
-static int minheap_shift_up(qminheap_t* heap, unsigned hole_index, void* data) {
-  unsigned parent;
+static int minheap_shift_up(qminheap_t* heap,
+                            unsigned int hole_index, void* data) {
+  unsigned int parent;
 
   parent = (hole_index - 1) / 2;
   while (hole_index && (heap->cmp)(heap->data[parent], data)) {
@@ -52,12 +51,13 @@ static int minheap_shift_up(qminheap_t* heap, unsigned hole_index, void* data) {
   }
   heap->data[hole_index] = data;
   (heap->set)(data, hole_index);
+
   return hole_index;
 }
 
 static void minheap_shift_down(qminheap_t* heap,
-                               unsigned hole_index, void* data) {
-  unsigned min_child;
+                               unsigned int hole_index, void* data) {
+  unsigned int min_child;
 
   min_child = 2 * (hole_index + 1);
   while(min_child <= heap->num) {
@@ -141,5 +141,5 @@ int qminheap_push(qminheap_t *heap, void *data) {
 }
 
 void qminheap_destroy(qminheap_t *heap) {
-  qfree(heap->pool, heap->data, sizeof(void*) * heap->size);
+  qfree(heap->data);
 }

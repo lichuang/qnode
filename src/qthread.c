@@ -4,6 +4,7 @@
 
 #include <unistd.h>
 #include <stdio.h>
+#include "qalloc.h"
 #include "qassert.h"
 #include "qactor.h"
 #include "qconfig.h"
@@ -13,7 +14,6 @@
 #include "qlog.h"
 #include "qluautil.h"
 #include "qmailbox.h"
-#include "qmempool.h"
 #include "qserver.h"
 #include "qthread.h"
 #include "qthread_log.h"
@@ -117,37 +117,31 @@ static void* worker_thread_main_loop(void *arg) {
 }
 
 qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
-  int           i, thread_num, result;
+  int           i, thread_num;
   qthread_t    *thread;
-  qmem_pool_t  *pool;
-
-  pool = qmem_pool_create();
-  if (pool == NULL) {
-    return NULL;
-  }
 
   thread_num = server->config->thread_num;
-  thread = qcalloc(pool, sizeof(qthread_t));
+  thread = qcalloc(sizeof(qthread_t));
   if (thread == NULL) {
     qerror("create thread error");
     return NULL;
   }
-  thread->engine = qengine_new(pool);
+  thread->engine = qengine_new();
   if (thread->engine == NULL) {
     qerror("create thread engine error");
     return NULL;
   }
   thread->tid = tid;
 
-  thread->thread_box = qcalloc(pool, (thread_num + 1) * sizeof(qthread_box_t*));
+  thread->thread_box = qcalloc((thread_num + 1) * sizeof(qthread_box_t*));
   if (thread->thread_box == NULL) {
     return NULL;
   }
-  thread->in_box  = qcalloc(pool, (thread_num + 1) * sizeof(qmailbox_t*));
+  thread->in_box  = qcalloc((thread_num + 1) * sizeof(qmailbox_t*));
   if (thread->in_box == NULL) {
     return NULL;
   }
-  thread->out_box = qcalloc(pool, (thread_num + 1) * sizeof(qmailbox_t*));
+  thread->out_box = qcalloc((thread_num + 1) * sizeof(qmailbox_t*));
   if (thread->out_box == NULL) {
     return NULL;
   }
@@ -159,12 +153,12 @@ qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
     }
     if (i == 0) {
       /* communicate with main thread */
-      thread->in_box[i] = qmailbox_new(pool, server_box_func, thread);
+      thread->in_box[i] = qmailbox_new(server_box_func, thread);
       qassert(thread->in_box[i]->signal);
     } else {
       /* communicate with other worker thread */
-      thread->thread_box[i] = qcalloc(pool, sizeof(qthread_box_t));
-      thread->in_box[i] = qmailbox_new(pool, thread_box_func, thread->thread_box[i]);
+      thread->thread_box[i] = qcalloc(sizeof(qthread_box_t));
+      thread->in_box[i] = qmailbox_new(thread_box_func, thread->thread_box[i]);
 
       thread->thread_box[i]->thread = thread;
       qassert((char*)(thread->in_box[i]) != (char*)thread);
@@ -183,9 +177,8 @@ qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
   thread->state = qlua_new_state();
   /* init the actor list */
   qlist_entry_init(&(thread->actor_list));
-  result = pthread_create(&thread->id, NULL,
-                          worker_thread_main_loop, thread);
-  qassert(result == 0);
+  pthread_create(&thread->id, NULL,
+                 worker_thread_main_loop, thread);
 
   return thread;
 }

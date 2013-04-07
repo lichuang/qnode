@@ -5,11 +5,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include "qalloc.h"
 #include "qassert.h"
 #include "qdefines.h"
 #include "qengine.h"
 #include "qlog.h"
-#include "qmempool.h"
 #include "qthread_log.h"
 
 #define QRETIRED_FD -1
@@ -27,13 +27,9 @@ static void update_engine_time(qengine_t *engine) {
   struct tm tm;
   time_t    t;
 
-  t = time(NULL);
+  t = engine->timer_mng.now / 1000;
   localtime_r(&t, &tm);
   strftime(engine->time_buff, sizeof(engine->time_buff), "[%m-%d %T]", &tm);
-  /*
-   * convert to ms
-   */
-  engine->now = 1000 * t;
 }
 
 static void engine_time_handler(void *data) {
@@ -42,26 +38,25 @@ static void engine_time_handler(void *data) {
   update_engine_time(engine);
 }
 
-qengine_t* qengine_new(qmem_pool_t *pool) {
+qengine_t* qengine_new() {
   int         i;
   qengine_t  *engine;
   qevent_t   *event;
 
-  engine = qcalloc(pool, sizeof(qengine_t));
+  engine = qcalloc(sizeof(qengine_t));
   if (engine == NULL) {
     goto error;
   }
-  engine->pool = pool;
   engine->max_fd = 0;
   engine->dispatcher = &(epoll_dispatcher);
   if (engine->dispatcher->init(engine) < 0) {
     goto error;
   }
-  engine->events = qalloc(pool, sizeof(qevent_t) * QMAX_EVENTS);
+  engine->events = qalloc(sizeof(qevent_t) * QMAX_EVENTS);
   if (engine->events == NULL) {
     goto error;
   }
-  engine->active_events = qalloc(pool, sizeof(qevent_t) * QMAX_EVENTS);
+  engine->active_events = qalloc(sizeof(qevent_t) * QMAX_EVENTS);
   if (engine->active_events == NULL) {
     goto error;
   }
@@ -72,22 +67,13 @@ qengine_t* qengine_new(qmem_pool_t *pool) {
     init_qevent(event);
   }
   qtimer_manager_init(&engine->timer_mng, engine);
+  engine->timer_mng.now = time(NULL) * 1000;
   update_engine_time(engine);
   qengine_add_timer(engine, 1000, engine_time_handler, 1000, engine);
 
   return engine;
 
 error:
-  if (engine->events) {
-    qfree(pool, engine->events, sizeof(qevent_t) * QMAX_EVENTS);
-  }
-  if (engine->active_events) {
-    qfree(pool, engine->active_events, sizeof(qevent_t) * QMAX_EVENTS);
-  }
-  if (engine) {
-    engine->dispatcher->destroy(engine);
-    qfree(pool, engine, sizeof(qengine_t));
-  }
   return NULL;
 }
 
@@ -152,10 +138,8 @@ int qengine_loop(qengine_t* engine) {
   int       read;
   qevent_t *event;
 
-  //update_engine_time(engine);
-
   next = qtimer_next(&engine->timer_mng);
-  num = engine->dispatcher->poll(engine, next);
+  num  = engine->dispatcher->poll(engine, next);
   for (i = 0; i < num; i++) {
     event = &(engine->events[engine->active_events[i].fd]);
     flags = engine->active_events[i].flags;
@@ -177,13 +161,10 @@ int qengine_loop(qengine_t* engine) {
 }
 
 void qengine_destroy(qengine_t *engine) {
-  qmem_pool_t *pool;
-
-  pool = engine->pool;
   engine->dispatcher->destroy(engine);
-  qfree(pool, engine->events, sizeof(qevent_t) * QMAX_EVENTS);
-  qfree(pool, engine->active_events, sizeof(qevent_t) * QMAX_EVENTS);
-  qfree(pool, engine, sizeof(qengine_t));
+  qfree(engine->events);
+  qfree(engine->active_events);
+  qfree(engine);
 }
 
 qid_t qengine_add_timer(qengine_t* engine, uint32_t timeout_ms,

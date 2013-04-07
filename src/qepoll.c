@@ -6,9 +6,9 @@
 #include <string.h>
 #include <sys/epoll.h>
 #include <unistd.h>
+#include "qalloc.h"
 #include "qengine.h"
 #include "qlog.h"
-#include "qmempool.h"
 
 static int  epoll_init(qengine_t *engine);
 static int  epoll_add(qengine_t *engine, int fd, int flags);
@@ -33,7 +33,7 @@ typedef struct epoll_t {
 static int epoll_init(struct qengine_t *engine) {
   epoll_t *epoll;
 
-  epoll = qalloc(engine->pool, sizeof(epoll_t));
+  epoll = qalloc(sizeof(epoll_t));
   if (epoll == NULL) {
     return -1;
   }

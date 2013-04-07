@@ -4,6 +4,7 @@
 
 #include <unistd.h>
 #include <stdio.h>
+#include "qalloc.h"
 #include "qassert.h"
 #include "qconfig.h"
 #include "qdefines.h"
@@ -12,7 +13,6 @@
 #include "qlog.h"
 #include "qlog_thread.h"
 #include "qmailbox.h"
-#include "qmempool.h"
 #include "qmsg.h"
 #include "qserver.h"
 #include "qsignal.h"
@@ -60,7 +60,7 @@ static void thread_log_box(int fd, int flags, void *data) {
       /* do flush I/O work */
     }
 
-    free(log);
+    qfree(log);
     pos = next;
   }
 }
@@ -94,41 +94,39 @@ void log_key_destroy(void *value) {
   UNUSED(value);
 }
 
-int qlog_thread_new(qmem_pool_t *pool, int thread_num) {
+int qlog_thread_new(int thread_num) {
   int i;
-  int result, fd;
+  int fd;
 
-  g_log_thread = qalloc(pool, sizeof(qlog_thread_t));
+  g_log_thread = qcalloc(sizeof(qlog_thread_t));
   if (g_log_thread == NULL) {
     return -1;
   }
+
   if (pthread_key_create(&g_thread_log_key, log_key_destroy) < 0) {
     return -1;
   }
-  g_log_thread->engine = qengine_new(pool);
+
+  g_log_thread->engine = qengine_new();
   if (g_log_thread->engine == NULL) {
-    qfree(pool, g_log_thread, sizeof(qlog_thread_t));
-    g_log_thread = NULL;
     return -1;
   }
+
   g_log_thread->thread_num = thread_num;
-  g_log_thread->signals = qalloc(pool, thread_num * sizeof(qsignal_t*));
+  g_log_thread->signals = qcalloc(thread_num * sizeof(qsignal_t*));
   if (g_log_thread->signals == NULL) {
-    qengine_destroy(g_log_thread->engine);
-    qfree(pool, g_log_thread, sizeof(qlog_thread_t));
-    g_log_thread = NULL;
     return -1;
   }
+
   for (i = 0; i < thread_num; ++i) {
-    g_log_thread->signals[i] = qsignal_new(pool);
+    g_log_thread->signals[i] = qsignal_new();
     fd = qsignal_get_fd(g_log_thread->signals[i]);
     qengine_add_event(g_log_thread->engine, fd, QEVENT_READ,
                       thread_log_box, g_log_thread->signals[i]);
   }
   g_log_thread->started = 0;
-  result = pthread_create(&g_log_thread->id, NULL,
-                          log_thread_main_loop, g_log_thread);
-  qassert(result == 0);
+  pthread_create(&g_log_thread->id, NULL,
+                 log_thread_main_loop, g_log_thread);
 
   return 0;
 }

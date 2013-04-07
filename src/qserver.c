@@ -4,6 +4,7 @@
 
 #include <signal.h>
 #include <stdio.h>
+#include "qalloc.h"
 #include "qactor.h"
 #include "qassert.h"
 #include "qdescriptor.h"
@@ -12,7 +13,6 @@
 #include "qlog.h"
 #include "qlog_thread.h"
 #include "qmailbox.h"
-#include "qmempool.h"
 #include "qmsg.h"
 #include "qnet.h"
 #include "qserver.h"
@@ -130,32 +130,30 @@ static int init_worker_threads(qserver_t *server) {
   int           i, j;
   int           thread_num;
   qconfig_t    *config;
-  qmem_pool_t  *pool;
   qmailbox_t   *box;
   qthread_t    *thread1, *thread2;
   
   config = server->config;
   thread_num = config->thread_num;
-  pool = server->pool;
 
-  server->threads = qalloc(pool, thread_num * sizeof(qthread_t*));
+  server->threads = qalloc(thread_num * sizeof(qthread_t*));
   if (server->threads == NULL) {
     goto error;
   }
   server->threads[0] = NULL;
 
-  server->in_box = qalloc(pool, thread_num * sizeof(qmailbox_t*));
+  server->in_box = qalloc(thread_num * sizeof(qmailbox_t*));
   if (server->in_box == NULL) {
     goto error;
   }
   server->in_box[0] = NULL;
 
-  server->thread_log = qalloc(pool, thread_num * sizeof(qthread_log_t*));
+  server->thread_log = qalloc(thread_num * sizeof(qthread_log_t*));
   if (server->thread_log == NULL) {
     goto error;
   }
 
-  server->out_box = qalloc(pool, thread_num * sizeof(qmailbox_t*));
+  server->out_box = qalloc(thread_num * sizeof(qmailbox_t*));
   if (server->out_box == NULL) {
     goto error;
   }
@@ -165,7 +163,7 @@ static int init_worker_threads(qserver_t *server) {
 
   /* create worker thread and mailbox */
   for (i = 1; i <= thread_num; ++i) {
-    box = qmailbox_new(pool, server_box, NULL);
+    box = qmailbox_new(server_box, NULL);
     if (box == NULL) {
       goto error;
     }
@@ -237,15 +235,13 @@ static void setup_signal() {
 }
 
 static int server_init(qconfig_t *config) {
-  qmem_pool_t *pool;
   qserver_t   *server;
 
   qassert(config);
   qassert(config->thread_num > 0);
   qassert(g_server == NULL);
 
-  pool = config->pool;
-  server = qcalloc(pool, sizeof(qserver_t));
+  server = qcalloc(sizeof(qserver_t));
 
   qmutex_init(&init_thread_lock);
   qcond_init(&init_thread_cond);
@@ -254,26 +250,25 @@ static int server_init(qconfig_t *config) {
     goto error;
   }
   g_server = server;
-  g_server->pool = pool;
 
   init_thread_count = 0;
-  if (qlog_thread_new(pool, config->thread_num + 1) < 0) {
+  if (qlog_thread_new(config->thread_num + 1) < 0) {
     goto error;
   }
   /* wait for the log thread start */
   wait_threads(1);
 
   server->config = config;
-  server->engine = qengine_new(g_server->pool);
+  server->engine = qengine_new();
   if (init_server_event(server) < 0) {
     goto error;
   }
-  server->actors = qalloc(pool, QID_MAX * sizeof(qactor_t*));
+  server->actors = qalloc(QID_MAX * sizeof(qactor_t*));
   if (server->actors == NULL) {
     goto error;
   }
 
-  server->descriptors = qcalloc(pool, QID_MAX * sizeof(qdescriptor_t*));
+  server->descriptors = qcalloc(QID_MAX * sizeof(qdescriptor_t*));
   if (server->descriptors == NULL) {
     goto error;
   }
@@ -307,7 +302,6 @@ static void destroy_threads() {
 
 static void destroy_server() {
   destroy_threads();
-  qmem_pool_destroy(g_server->pool);
 }
 
 int qserver_run(qconfig_t *config) {

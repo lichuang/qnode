@@ -13,21 +13,23 @@
 #include "qtype.h"
 
 typedef struct qtimer_t {
-  int             heap_index;
-  void*           arg;
-  uint64_t        timeout;
-  uint64_t        cycle;
-  qid_t           id;
-  qlist_t         entry;
-  qtimer_func_t*  handler;
+  int             heap_index;   /* heap index in the minheap */
+  void           *arg;          /* client data */
+  uint64_t        timeout;      /* timeout(in ms) */
+  uint64_t        cycle;        /* timer cycle */
+  qid_t           id;           /* timer id */
+  qlist_t         entry;        /* timer free list entry */
+  qtimer_func_t  *handler;      /* timer handler */
+  char data[1000];
 } qtimer_t;
 
 typedef struct qtimer_manager_t {
+  uint64_t        now;
+  uint64_t        now_ms;
   qidmap_t        id_map;
-  qlist_t         free_list;
+  qlist_t         free_list;    /* free timer list */
   qminheap_t      min_heap;
   qengine_t      *engine;
-  qmem_pool_t    *pool;
 } qtimer_manager_t;
 
 void  qtimer_manager_init(qtimer_manager_t *mng, qengine_t *engine);

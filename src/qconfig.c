@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include "qconfig.h"
 #include "qluautil.h"
-#include "qmempool.h"
 #include "qserver.h"
 
 static void config_init_log(qconfig_t *config, lua_State *L) {
@@ -33,19 +32,13 @@ static void config_init_script(qconfig_t *config, lua_State *L) {
 
 static void config_set_default(qconfig_t *config) {
   config->thread_num = 2;
-  qstring_null_set(&(config->script_path), config->pool);
+  qstring_null_set(&(config->script_path));
   qstring_assign(&(config->script_path), "./script");
 }
 
 int qconfig_init(qconfig_t *config, const char *filename) {
-  qmem_pool_t *pool;
   lua_State   *L;
 
-  pool = qmem_pool_create();
-  if (pool == NULL) {
-    return -1;
-  }
-  config->pool = pool;
   config_set_default(config);
   if (filename == NULL) {
     return -1;

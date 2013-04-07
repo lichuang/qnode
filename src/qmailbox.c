@@ -7,18 +7,18 @@
 #include <stdio.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include "qalloc.h"
 #include "qassert.h"
 #include "qlog.h"
 #include "qmsg.h"
 #include "qmailbox.h"
-#include "qmempool.h"
 #include "qsignal.h"
 
-qmailbox_t* qmailbox_new(qmem_pool_t *pool, qevent_func_t *callback, void *reader) {
+qmailbox_t* qmailbox_new(qevent_func_t *callback, void *reader) {
   qmailbox_t  *box;
   qsignal_t   *signal;
 
-  box = qcalloc(pool, sizeof(qmailbox_t));
+  box = qcalloc(sizeof(qmailbox_t));
   if (box == NULL) {
     return NULL;
   }
@@ -28,9 +28,9 @@ qmailbox_t* qmailbox_new(qmem_pool_t *pool, qevent_func_t *callback, void *reade
   box->read   = &(box->lists[1]);
   box->callback = callback;
   box->reader = reader;
-  signal = qsignal_new(pool);
+  signal = qsignal_new();
   if (signal == NULL) {
-    qfree(pool, box, sizeof(qmailbox_t));
+    qfree(box);
     return NULL;
   }
   box->signal = signal;

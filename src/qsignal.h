@@ -14,7 +14,7 @@ struct qsignal_t {
   qatomic_t active;        /* active if there is mail */
 };
 
-qsignal_t* qsignal_new(qmem_pool_t *pool);
+qsignal_t* qsignal_new();
 int qsignal_get_fd(qsignal_t *signal);
 void qsignal_send(qsignal_t *signal);
 void qsignal_recv(qsignal_t *signal);

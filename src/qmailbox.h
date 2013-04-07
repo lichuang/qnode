@@ -19,7 +19,7 @@ struct qmailbox_t {
   qsignal_t        *signal;
 };
 
-qmailbox_t* qmailbox_new(qmem_pool_t *pool, qevent_func_t *callback, void *reader);
+qmailbox_t* qmailbox_new(qevent_func_t *callback, void *reader);
 int         qmailbox_active(qengine_t *engine, qmailbox_t *box);
 void        qmailbox_add(qmailbox_t *box, struct qmsg_t *msg);
 int         qmailbox_get(qmailbox_t *box, qlist_t **list);

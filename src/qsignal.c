@@ -6,8 +6,8 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include "qalloc.h"
 #include "qassert.h"
-#include "qmempool.h"
 #include "qsignal.h"
 
 static void signal_make_pair(int *rfd, int *wfd) {
@@ -20,10 +20,10 @@ static void signal_make_pair(int *rfd, int *wfd) {
   *rfd = fds[1];
 }
 
-qsignal_t* qsignal_new(qmem_pool_t *pool) {
+qsignal_t* qsignal_new() {
   qsignal_t *signal;
 
-  signal = qalloc(pool, sizeof(qsignal_t));
+  signal = qalloc(sizeof(qsignal_t));
   if (signal == NULL) {
     return NULL;
   }

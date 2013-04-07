@@ -6,62 +6,59 @@
 #include <lualib.h>
 #include <lauxlib.h>
 #include <string.h>
+#include "qalloc.h"
 #include "qassert.h"
 #include "qdict.h"
 #include "qlog.h"
-#include "qmempool.h"
 
-qdict_t* qdict_new(qmem_pool_t *pool, int hashsize) {
+qdict_t* qdict_new(int hashsize) {
   int       i;
   qdict_t  *dict;
   qlist_t  *list;
 
-  dict = qalloc(pool, sizeof(qdict_t));
+  dict = qalloc(sizeof(qdict_t));
   if (dict == NULL) {
     goto error;
   }
   dict->hashsize = hashsize;
   dict->num = 0;
-  dict->buckets  = qcalloc(pool, hashsize * sizeof(qlist_t*));
+  dict->buckets  = qcalloc(hashsize * sizeof(qlist_t*));
   if (dict->buckets == NULL) {
     goto error;
   }
   for (i = 0; i < hashsize; ++i) {
-    list = qalloc(pool, sizeof(qlist_t));
+    list = qalloc(sizeof(qlist_t));
     if (list == NULL) {
       goto error;
     }
     qlist_entry_init(list);
     dict->buckets[i] = list;
   }
-  dict->pool = pool;
   return dict;
 
 error:
   for (i = 0; i < hashsize; ++i) {
     list = dict->buckets[i];
     if (list != NULL) {
-      qfree(pool, list, sizeof(qlist_t));
+      qfree(list);
       continue;
     }
     break;
   }
   if (dict->buckets != NULL) {
-    qfree(pool, dict->buckets, hashsize * sizeof(qlist_t*));
+    qfree(dict->buckets);
   }
   if (dict != NULL) {
-    qfree(pool, dict, sizeof(qdict_t));
+    qfree(dict);
   }
   return NULL;
 }
 
 void qdict_destroy(qdict_t *dict) {
   int           i, hashsize;
-  qmem_pool_t  *pool;
   qlist_t      *list;
   qlist_t      *pos, *next;
 
-  pool = dict->pool;
   hashsize = dict->hashsize;
   for (i = 0; i < dict->hashsize; ++i) {
     list = dict->buckets[i];
@@ -74,13 +71,13 @@ void qdict_destroy(qdict_t *dict) {
       if (entry->val.type == QDICT_VAL_STRING) {
         qstring_destroy(&(entry->val.data.str));
       }
-      qfree(pool, entry, sizeof(qdict_entry_t));
+      qfree(entry);
       pos  = next;
     }
-    qfree(pool, list, sizeof(qlist_t));
+    qfree(list);
   }
-  qfree(pool, dict->buckets, hashsize * sizeof(qlist_t*));
-  qfree(pool, dict, sizeof(qdict_t));
+  qfree(dict->buckets);
+  qfree(dict);
 }
 
 static int hashstring(const char *str, size_t len) {
@@ -138,7 +135,7 @@ static qdict_entry_t* find(qdict_t *dict, qkey_t *key, int *save_idx) {
   return NULL;
 }
 
-static void copy_key(qdict_t *dict, qdict_entry_t *entry, qkey_t *key) {
+static void copy_key(qdict_entry_t *entry, qkey_t *key) {
   qkey_t *dict_key;
 
   dict_key = &(entry->key);
@@ -149,7 +146,7 @@ static void copy_key(qdict_t *dict, qdict_entry_t *entry, qkey_t *key) {
   }
   if (key->type == QDICT_KEY_STRING) {
     dict_key->type = QDICT_KEY_STRING;
-    qstring_null_set(&(dict_key->data.str), dict->pool);
+    qstring_null_set(&(dict_key->data.str));
     qstring_assign(&(dict_key->data.str), key->data.str.data);
     return;
   }
@@ -170,8 +167,8 @@ int qdict_add(qdict_t *dict, qkey_t *key, qval_t *val) {
     qerror("add key exist");
     return -1;
   }
-  entry = qalloc(dict->pool, sizeof(qdict_entry_t));
-  copy_key(dict, entry, key);
+  entry = qalloc(sizeof(qdict_entry_t));
+  copy_key(entry, key);
   copy_val(entry, val);
   list = dict->buckets[idx];
   qlist_add_tail(&entry->entry, list);
@@ -184,12 +181,12 @@ int qdict_replace(qdict_t *dict, qkey_t *key, qval_t *val) {
 
   entry = find(dict, key, NULL);
   if (entry == NULL) {
-    entry = qalloc(dict->pool, sizeof(qdict_entry_t));
+    entry = qalloc(sizeof(qdict_entry_t));
     if (entry == NULL) {
       return -1;
     }
   }
-  copy_key(dict, entry, key);
+  copy_key(entry, key);
   copy_val(entry, val);
   return 0;
 }
@@ -207,7 +204,7 @@ qval_t* qdict_get(qdict_t *dict, qkey_t *key) {
 qdict_iter_t* qdict_iterator(qdict_t *dict) {
   qdict_iter_t *iter;
 
-  iter = qalloc(dict->pool, sizeof(qdict_iter_t));
+  iter = qalloc(sizeof(qdict_iter_t));
   iter->dict  = dict;
   iter->hash  = 0;
   iter->entry = NULL;
@@ -215,7 +212,7 @@ qdict_iter_t* qdict_iterator(qdict_t *dict) {
 }
 
 void qdict_iterator_destroy(qdict_iter_t *iter) {
-  qfree(iter->dict->pool, iter, sizeof(qdict_iter_t));
+  qfree(iter);
 }
 
 qdict_entry_t* qdict_next(qdict_iter_t *iter) {

@@ -15,10 +15,10 @@
 #define QID_INVALID  -1
 
 typedef struct qidmap_t {
-  qid_t     last_qid;
-  unsigned  int nr_free;
-  char      page[QID_MAX];
-  void*     data[QID_MAX];
+  qid_t         last_qid;
+  unsigned int  nr_free;
+  char          page[QID_MAX];
+  void*         data[QID_MAX];
 } qidmap_t;
 
 void   qidmap_init(qidmap_t *idmap);

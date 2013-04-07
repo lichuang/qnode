@@ -3,6 +3,7 @@
  */
 
 #include <stdint.h>
+#include "qalloc.h"
 #include "qactor.h"
 #include "qapi.h"
 #include "qassert.h"
@@ -13,7 +14,6 @@
 #include "qlog.h"
 #include "qidmap.h"
 #include "qmailbox.h"
-#include "qmempool.h"
 #include "qmsg.h"
 #include "qnet.h"
 #include "qserver.h"
@@ -31,16 +31,11 @@ qid_t qactor_new_id() {
 qactor_t* qactor_new(qid_t aid) {
   qactor_t *actor;
 
-  actor = malloc(sizeof(qactor_t));
+  actor = qalloc(sizeof(qactor_t));
   if (actor == NULL) {
     return NULL;
   }
 
-  actor->pool  = qmem_pool_create();
-  if (actor->pool == NULL) {
-    free(actor);
-    return NULL;
-  }
   actor->state = NULL;
   qlist_entry_init(&(actor->entry));
   qlist_entry_init(&(actor->desc_list));
@@ -83,7 +78,7 @@ void qactor_destroy(qactor_t *actor) {
   if (actor->listen_params != NULL) {
     qdict_destroy(actor->listen_params);
   }
-  qfree(actor->pool, actor, sizeof(qactor_t));
+  qfree(actor);
 }
 
 void qactor_attach(qactor_t *actor, lua_State *state) {
@@ -109,7 +104,7 @@ qid_t qactor_spawn(qactor_t *actor, lua_State *state) {
 
   aid = qactor_new_id();
   if (aid == QID_INVALID) {
-    free(msg);
+    qfree(msg);
     return -1;
   }
 

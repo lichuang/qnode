@@ -28,7 +28,6 @@ struct qactor_t {
   qlist_t         desc_list;        /* descriptor list */
   qspinlock_t     desc_list_lock;   /* descriptor list lock */
   qlist_t         msg_list;         /* message list */
-  qmem_pool_t     *pool;            /* memory pool */
   qdict_t *listen_params;
 };
 

@@ -14,7 +14,6 @@ struct qconfig_t {
   qstring_t   log_path;
   qstring_t   log_level;
   qstring_t   log_handler;
-  qmem_pool_t *pool;
 };
 
 int  qconfig_init(qconfig_t *config, const char *filename);

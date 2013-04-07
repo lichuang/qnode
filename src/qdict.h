@@ -34,9 +34,9 @@ typedef struct qkey_t {
   (key).type = QDICT_KEY_NUMBER;        \
 } while(0)
 
-#define QKEY_STRING(key, s, p) do {       \
-  qstring_set(&((key).data.str), s, (p)); \
-  (key).type = QDICT_KEY_STRING;          \
+#define QKEY_STRING(key, s) do {        \
+  qstring_set(&((key).data.str), s);    \
+  (key).type = QDICT_KEY_STRING;        \
 } while(0)
 
 typedef struct qval_t {
@@ -62,7 +62,6 @@ typedef struct qdict_t {
   qlist_t       **buckets;
   int           hashsize;
   unsigned int  num;
-  qmem_pool_t   *pool;
 } qdict_t;
 
 typedef struct qdict_iter_t {
@@ -71,7 +70,7 @@ typedef struct qdict_iter_t {
   qdict_entry_t *entry;
 } qdict_iter_t;
 
-qdict_t*        qdict_new(qmem_pool_t *pool, int hashsize);
+qdict_t*        qdict_new(int hashsize);
 void            qdict_destroy(qdict_t *dict);
 int             qdict_add(qdict_t *dict, qkey_t *key, qval_t *val);
 int             qdict_replace(qdict_t *dict, qkey_t *key, qval_t *val);

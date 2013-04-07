@@ -6,7 +6,6 @@
 #include <string.h>
 #include "qbuffer.h"
 #include "qluautil.h"
-#include "qmempool.h"
 
 static int qnode_buffer_find(lua_State *state) {
   int         pos;

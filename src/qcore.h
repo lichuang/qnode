@@ -11,7 +11,6 @@ typedef struct qengine_t      qengine_t;
 typedef struct qdescriptor_t  qdescriptor_t; 
 typedef struct qlog_t         qlog_t;
 typedef struct qmailbox_t     qmailbox_t;
-typedef struct qmem_pool_t    qmem_pool_t;
 typedef struct qmsg_t         qmsg_t;
 typedef struct qserver_t      qserver_t;
 typedef struct qsignal_t      qsignal_t;

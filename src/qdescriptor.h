@@ -56,11 +56,9 @@ struct qdescriptor_t {
     struct qtcp_descriptor_t  tcp;
     struct qfile_descriptor_t file;
   } data;
-
-  qmem_pool_t     *pool;
 };
 
-qdescriptor_t*    qdescriptor_new(qmem_pool_t *pool, int fd, unsigned short type, qactor_t *actor);
+qdescriptor_t*    qdescriptor_new(int fd, unsigned short type, qactor_t *actor);
 void              qdescriptor_destroy(qdescriptor_t *desc);
 qactor_t*         qdescriptor_get_actor(qdescriptor_t *desc);
 

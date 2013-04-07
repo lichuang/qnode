@@ -20,7 +20,6 @@ struct qserver_t {
   qengine_t        *engine;       /* event dispatch engine */
   qmailbox_t      **in_box;       /* for worker-server message */
   qmailbox_t      **out_box;      /* for server-worker message */
-  qmem_pool_t      *pool;         /* memory pool */
   qthread_t       **threads;      /* worker threads array */
   qthread_log_t   **thread_log;   /* thread log array(include main) */
   unsigned int      num_actor;    /* actor number */
