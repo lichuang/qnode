@@ -11,9 +11,9 @@
 /* per-thread log struct */
 struct qthread_log_t {
   struct qlist_t  lists[2];
-  struct qlist_t  *write;
-  struct qlist_t  *read;
-  qengine_t       *engine;
+  struct qlist_t *write;
+  struct qlist_t *read;
+  qengine_t      *engine;
   int             idx;
 };
 

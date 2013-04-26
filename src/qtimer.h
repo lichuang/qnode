@@ -23,11 +23,11 @@ typedef struct qtimer_t {
 } qtimer_t;
 
 typedef struct qtimer_manager_t {
-  qengine_t       *engine;
+  qengine_t      *engine;
   qidmap_t        id_map;
   qlist_t         free_list;
   qminheap_t      min_heap;
-  qmem_pool_t     *pool;
+  qmem_pool_t    *pool;
 } qtimer_manager_t;
 
 void  qtimer_manager_init(qtimer_manager_t *mng, qengine_t *engine);

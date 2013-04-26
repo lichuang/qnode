@@ -23,9 +23,13 @@ extern qserver_msg_handler g_server_msg_handlers[];
 
 qserver_t *g_server;
 
+/* thread init condition */
 static int      init_thread_count;
 static qcond_t  init_thread_cond;
 static qmutex_t init_thread_lock; 
+
+/* server running flag */
+static int      running;
 
 static void server_accept(int fd, int flags, void *data) {
   UNUSED(fd);
@@ -159,12 +163,14 @@ static int init_worker_threads(qserver_t *server) {
 
   init_thread_count = 0;
 
+  /* create worker thread and mailbox */
   for (i = 1; i <= thread_num; ++i) {
     box = qmailbox_new(pool, server_box, NULL);
     if (box == NULL) {
       goto error;
     }
     box->reader = box;
+    /* add the worker-main box into main thread event engine */
     qmailbox_active(server->engine, box);
     server->in_box[i] = box;
     server->threads[i] = qthread_new(server, i); 
@@ -175,12 +181,13 @@ static int init_worker_threads(qserver_t *server) {
     server->threads[i]->out_box[0] = box;
   }
     
-  /* wait for the worker thread startup */
+  /* wait for the worker threads start */
   wait_threads(thread_num);
 
   qmutex_destroy(&init_thread_lock);
   qcond_destroy(&init_thread_cond);
 
+  /* link worker thread mailbox */
   for (i = 1; i <= thread_num; ++i) {
     thread1 = server->threads[i];
     for (j = 1; j <= thread_num; ++j) {
@@ -210,7 +217,7 @@ static void sig_handler(int sig) {
   case SIGINT:
   case SIGQUIT:
   case SIGABRT:
-    g_server->status = STOPPING;
+    running = 0;
     break;
   default:
     break;
@@ -253,7 +260,7 @@ static int server_init(qconfig_t *config) {
   if (qlog_thread_new(pool, config->thread_num + 1) < 0) {
     goto error;
   }
-  /* wait for the log thread startup */
+  /* wait for the log thread start */
   wait_threads(1);
 
   server->config = config;
@@ -261,12 +268,12 @@ static int server_init(qconfig_t *config) {
   if (init_server_event(server) < 0) {
     goto error;
   }
-  server->actors = (qactor_t**)qalloc(pool, QID_MAX * sizeof(qactor_t*));
+  server->actors = qalloc(pool, QID_MAX * sizeof(qactor_t*));
   if (server->actors == NULL) {
     goto error;
   }
 
-  server->descriptors = (qdescriptor_t**)qcalloc(pool, QID_MAX * sizeof(qdescriptor_t*));
+  server->descriptors = qcalloc(pool, QID_MAX * sizeof(qdescriptor_t*));
   if (server->descriptors == NULL) {
     goto error;
   }
@@ -280,7 +287,7 @@ static int server_init(qconfig_t *config) {
 
   server->thread_log[0] = qthread_log_init(server->engine, 0);
   server_start(server);
-  qinfo("qserver status...");
+
   return 0;
 
 error:
@@ -299,26 +306,22 @@ static void destroy_threads() {
 }
 
 static void destroy_server() {
-  if (g_server->status == STOPPED) {
-    return;
-  }
-  g_server->status = STOPPED;
   destroy_threads();
   qmem_pool_destroy(g_server->pool);
 }
 
-int qserver_run(struct qconfig_t *config) {
+int qserver_run(qconfig_t *config) {
   if (server_init(config) != 0) {
     return -1;
   }
-  g_server->status = RUNNING;
-  while (g_server->status == RUNNING && qengine_loop(g_server->engine) == 0) {
+  running = 1;
+  while (running && qengine_loop(g_server->engine) == 0) {
   }
   destroy_server();
   return 0;
 }
 
-void qserver_new_actor(struct qactor_t *actor) {
+void qserver_new_actor(qactor_t *actor) {
   qassert(g_server->actors[actor->aid] == NULL);
   g_server->actors[actor->aid] = actor;
   g_server->num_actor++;

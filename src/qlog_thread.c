@@ -65,13 +65,14 @@ static void thread_log_box(int fd, int flags, void *data) {
   }
 }
 
-static void* main_loop(void *arg) {
+static void* log_thread_main_loop(void *arg) {
   int         i, fd;
   qsignal_t  *signal;
   qlog_thread_t *thread;
 
   thread = (qlog_thread_t*)arg;
   thread->started = 1;
+  qserver_worker_started();
   while (!thread->stop && qengine_loop(thread->engine) == 0) {
   }
 
@@ -125,9 +126,9 @@ int qlog_thread_new(qmem_pool_t *pool, int thread_num) {
                       thread_log_box, g_log_thread->signals[i]);
   }
   g_log_thread->started = 0;
-  result = pthread_create(&g_log_thread->id, NULL, main_loop, g_log_thread);
+  result = pthread_create(&g_log_thread->id, NULL,
+                          log_thread_main_loop, g_log_thread);
   qassert(result == 0);
-  qserver_worker_started();
 
   return 0;
 }

@@ -102,13 +102,16 @@ next:
   }
 }
 
-static void* main_loop(void *arg) {
+static void* worker_thread_main_loop(void *arg) {
   qthread_t *thread;
 
   thread = (qthread_t*)arg;
-  g_server->thread_log[thread->tid] = qthread_log_init(thread->engine, thread->tid);
-  thread->started = 1;
-  while (!thread->stop && qengine_loop(thread->engine) == 0) {
+  /* init the worker thread log structure */
+  g_server->thread_log[thread->tid] = qthread_log_init(thread->engine,
+                                                       thread->tid);
+  thread->running = 1;
+  qserver_worker_started();
+  while (thread->running && qengine_loop(thread->engine) == 0) {
   }
   return NULL;
 }
@@ -172,6 +175,7 @@ qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
     if (thread->in_box[i] == NULL) {
       return NULL;
     }
+    /* add the in box in the worker event engine */
     qmailbox_active(thread->engine, thread->in_box[i]);
   }
 
@@ -179,19 +183,21 @@ qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
   thread->state = qlua_new_state();
   /* init the actor list */
   qlist_entry_init(&(thread->actor_list));
-  result = pthread_create(&thread->id, NULL, main_loop, thread);
+  result = pthread_create(&thread->id, NULL,
+                          worker_thread_main_loop, thread);
   qassert(result == 0);
 
-  qserver_worker_started();
   return thread;
 }
 
 void qthread_destroy(qthread_t *thread) {
   qmsg_t *msg;
 
+  /* send stop message to thread */
   msg = qmsg_new(0, thread->tid);
   qmsg_init_sstop(msg);
   qmsg_send(msg);
 
+  /* wait for the thread stop */
   pthread_join(thread->id, NULL);
 }

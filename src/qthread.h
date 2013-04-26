@@ -12,21 +12,20 @@
 #include "qtype.h"
 
 typedef struct qthread_box_t {
-  qmailbox_t          *box;
-  qthread_t           *thread;
+  qmailbox_t         *box;
+  qthread_t          *thread;
 } qthread_box_t;
 
 struct qthread_t {
-  unsigned            started:1;
-  unsigned            stop:1;
+  unsigned int        running:1;
   pthread_t           id;
   qtid_t              tid;
-  qengine_t           *engine;
-  qmailbox_t          **in_box;
-  qmailbox_t          **out_box;
-  qthread_box_t       **thread_box;
+  qengine_t          *engine;
+  qmailbox_t        **in_box;
+  qmailbox_t        **out_box;
+  qthread_box_t     **thread_box;
   qlist_t             actor_list;
-  lua_State           *state;
+  lua_State          *state;
 };
 
 qthread_t*  qthread_new(qserver_t *server, qtid_t tid);

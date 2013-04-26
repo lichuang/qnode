@@ -13,31 +13,24 @@
 
 #define QSERVER_THREAD_TID 0
 
-enum {
-  STOPPED   = 0,
-  RUNNING   = 1,
-  STOPPING  = 2,
-};
-
 struct qserver_t {
-  qactor_t        **actors;
-  qconfig_t        *config;
-  qdescriptor_t   **descriptors;
-  qengine_t        *engine;
-  qmailbox_t      **in_box;
-  qmailbox_t      **out_box;
-  qmem_pool_t      *pool;
-  qthread_t       **threads;
-  qthread_log_t   **thread_log;
-  unsigned int      num_actor;
-  qidmap_t          id_map;
-  qmutex_t          id_map_mutex;
-  int               status;
+  qactor_t        **actors;       /* actor array */
+  qconfig_t        *config;       /* server config */
+  qdescriptor_t   **descriptors;  /* descriptor array */
+  qengine_t        *engine;       /* event dispatch engine */
+  qmailbox_t      **in_box;       /* for worker-server message */
+  qmailbox_t      **out_box;      /* for server-worker message */
+  qmem_pool_t      *pool;         /* memory pool */
+  qthread_t       **threads;      /* worker threads array */
+  qthread_log_t   **thread_log;   /* thread log array(include main) */
+  unsigned int      num_actor;    /* actor number */
+  qidmap_t          id_map;       /* id map for allocate actor id */
+  qmutex_t          id_map_mutex; /* mutex for id map */
 };
 
-int qserver_run(struct qconfig_t *config);
+int qserver_run(qconfig_t *config);
 
-void qserver_new_actor(struct qactor_t *actor);
+void qserver_new_actor(qactor_t *actor);
 
 void qserver_worker_started();
 

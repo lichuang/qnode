@@ -60,7 +60,7 @@ static int thread_handle_sstart_msg(qthread_t *thread, qmsg_t *msg) {
 
 static int thread_handle_sstop_msg(qthread_t *thread, qmsg_t *msg) {
   UNUSED(msg);
-  thread->stop = 1;
+  thread->running = 0;
   return 0;
 }
 
