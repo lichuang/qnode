@@ -114,6 +114,14 @@ static void server_start(qserver_t *server) {
   qmsg_send(msg);
 }
 
+static void wait_threads(int thread_num) {
+  qmutex_lock(&init_thread_lock);
+  while (init_thread_count < thread_num) {
+    qcond_wait(&init_thread_cond, &init_thread_lock);
+  }
+  qmutex_unlock(&init_thread_lock);
+}
+
 static int init_worker_threads(qserver_t *server) {
   int           i, j;
   int           thread_num;
@@ -150,8 +158,6 @@ static int init_worker_threads(qserver_t *server) {
   server->out_box[0] = NULL;
 
   init_thread_count = 0;
-  qmutex_init(&init_thread_lock);
-  qcond_init(&init_thread_cond);
 
   for (i = 1; i <= thread_num; ++i) {
     box = qmailbox_new(pool, server_box, NULL);
@@ -169,12 +175,8 @@ static int init_worker_threads(qserver_t *server) {
     server->threads[i]->out_box[0] = box;
   }
     
-  /* wait for all the worker threads to set themselves up */
-  qmutex_lock(&init_thread_lock);
-  while (init_thread_count < thread_num) {
-    qcond_wait(&init_thread_cond, &init_thread_lock);
-  }
-  qmutex_unlock(&init_thread_lock);
+  /* wait for the worker thread startup */
+  wait_threads(thread_num);
 
   qmutex_destroy(&init_thread_lock);
   qcond_destroy(&init_thread_cond);
@@ -238,14 +240,22 @@ static int server_init(qconfig_t *config) {
   pool = config->pool;
   server = qcalloc(pool, sizeof(qserver_t));
 
+  qmutex_init(&init_thread_lock);
+  qcond_init(&init_thread_cond);
+
   if (server == NULL) {
     goto error;
   }
   g_server = server;
   g_server->pool = pool;
+
+  init_thread_count = 0;
   if (qlog_thread_new(pool, config->thread_num + 1) < 0) {
     goto error;
   }
+  /* wait for the log thread startup */
+  wait_threads(1);
+
   server->config = config;
   server->engine = qengine_new(g_server->pool);
   if (init_server_event(server) < 0) {

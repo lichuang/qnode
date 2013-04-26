@@ -127,10 +127,8 @@ int qlog_thread_new(qmem_pool_t *pool, int thread_num) {
   g_log_thread->started = 0;
   result = pthread_create(&g_log_thread->id, NULL, main_loop, g_log_thread);
   qassert(result == 0);
-  /* ugly, but works */
-  while (g_log_thread->started == 0) {
-    usleep(100);
-  }
+  qserver_worker_started();
+
   return 0;
 }
 
