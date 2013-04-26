@@ -21,7 +21,11 @@
 
 extern qserver_msg_handler g_server_msg_handlers[];
 
-struct qserver_t *g_server;
+qserver_t *g_server;
+
+static int      init_thread_count;
+static qcond_t  init_thread_cond;
+static qmutex_t init_thread_lock; 
 
 static void server_accept(int fd, int flags, void *data) {
   UNUSED(fd);
@@ -145,6 +149,10 @@ static int init_worker_threads(qserver_t *server) {
   }
   server->out_box[0] = NULL;
 
+  init_thread_count = 0;
+  qmutex_init(&init_thread_lock);
+  qcond_init(&init_thread_cond);
+
   for (i = 1; i <= thread_num; ++i) {
     box = qmailbox_new(pool, server_box, NULL);
     if (box == NULL) {
@@ -160,6 +168,16 @@ static int init_worker_threads(qserver_t *server) {
     server->out_box[i] = server->threads[i]->in_box[0];
     server->threads[i]->out_box[0] = box;
   }
+    
+  /* wait for all the worker threads to set themselves up */
+  qmutex_lock(&init_thread_lock);
+  while (init_thread_count < thread_num) {
+    qcond_wait(&init_thread_cond, &init_thread_lock);
+  }
+  qmutex_unlock(&init_thread_lock);
+
+  qmutex_destroy(&init_thread_lock);
+  qcond_destroy(&init_thread_cond);
 
   for (i = 1; i <= thread_num; ++i) {
     thread1 = server->threads[i];
@@ -210,12 +228,12 @@ static void setup_signal() {
 }
 
 static int server_init(qconfig_t *config) {
+  qmem_pool_t *pool;
+  qserver_t   *server;
+
   qassert(config);
   qassert(config->thread_num > 0);
   qassert(g_server == NULL);
-
-  qmem_pool_t *pool;
-  qserver_t   *server;
 
   pool = config->pool;
   server = qcalloc(pool, sizeof(qserver_t));
@@ -294,4 +312,11 @@ void qserver_new_actor(struct qactor_t *actor) {
   qassert(g_server->actors[actor->aid] == NULL);
   g_server->actors[actor->aid] = actor;
   g_server->num_actor++;
+}
+
+void qserver_worker_started() {
+  qmutex_lock(&init_thread_lock);
+  init_thread_count++;
+  qcond_signal(&init_thread_cond);
+  qmutex_unlock(&init_thread_lock);
 }

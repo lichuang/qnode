@@ -175,14 +175,14 @@ qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
     qmailbox_active(thread->engine, thread->in_box[i]);
   }
 
+  /* create the lua VM for the thread */
   thread->state = qlua_new_state();
+  /* init the actor list */
   qlist_entry_init(&(thread->actor_list));
   result = pthread_create(&thread->id, NULL, main_loop, thread);
   qassert(result == 0);
-  /* ugly, but works */
-  while (thread->started == 0) {
-    usleep(100);
-  }
+
+  qserver_worker_started();
   return thread;
 }
 
