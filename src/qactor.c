@@ -8,7 +8,6 @@
 #include "qassert.h"
 #include "qdefines.h"
 #include "qdescriptor.h"
-#include "qdict.h"
 #include "qengine.h"
 #include "qluautil.h"
 #include "qlog.h"
@@ -57,10 +56,10 @@ qactor_t* qactor_new(qid_t aid) {
 }
 
 void qactor_destroy(qactor_t *actor) {
-  qassert(actor);
-
   qlist_t *pos, *next;
   qmsg_t  *msg;
+
+  qassert(actor);
 
   lua_close(actor->state);
   qmutex_lock(&g_server->id_map_mutex);

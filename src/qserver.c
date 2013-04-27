@@ -295,8 +295,8 @@ error:
 }
 
 static void destroy_threads() {
-  int i;
-  qthread_t *thread;
+  int         i;
+  qthread_t  *thread;
 
   for (i = 1; i <= g_server->config->thread_num; ++i) {
     thread = g_server->threads[i];
