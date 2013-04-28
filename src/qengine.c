@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "qassert.h"
+#include "qdefines.h"
 #include "qengine.h"
 #include "qlog.h"
 #include "qmempool.h"
@@ -13,7 +14,7 @@
 
 #define QRETIRED_FD -1
 
-extern const struct qdispatcher_t epoll_dispatcher;
+extern const qdispatcher_t epoll_dispatcher;
 
 static void init_qevent(qevent_t *event) {
   event->fd = QRETIRED_FD;
@@ -22,7 +23,7 @@ static void init_qevent(qevent_t *event) {
   event->data = NULL;
 }
 
-static void init_engine_time(qengine_t *engine) {
+static void update_engine_time(qengine_t *engine) {
   struct tm tm;
   time_t    t;
 
@@ -33,6 +34,12 @@ static void init_engine_time(qengine_t *engine) {
    * convert to ms
    */
   engine->now = 1000 * t;
+}
+
+static void engine_time_handler(void *data) {
+  qengine_t *engine = (qengine_t *)data;
+
+  update_engine_time(engine);
 }
 
 qengine_t* qengine_new(qmem_pool_t *pool) {
@@ -65,7 +72,9 @@ qengine_t* qengine_new(qmem_pool_t *pool) {
     init_qevent(event);
   }
   qtimer_manager_init(&engine->timer_mng, engine);
-  init_engine_time(engine);
+  update_engine_time(engine);
+  qengine_add_timer(engine, 1000, engine_time_handler, 1000, engine);
+
   return engine;
 
 error:
@@ -143,7 +152,7 @@ int qengine_loop(qengine_t* engine) {
   int       read;
   qevent_t *event;
 
-  init_engine_time(engine);
+  //update_engine_time(engine);
 
   next = qtimer_next(&engine->timer_mng);
   num = engine->dispatcher->poll(engine, next);

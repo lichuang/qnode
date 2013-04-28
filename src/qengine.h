@@ -61,10 +61,12 @@ qengine_t* qengine_new(qmem_pool_t *pool);
 int qengine_loop(qengine_t* engine);
 void qengine_destroy(qengine_t *engine);
 
-int qengine_add_event(qengine_t* engine, int fd, int flags, qevent_func_t *callback, void *data);
+int qengine_add_event(qengine_t* engine, int fd, int flags,
+                      qevent_func_t *callback, void *data);
 int qengine_del_event(qengine_t* engine, int fd, int flags);
 
-qid_t qengine_add_timer(qengine_t* engine, uint32_t timeout_ms, qtimer_func_t *func, int type, void *data);
+qid_t qengine_add_timer(qengine_t* engine, uint32_t timeout_ms,
+                        qtimer_func_t *func, int type, void *data);
 int qengine_del_timer(qengine_t* engine, qid_t id);
 
 #endif  /* __QENGINE_H__ */

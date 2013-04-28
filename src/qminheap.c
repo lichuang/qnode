@@ -8,14 +8,9 @@
 
 int qminheap_init(qminheap_t *heap, qmem_pool_t *pool,
                   cmp_func_t cmp, set_func_t set, get_func_t get) {
-  int i;
-
-  heap->data = (void**)qalloc(pool, QID_MAX * sizeof(void*)); 
+  heap->data = (void**)qcalloc(pool, QID_MAX * sizeof(void*)); 
   if (heap->data == NULL) {
     return -1;
-  }
-  for (i = 0; i < QID_MAX; ++i) {
-    heap->data[i] = NULL;
   }
   heap->size = QID_MAX;
   heap->num  = 0;
@@ -85,8 +80,7 @@ static int minheap_push(qminheap_t *heap, void *data) {
   if (minheap_reserve(heap, heap->num + 1) == -1) {
     return -1;
   }
-  heap->num += 1;
-  return minheap_shift_up(heap, heap->num, data);
+  return minheap_shift_up(heap, heap->num++, data);
 }
 
 static int minheap_erase(qminheap_t* heap, void *data) {

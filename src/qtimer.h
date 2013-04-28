@@ -13,20 +13,20 @@
 #include "qtype.h"
 
 typedef struct qtimer_t {
-  qtimer_func_t*  handler;
+  int             heap_index;
   void*           arg;
   uint64_t        timeout;
   uint64_t        cycle;
   qid_t           id;
   qlist_t         entry;
-  int             heap_index;
+  qtimer_func_t*  handler;
 } qtimer_t;
 
 typedef struct qtimer_manager_t {
-  qengine_t      *engine;
   qidmap_t        id_map;
   qlist_t         free_list;
   qminheap_t      min_heap;
+  qengine_t      *engine;
   qmem_pool_t    *pool;
 } qtimer_manager_t;
 

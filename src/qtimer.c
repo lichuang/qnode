@@ -31,12 +31,13 @@ static inline int compare_timer(void *data1, void *data2) {
   return (timer1->timeout > timer2->timeout);
 }
 
-void qtimer_manager_init(qtimer_manager_t *mng, struct qengine_t *engine) {
+void qtimer_manager_init(qtimer_manager_t *mng, qengine_t *engine) {
   mng->engine = engine;
   mng->pool   = engine->pool;
   qidmap_init(&(mng->id_map));
   qlist_entry_init(&(mng->free_list));
-  qminheap_init(&(mng->min_heap), engine->pool, compare_timer, set_timer_heap_index, get_timer_heap_index);
+  qminheap_init(&(mng->min_heap), engine->pool, compare_timer,
+                set_timer_heap_index, get_timer_heap_index);
 }
 
 void qtimer_manager_free(qtimer_manager_t *mng) {
@@ -49,11 +50,14 @@ qid_t qtimer_add(qtimer_manager_t *mng, uint32_t timeout,
   qlist_t  *pos;
 
   if (qlist_empty(&(mng->free_list))) {
+    timer = qalloc(mng->pool, sizeof(timer_t));
+    if (timer == NULL) {
+      return -1;
+    }
+  } else {
     pos = mng->free_list.next;
     qlist_del_init(pos);
     timer = qlist_entry(pos, qtimer_t, entry);
-  } else {
-    timer = qalloc(mng->pool, sizeof(timer_t));
   }
   timer->id       = qid_new(&(mng->id_map));
   timer->timeout  = timeout + mng->engine->now;
