@@ -81,7 +81,10 @@ int qmailbox_get(qmailbox_t *box, qlist_t **list) {
   read = box->read;
   /* second change the read ptr to the write ptr */
   qatomic_ptr_xchg(&(box->read), box->write);
-  /* last change the write ptr to the read ptr saved before and return to list */
+  /* 
+   * last change the write ptr to the read ptr saved before
+   * and return to list
+   */
   *list = qatomic_ptr_xchg(&(box->write), read);
   qassert(box->read != box->write);
   qassert(*list == box->read);

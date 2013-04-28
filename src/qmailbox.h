@@ -9,17 +9,14 @@
 #include "qengine.h"
 #include "qlist.h"
 
-struct qmsg_t;
-struct qsignal_t;
-
 struct qmailbox_t {
-  struct qlist_t    lists[2];   /* one for read, one for write */
-  struct qlist_t    *write;     /* current write list */
-  struct qlist_t    *read;      /* current write list */
-  qevent_func_t     *callback;  /* mailbox reader callback */
-  void              *reader;    /* mailbox reader */
-  struct qsignal_t  *signal;
   unsigned          active:1;
+  qlist_t           lists[2];   /* one for read, one for write */
+  qlist_t          *write;      /* current write list ptr */
+  qlist_t          *read;       /* current read  list ptr */
+  qevent_func_t    *callback;   /* mailbox reader callback */
+  void             *reader;     /* mailbox reader */
+  qsignal_t        *signal;
 };
 
 qmailbox_t* qmailbox_new(qmem_pool_t *pool, qevent_func_t *callback, void *reader);

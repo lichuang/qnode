@@ -43,7 +43,7 @@ enum {
 /* 
  * define messages between worker-thread and main-thread 
  */
-typedef struct qmsg_t {
+struct qmsg_t {
   qlist_t entry;
 
   int handled:1;            /* whether the msg has been handler by receiver */
@@ -69,7 +69,7 @@ typedef struct qmsg_t {
       qactor_msg_t *actor_msg;
     } t_send;
   } args;
-} qmsg_t;
+};
 
 /* handler for worker thread msg */
 typedef int (*qthread_msg_handler)(qthread_t *thread, qmsg_t *msg);

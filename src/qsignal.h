@@ -8,11 +8,11 @@
 #include "qatomic.h"
 #include "qcore.h"
 
-typedef struct qsignal_t {
+struct qsignal_t {
   int       rfd;
   int       wfd;
   qatomic_t active;        /* active if there is mail */
-} qsignal_t;
+};
 
 qsignal_t* qsignal_new(qmem_pool_t *pool);
 int qsignal_get_fd(qsignal_t *signal);
