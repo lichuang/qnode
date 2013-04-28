@@ -22,14 +22,14 @@ pthread_key_t g_thread_log_key = PTHREAD_ONCE_INIT;
 qlog_thread_t *g_log_thread = NULL;
 
 static void thread_log_box(int fd, int flags, void *data) {
-  UNUSED(fd);
-  UNUSED(flags);
-
   int           i, idx;
   qsignal_t     *signal;
   qlist_t       *list, *pos, *next;
   qlog_t        *log;
   qthread_log_t *thread_log;
+
+  UNUSED(fd);
+  UNUSED(flags);
 
   signal = (qsignal_t*)data;
   for (i = 0; ; i++) {
@@ -134,14 +134,10 @@ int qlog_thread_new(qmem_pool_t *pool, int thread_num) {
 }
 
 void qlog_thread_destroy() {
-  /*
-   * set the stop flag and wake up the log thread
-   */
+  /* set the stop flag and wake up the log thread */
   g_log_thread->stop = 1;
   qlog_thread_active(0);
-  /*
-   * wait for the thread
-   */
+  /* wait for the thread */
   pthread_join(g_log_thread->id, NULL);
 }
 

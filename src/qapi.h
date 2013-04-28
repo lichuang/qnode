@@ -8,13 +8,12 @@
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
-
-struct qactor_t;
+#include "qcore.h"
 
 /*
  * regist all C APIs to Lua
  * */
-void qapi_register(lua_State *state, struct qactor_t *);
+void qapi_register(lua_State *state, qactor_t *actor);
 
 /*
  *  Lua C API:

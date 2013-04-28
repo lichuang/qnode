@@ -9,8 +9,8 @@
 #include "qmempool.h"
 
 static int qnode_buffer_find(lua_State *state) {
-  qbuffer_t  *buffer;
   int         pos;
+  qbuffer_t  *buffer;
   const char *str;
   char       *ret;
 

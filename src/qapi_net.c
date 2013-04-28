@@ -56,18 +56,18 @@ static int qnode_tcp_listen(lua_State *state) {
 }
 
 static void socket_accept(int fd, int flags, void *data) {
-  UNUSED(fd);
-  UNUSED(flags);
-
+  int                 sock;
   struct sockaddr     remote;
   socklen_t           n;
-  int sock;
   qdescriptor_t      *desc;
   qtcp_descriptor_t  *tcp;
   qactor_t           *actor;
   lua_State          *state;
   qengine_t          *engine;
   qdescriptor_t      *accept_desc;
+
+  UNUSED(fd);
+  UNUSED(flags);
 
   n = sizeof(struct sockaddr);
   desc = (qdescriptor_t *)data;
@@ -138,15 +138,15 @@ static int qnode_tcp_accept(lua_State *state) {
 }
 
 static void socket_recv(int fd, int flags, void *data) {
-  UNUSED(fd);
-  UNUSED(flags);
-
   int                nret;
   qdescriptor_t     *desc;
   qtcp_descriptor_t *tcp;
   qactor_t          *actor;
   lua_State         *state;
   qengine_t         *engine;
+
+  UNUSED(fd);
+  UNUSED(flags);
 
   desc = (qdescriptor_t *)data;
   tcp = &(desc->data.tcp);
@@ -203,15 +203,15 @@ static int qnode_tcp_recv(lua_State *state) {
 }
 
 static void socket_send(int fd, int flags, void *data) {
-  UNUSED(fd);
-  UNUSED(flags);
-
   int                 nret;
   qdescriptor_t      *desc;
   qtcp_descriptor_t  *tcp;
   qactor_t           *actor;
   qengine_t          *engine;
   lua_State          *state;
+
+  UNUSED(fd);
+  UNUSED(flags);
 
   desc = (qdescriptor_t *)data;
   tcp = &(desc->data.tcp);

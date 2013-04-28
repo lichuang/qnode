@@ -54,6 +54,7 @@ void qapi_register(lua_State *state, struct qactor_t *actor) {
   lua_setglobal(state, "qnode");
   */
 
+  /* register the actor-state table */
   lua_pushlightuserdata(state, state);
   lua_pushlightuserdata(state, actor);
   lua_settable(state, LUA_REGISTRYINDEX);

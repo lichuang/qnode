@@ -16,6 +16,7 @@ int qbuffer_init(qmem_pool_t *pool, qbuffer_t *buffer) {
   buffer->pos  = buffer->len = 0;
   buffer->size = QBUFFER_SIZE;
   buffer->pool = pool;
+
   return 0;
 }
 

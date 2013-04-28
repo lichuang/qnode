@@ -58,6 +58,7 @@ static int qnode_spawn(lua_State *state) {
     return 2;
   }
   lua_pushnumber(state, id);
+
   return 1;
 }
 
@@ -86,6 +87,7 @@ static int qnode_send(lua_State *state) {
   qmsg_init_tsend(msg, actor_msg);
   qmsg_send(msg);
   lua_pushnumber(state, 0);
+
   return 1;
 }
 

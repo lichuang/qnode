@@ -24,12 +24,12 @@ extern qserver_msg_handler g_server_msg_handlers[];
 qserver_t *g_server;
 
 /* thread init condition */
-static int      init_thread_count;
-static qcond_t  init_thread_cond;
-static qmutex_t init_thread_lock; 
+static int          init_thread_count;
+static qcond_t      init_thread_cond;
+static qmutex_t     init_thread_lock; 
 
 /* server running flag */
-static int      running;
+static volatile int running;
 
 static void server_accept(int fd, int flags, void *data) {
   UNUSED(fd);

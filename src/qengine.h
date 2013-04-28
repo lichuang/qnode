@@ -46,15 +46,15 @@ typedef struct qdispatcher_t {
 } qdispatcher_t;
 
 struct qengine_t {
-  qevent_t            *events;
-  qevent_t            *active_events;
-  const qdispatcher_t *dispatcher;
-  void                *data;
-  int                 max_fd;
-  qmem_pool_t         *pool;
-  qtimer_manager_t    timer_mng;
-  uint64_t            now;
-  char                time_buff[20];
+  qevent_t             *events;
+  qevent_t             *active_events;
+  const qdispatcher_t  *dispatcher;
+  void                 *data;
+  int                   max_fd;
+  qmem_pool_t          *pool;
+  qtimer_manager_t      timer_mng;
+  uint64_t              now;
+  char                  time_buff[20];
 };
 
 qengine_t* qengine_new(qmem_pool_t *pool);
