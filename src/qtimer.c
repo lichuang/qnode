@@ -69,7 +69,7 @@ qid_t qtimer_add(qtimer_manager_t *mng, uint32_t timeout,
     timer = qlist_entry(pos, qtimer_t, entry);
   }
   timer->id       = qid_new(&(mng->id_map));
-  timer->timeout  = timeout + mng->now;
+  timer->timeout  = timeout + mng->now_ms;
   timer->handler  = func;
   timer->cycle    = cycle;
   timer->arg      = arg;
@@ -86,11 +86,11 @@ int qtimer_next(qtimer_manager_t *mng) {
   if (timer == NULL) {
     return -1;
   }
-  if (timer->timeout < mng->now) {
+  if (timer->timeout < mng->now_ms) {
     return 0;
   }
 
-  return (timer->timeout - mng->now);
+  return (timer->timeout - mng->now_ms);
 }
 
 void qtimer_process(qtimer_manager_t *mng) {

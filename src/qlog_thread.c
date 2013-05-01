@@ -96,8 +96,8 @@ static void log_key_destroy(void *value) {
 }
 
 static void log_time_handler(void *data) {
-  struct tm tm;
-  time_t    t;
+  time_t     t;
+  struct tm  tm;
   qengine_t *engine;
 
   UNUSED(data);
