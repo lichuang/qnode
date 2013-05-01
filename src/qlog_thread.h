@@ -15,6 +15,7 @@ typedef struct qlog_thread_t {
   int           thread_num;
   qengine_t    *engine;
   qsignal_t   **signals;
+  char          time_buff[20];
 } qlog_thread_t;
 
 int  qlog_thread_new(int thread_num);

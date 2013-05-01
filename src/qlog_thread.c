@@ -53,6 +53,7 @@ static void thread_log_box(int fd, int flags, void *data) {
     next = pos->next;
     qlist_del_init(&(log->entry));
 
+    log->n = sprintf(log->buff, "%s %d", g_log_thread->time_buff, log->idx);
     log->n += sprintf(log->buff + log->n, " %s:%d ", log->file, log->line);
     vsprintf(log->buff + log->n, log->format, log->args);
     printf("%s\n", log->buff);
@@ -90,8 +91,22 @@ static void* log_thread_main_loop(void *arg) {
   return NULL;
 }
 
-void log_key_destroy(void *value) {
+static void log_key_destroy(void *value) {
   UNUSED(value);
+}
+
+static void log_time_handler(void *data) {
+  struct tm tm;
+  time_t    t;
+  qengine_t *engine;
+
+  UNUSED(data);
+
+  engine = g_log_thread->engine;
+  t = engine->timer_mng.now;
+  localtime_r(&t, &tm);
+  strftime(g_log_thread->time_buff, sizeof(g_log_thread->time_buff),
+           "[%m-%d %T]", &tm);
 }
 
 int qlog_thread_new(int thread_num) {
@@ -125,6 +140,9 @@ int qlog_thread_new(int thread_num) {
                       thread_log_box, g_log_thread->signals[i]);
   }
   g_log_thread->started = 0;
+  log_time_handler(NULL);
+  qengine_add_timer(g_log_thread->engine, 1000, log_time_handler,
+                    1000, NULL);
   pthread_create(&g_log_thread->id, NULL,
                  log_thread_main_loop, g_log_thread);
 

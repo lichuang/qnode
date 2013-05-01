@@ -47,7 +47,6 @@ struct qengine_t {
   void                 *data;
   int                   max_fd;
   qtimer_manager_t      timer_mng;
-  char                  time_buff[20];
 };
 
 qengine_t* qengine_new();

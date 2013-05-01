@@ -23,21 +23,6 @@ static void init_qevent(qevent_t *event) {
   event->data = NULL;
 }
 
-static void update_engine_time(qengine_t *engine) {
-  struct tm tm;
-  time_t    t;
-
-  t = engine->timer_mng.now / 1000;
-  localtime_r(&t, &tm);
-  strftime(engine->time_buff, sizeof(engine->time_buff), "[%m-%d %T]", &tm);
-}
-
-static void engine_time_handler(void *data) {
-  qengine_t *engine = (qengine_t *)data;
-
-  update_engine_time(engine);
-}
-
 qengine_t* qengine_new() {
   int         i;
   qengine_t  *engine;
@@ -67,9 +52,6 @@ qengine_t* qengine_new() {
     init_qevent(event);
   }
   qtimer_manager_init(&engine->timer_mng, engine);
-  engine->timer_mng.now = time(NULL) * 1000;
-  update_engine_time(engine);
-  qengine_add_timer(engine, 1000, engine_time_handler, 1000, engine);
 
   return engine;
 

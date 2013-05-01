@@ -32,7 +32,16 @@ static inline int compare_timer(void *data1, void *data2) {
   return (timer1->timeout > timer2->timeout);
 }
 
+static void update_now_time(qtimer_manager_t *mng) {
+  time_t now;
+
+  now         = time(NULL);
+  mng->now    = now;
+  mng->now_ms = now * 1000; 
+}
+
 void qtimer_manager_init(qtimer_manager_t *mng, qengine_t *engine) {
+  update_now_time(mng);
   mng->engine = engine;
   qidmap_init(&(mng->id_map));
   qlist_entry_init(&(mng->free_list));
@@ -92,10 +101,9 @@ void qtimer_process(qtimer_manager_t *mng) {
     return;
   }
 
-  time_t t = time(NULL);
-  mng->now = 1000 * t;
+  update_now_time(mng);
 
-  now = mng->now;
+  now = mng->now_ms;
   timer = (qtimer_t*)qminheap_top(&(mng->min_heap));
   while (now >= timer->timeout) {
     (timer->handler)(timer->arg);

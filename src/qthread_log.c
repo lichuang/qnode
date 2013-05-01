@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <string.h>
+#include "qalloc.h"
 #include "qassert.h"
 #include "qatomic.h"
 #include "qengine.h"
@@ -18,7 +19,7 @@ extern pthread_key_t g_thread_log_key;
 qthread_log_t* qthread_log_init(struct qengine_t* engine, int idx) {
   qthread_log_t *thread_log;
 
-  thread_log = malloc(sizeof(qthread_log_t));
+  thread_log = qcalloc(sizeof(qthread_log_t));
   if (thread_log == NULL) {
     return NULL;
   }
@@ -28,7 +29,7 @@ qthread_log_t* qthread_log_init(struct qengine_t* engine, int idx) {
   thread_log->read  = &thread_log->lists[0];
   thread_log->engine = engine;
   if (pthread_setspecific(g_thread_log_key, thread_log) < 0) {
-    free(thread_log);
+    qfree(thread_log);
     return NULL;
   }
   qassert(pthread_getspecific(g_thread_log_key) != NULL);
@@ -46,7 +47,7 @@ qlog_t* qthread_log_get() {
     return NULL;
   }
   
-  log = malloc(sizeof(qlog_t));
+  log = qcalloc(sizeof(qlog_t));
   if (log == NULL) {
     return NULL;
   }
@@ -55,7 +56,6 @@ qlog_t* qthread_log_get() {
   log->n = strlen(thread_log->engine->time_buff);
   strcpy(log->buff, thread_log->engine->time_buff);
   */
-  log->n = sprintf(log->buff, "%s %d", thread_log->engine->time_buff, log->idx);
   qlist_add_tail(&log->entry, thread_log->write);
 
   return log;
