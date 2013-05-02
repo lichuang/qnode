@@ -44,14 +44,14 @@ enum {
  * define messages between worker-thread and main-thread 
  */
 struct qmsg_t {
-  qlist_t entry;
+  qlist_t         entry;
 
-  int handled:1;            /* whether the msg has been handler by receiver */
-  unsigned short flag;
-  unsigned int type;
+  unsigned int    handled:1;            /* whether the msg has been handler by receiver */
+  unsigned short  flag;
+  unsigned int    type;
 
-  qtid_t sender_id;
-  qtid_t receiver_id;
+  qtid_t          sender_id;
+  qtid_t          receiver_id;
 
   union {
     struct {

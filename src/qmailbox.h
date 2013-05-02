@@ -10,7 +10,7 @@
 #include "qlist.h"
 
 struct qmailbox_t {
-  unsigned          active:1;
+  unsigned int      active:1;
   qlist_t           lists[2];   /* one for read, one for write */
   qlist_t          *write;      /* current write list ptr */
   qlist_t          *read;       /* current read  list ptr */
