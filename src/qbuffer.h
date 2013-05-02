@@ -9,7 +9,7 @@
 #include "qcore.h"
 
 typedef struct qbuffer_t {
-  char        *data;
+  char       *data;
   uint32_t    size;
   uint32_t    pos;
   uint32_t    len;

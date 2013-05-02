@@ -13,6 +13,7 @@ end
 function accept(_listen, _aid)
   print("in accept")
   local socket = qnode_tcp_accept(_listen)
+  -- spawn a child to handle the request
   local aid = qnode_spawn("child", "child", {sock = socket, aid = _aid});
   accept(_listen, _aid)
 end

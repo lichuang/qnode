@@ -279,6 +279,8 @@ static int qnode_tcp_buffer(lua_State *state) {
     return 2;
   }
 
+  printf("recv buffer: %s", tcp->buffer.data);
+
   lua_pushlightuserdata(state, &(tcp->buffer));
   return 1;
 }
