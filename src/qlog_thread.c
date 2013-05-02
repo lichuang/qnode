@@ -21,7 +21,7 @@
 pthread_key_t g_thread_log_key = PTHREAD_ONCE_INIT;
 qlog_thread_t *g_log_thread = NULL;
 
-static void thread_log_box(int fd, int flags, void *data) {
+static void log_thread_box(int fd, int flags, void *data) {
   int           i, idx;
   qsignal_t     *signal;
   qlist_t       *list, *pos, *next;
@@ -53,9 +53,6 @@ static void thread_log_box(int fd, int flags, void *data) {
     next = pos->next;
     qlist_del_init(&(log->entry));
 
-    log->n = sprintf(log->buff, "%s %d", g_log_thread->time_buff, log->idx);
-    log->n += sprintf(log->buff + log->n, " %s:%d ", log->file, log->line);
-    vsprintf(log->buff + log->n, log->format, log->args);
     printf("%s\n", log->buff);
     if (flags == -1) {
       /* do flush I/O work */
@@ -77,14 +74,12 @@ static void* log_thread_main_loop(void *arg) {
   while (thread->running && qengine_loop(thread->engine) == 0) {
   }
 
-  /*
-   * now the server terminate, do the clean work
-   */
+  /* now the server terminate, do the clean work */
   for (i = 0; i < g_log_thread->thread_num; ++i) {
     signal = g_log_thread->signals[i];
     fd = qsignal_get_fd(signal);
     qengine_del_event(g_log_thread->engine, fd, QEVENT_READ);
-    thread_log_box(0, -1, signal);
+    log_thread_box(0, -1, signal);
   }
   qengine_destroy(g_log_thread->engine);
 
@@ -106,7 +101,7 @@ static void log_time_handler(void *data) {
   t = engine->timer_mng.now;
   localtime_r(&t, &tm);
   strftime(g_log_thread->time_buff, sizeof(g_log_thread->time_buff),
-           "[%m-%d %T]", &tm);
+           "[%m-%d %T", &tm);
 }
 
 int qlog_thread_new(int thread_num) {
@@ -137,7 +132,7 @@ int qlog_thread_new(int thread_num) {
     g_log_thread->signals[i] = qsignal_new();
     fd = qsignal_get_fd(g_log_thread->signals[i]);
     qengine_add_event(g_log_thread->engine, fd, QEVENT_READ,
-                      thread_log_box, g_log_thread->signals[i]);
+                      log_thread_box, g_log_thread->signals[i]);
   }
   log_time_handler(NULL);
   qengine_add_timer(g_log_thread->engine, 1000, log_time_handler,
@@ -150,7 +145,6 @@ int qlog_thread_new(int thread_num) {
 
 void qlog_thread_destroy() {
   g_log_thread->running = 0;
-  qlog_thread_active(0);
   /* wait for the thread */
   pthread_join(g_log_thread->id, NULL);
 }

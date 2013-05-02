@@ -53,7 +53,6 @@ static int init_server_event(struct qserver_t *server) {
 }
 
 static void server_box(int fd, int flags, void *data) {
-  qinfo("handle server msg");
   qmsg_t      *msg;
   qlist_t     *list;
   qmailbox_t  *box;
@@ -110,7 +109,7 @@ static void server_start(qserver_t *server) {
   aid = qactor_new_id();
   qassert(aid != QID_INVALID);
   tid = qserver_worker_thread();
-  msg = qmsg_new(QSERVER_THREAD_TID, tid);
+  msg = qmsg_new(QMAIN_THREAD_TID, tid);
   if (msg == NULL) {
     return;
   }

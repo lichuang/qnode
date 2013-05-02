@@ -11,7 +11,7 @@
 #include "qmutex.h"
 #include "qtype.h"
 
-#define QSERVER_THREAD_TID 0
+#define QMAIN_THREAD_TID 0
 
 struct qserver_t {
   qactor_t        **actors;       /* actor array */

@@ -18,10 +18,9 @@
 #include "qthread.h"
 #include "qthread_log.h"
 
-static void server_box_func(int fd, int flags, void *data) {
+static void thread_box(int fd, int flags, void *data) {
   UNUSED(fd);
   UNUSED(flags);
-  qinfo("server box");
 
   qmsg_t      *msg;
   qlist_t     *list;
@@ -48,7 +47,6 @@ static void server_box_func(int fd, int flags, void *data) {
       qerror("msg %d is not valid msg type", msg->type);
       goto next;
     }
-    qinfo("handle %d msg", msg->type);
     (g_thread_msg_handlers[msg->type])(thread, msg);
 
 next:
@@ -153,7 +151,7 @@ qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
     }
     if (i == 0) {
       /* communicate with main thread */
-      thread->in_box[i] = qmailbox_new(server_box_func, thread);
+      thread->in_box[i] = qmailbox_new(thread_box, thread);
       qassert(thread->in_box[i]->signal);
     } else {
       /* communicate with other worker thread */

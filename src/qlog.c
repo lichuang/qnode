@@ -3,6 +3,7 @@
  */
 
 #include <stdio.h>
+#include "qalloc.h"
 #include "qassert.h"
 #include "qlog.h"
 #include "qlog_thread.h"
@@ -26,7 +27,8 @@ const char *level_str(int level) {
   return log_levels[level];
 }
 
-static void log_init(qlog_t *log, int level, const char* file, long line, const char *format, va_list args) {
+static void log_init(qlog_t *log, int level, const char* file,
+                     long line, const char *format, va_list args) {
   //log->file_len = strlen(file);
   strcpy(log->file, file);
   //log->fmt_len = strlen(format);
@@ -54,11 +56,11 @@ void qlog(int level, const char* file, long line, const char *format, ...) {
   log_init(log, level, file, line, format, args);
   va_end(args);
 
-#if 0
-  qassert(log->n > 5);
-  log->n += sprintf(log->buff + log->n, " %s:%d ", log->file, log->line);
-  //vsprintf(log->buff + log->n, log->format, log->args);
+  log->n = sprintf(log->buff, "%s %d", g_log_thread->time_buff, log->idx);
+  log->n += sprintf(log->buff + log->n, " %s:%d] ", log->file, log->line);
   vsprintf(log->buff + log->n, log->format, args);
+
+#if 0
   fprintf(stdout, "%s\n", log->buff);
   fflush(stdout);
 #else

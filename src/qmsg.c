@@ -2,9 +2,7 @@
  * See Copyright Notice in qnode.h
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "qalloc.h"
 #include "qassert.h"
 #include "qdefines.h"
 #include "qlog.h"
@@ -17,7 +15,7 @@
 qmsg_t* qmsg_new(qtid_t sender_id, qtid_t receiver_id) {
   qmsg_t *msg;
 
-  msg = malloc(sizeof(qmsg_t));
+  msg = qcalloc(sizeof(qmsg_t));
   if (msg == NULL) {
     return NULL;
   }
@@ -42,16 +40,16 @@ void qmsg_destroy(qmsg_t *msg) {
     default:
       break;
   }
-  free(msg);
+  qfree(msg);
 }
 
 qactor_msg_t* qactor_msg_new() {
-  return malloc(sizeof(qactor_msg_t));
+  return qalloc(sizeof(qactor_msg_t));
 }
 
 void qactor_msg_destroy(qactor_msg_t *msg) {
   qdict_destroy(msg->arg_dict);
-  free(msg);
+  qfree(msg);
 }
 
 qmsg_t* qmsg_clone(qmsg_t *msg) {
@@ -72,28 +70,29 @@ void qmsg_send(qmsg_t *msg) {
 
   qinfo("add a msg %p, type: %d, sender: %d, receiver: %d, flag: %d",
         msg, msg->type, sender_id, receiver_id, msg->flag);
+  qassert(msg->flag > 0);
   qassert(msg->type > 0 && msg->type < QMAX_MSG_TYPE);
  
-  /* server thread send to worker thread */
-  if (sender_id == QSERVER_THREAD_TID) {
-    qassert(receiver_id != QSERVER_THREAD_TID);
+  /* main thread send to worker thread */
+  if (sender_id == QMAIN_THREAD_TID) {
+    qassert(receiver_id != QMAIN_THREAD_TID);
     qmailbox_add(g_server->out_box[receiver_id], msg);
     return;
   }
 
   /* worker thread send to server thread */
-  if (receiver_id == QSERVER_THREAD_TID) {
-    qassert(sender_id != QSERVER_THREAD_TID);
+  if (receiver_id == QMAIN_THREAD_TID) {
+    qassert(sender_id != QMAIN_THREAD_TID);
     qmailbox_add(g_server->in_box[receiver_id], msg);
     return;
   }
 
   /* sender and receiver is the same worker thread */
   if (sender_id == receiver_id) {
-    qassert(sender_id != QSERVER_THREAD_TID);
+    qassert(sender_id != QMAIN_THREAD_TID);
     thread = g_server->threads[sender_id];
     g_thread_msg_handlers[msg->type](thread, msg);
-    free(msg);
+    qfree(msg);
     return;
   } 
   
