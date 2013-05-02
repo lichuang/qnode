@@ -9,8 +9,7 @@
 #include "qcore.h"
 
 typedef struct qlog_thread_t {
-  unsigned int  started:1;
-  unsigned int  stop:1;
+  unsigned int  running:1;
   pthread_t     id;
   int           thread_num;
   qengine_t    *engine;

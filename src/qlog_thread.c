@@ -72,9 +72,9 @@ static void* log_thread_main_loop(void *arg) {
   qlog_thread_t *thread;
 
   thread = (qlog_thread_t*)arg;
-  thread->started = 1;
+  thread->running = 1;
   qserver_worker_started();
-  while (!thread->stop && qengine_loop(thread->engine) == 0) {
+  while (thread->running && qengine_loop(thread->engine) == 0) {
   }
 
   /*
@@ -139,7 +139,6 @@ int qlog_thread_new(int thread_num) {
     qengine_add_event(g_log_thread->engine, fd, QEVENT_READ,
                       thread_log_box, g_log_thread->signals[i]);
   }
-  g_log_thread->started = 0;
   log_time_handler(NULL);
   qengine_add_timer(g_log_thread->engine, 1000, log_time_handler,
                     1000, NULL);
@@ -150,8 +149,7 @@ int qlog_thread_new(int thread_num) {
 }
 
 void qlog_thread_destroy() {
-  /* set the stop flag and wake up the log thread */
-  g_log_thread->stop = 1;
+  g_log_thread->running = 0;
   qlog_thread_active(0);
   /* wait for the thread */
   pthread_join(g_log_thread->id, NULL);
