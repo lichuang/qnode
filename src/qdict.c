@@ -16,42 +16,17 @@ qdict_t* qdict_new(int hashsize) {
   qdict_t  *dict;
   qlist_t  *list;
 
-  dict = qalloc(sizeof(qdict_t));
+  dict = qcalloc(sizeof(qdict_t) + hashsize * sizeof(qlist_t *));
   if (dict == NULL) {
-    goto error;
+    return NULL;
   }
   dict->hashsize = hashsize;
   dict->num = 0;
-  dict->buckets  = qcalloc(hashsize * sizeof(qlist_t*));
-  if (dict->buckets == NULL) {
-    goto error;
-  }
   for (i = 0; i < hashsize; ++i) {
-    list = qalloc(sizeof(qlist_t));
-    if (list == NULL) {
-      goto error;
-    }
-    qlist_entry_init(list);
-    dict->buckets[i] = list;
+    dict->buckets[i] = NULL;
   }
-  return dict;
 
-error:
-  for (i = 0; i < hashsize; ++i) {
-    list = dict->buckets[i];
-    if (list != NULL) {
-      qfree(list);
-      continue;
-    }
-    break;
-  }
-  if (dict->buckets != NULL) {
-    qfree(dict->buckets);
-  }
-  if (dict != NULL) {
-    qfree(dict);
-  }
-  return NULL;
+  return dict;
 }
 
 void qdict_destroy(qdict_t *dict) {
@@ -62,21 +37,20 @@ void qdict_destroy(qdict_t *dict) {
   hashsize = dict->hashsize;
   for (i = 0; i < dict->hashsize; ++i) {
     list = dict->buckets[i];
+    if (list == NULL) {
+      continue;
+    }
     for (pos = list->next; pos != list; ) {
       qdict_entry_t *entry = qlist_entry(pos, qdict_entry_t, entry);
       next = pos->next;
-      if (entry->key.type == QDICT_KEY_STRING) {
-        qstring_destroy(&(entry->key.data.str));
-      }
+      qstring_destroy(&(entry->key));
       if (entry->val.type == QDICT_VAL_STRING) {
-        qstring_destroy(&(entry->val.data.str));
+        qstring_destroy(&(entry->value.str));
       }
       qfree(entry);
       pos  = next;
     }
-    qfree(list);
   }
-  qfree(dict->buckets);
   qfree(dict);
 }
 
@@ -89,46 +63,26 @@ static int hashstring(const char *str, size_t len) {
   return hash;
 }
 
-static int mainposition(qdict_t *dict, qkey_t *key) {
-  if (key->type == QDICT_KEY_NUMBER) {
-    return (key->data.num % dict->hashsize);
-  }
-  if (key->type == QDICT_KEY_STRING) {
-    return hashstring(key->data.str.data, key->data.str.len) % dict->hashsize;
-  }
-  /* NEVER reach here */
-  qerror("key type %d error", key->type);
-  return -1;
+static int mainposition(qdict_t *dict, qstring_t key) {
+  qstr_header_t *header;
+
+  header = str_to_header(key);
+  return hashstring(key, header->len) % dict->hashsize;
 }
 
-static int compare(qkey_t *dict_key, qkey_t *key) {
-  if (dict_key->type != key->type) {
-    return -1;
-  }
-  if (key->type == QDICT_KEY_NUMBER) {
-    return dict_key->data.num == key->data.num;
-  }
-  if (key->type == QDICT_KEY_STRING) {
-    return (strcmp(dict_key->data.str.data, key->data.str.data) == 0);
-  }
-  /* NEVER reach here */
-  qerror("key type %d error", key->type);
-  return -1;
-}
-
-static qdict_entry_t* find(qdict_t *dict, qkey_t *key, int *save_idx) {
+static qdict_entry_t* find(qdict_t *dict, qkey_t *key, int *idx) {
   int             idx;
   qlist_t        *list, *pos;
   qdict_entry_t  *entry;
 
-  idx = mainposition(dict, key);
-  if (save_idx != NULL) {
-    *save_idx = idx;
+  hash = mainposition(dict, key);
+  if (idx != NULL) {
+    *idx = hash;
   }
-  list = dict->buckets[idx];
+  list = dict->buckets[hash];
   qlist_for_each(pos, list) {
     entry = qlist_entry(pos, qdict_entry_t, entry);
-    if (compare(&(entry->key), key) == 0) {
+    if (qstring_equal(&(entry->key), key) == 0) {
       return entry;
     }
   }
@@ -191,14 +145,8 @@ int qdict_replace(qdict_t *dict, qkey_t *key, qval_t *val) {
   return 0;
 }
 
-qval_t* qdict_get(qdict_t *dict, qkey_t *key) {
-  qdict_entry_t *entry;
-
-  entry = find(dict, key, NULL);
-  if (entry == NULL) {
-    return NULL;
-  }
-  return &(entry->val);
+qdict_entry_t* qdict_get(qdict_t *dict, const char *key);
+  return find(dict, key, NULL);
 }
 
 qdict_iter_t* qdict_iterator(qdict_t *dict) {

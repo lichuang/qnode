@@ -9,24 +9,28 @@
 #include <stdio.h>
 #include "qcore.h"
 
-typedef struct qstring_t {
-  size_t      len;
-  size_t      size;
-  char        *data;
-} qstring_t;
+#define str_to_header(str) (qstr_header_t*)((str) - sizeof(qstr_header_t))
 
+typedef char* qstring_t;
+
+typedef struct qstr_header_t {
+  size_t      len;
+  size_t      free;
+  char        data[];
+} qstr_header_t;
+
+/*
 #define qstring(str)      { sizeof(str) - 1, sizeof(str) - 1, (str) }
 #define qstring_null()    { 0, 0, NULL }
 #define qstring_set(str, text)                            \
       (str)->len = sizeof(text) - 1; (str)->size = (str)->size; (str)->data = text
 #define qstring_null_set(str)   (str)->len = (str)->size = 0; (str)->data = NULL
-
-/*
-qstring_t*  qstring_new();
 */
-void        qstring_destroy(qstring_t *string);
-int         qstring_assign(qstring_t *string, const char *str);
-int         qstring_append(qstring_t *string, const char *str);
-int         qstring_format(qstring_t *string, char *fmt, ...);
+
+qstring_t   qstring_new(const char* data);
+void        qstring_destroy(qstring_t string);
+//int         qstring_assign(qstring_t string, const char *str);
+qstring_t   qstring_append(qstring_t string, const char *str);
+int         qstring_equal(qstring_t str1, qstring_t str2);
 
 #endif  /* __QSTRING_H__ */

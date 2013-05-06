@@ -10,71 +10,42 @@
 #include "qstring.h"
 
 enum {
-  QDICT_KEY_NUMBER    = 0,
-  QDICT_KEY_STRING    = 1,
-};
-
-enum {
   QDICT_VAL_NUMBER    = 0,
   QDICT_VAL_STRING    = 1,
-  QDICT_VAL_USERDATA  = 2,
 };
 
-typedef struct qkey_t {
-  union {
-    int           num;
-    qstring_t     str;
-  } data;
-
-  unsigned short  type;
-} qkey_t;
-
-#define QKEY_NUMBER(key, n) do {        \
-  (key).data.num = (n);                 \
-  (key).type = QDICT_KEY_NUMBER;        \
-} while(0)
-
-#define QKEY_STRING(key, s) do {        \
-  qstring_set(&((key).data.str), s);    \
-  (key).type = QDICT_KEY_STRING;        \
-} while(0)
-
-typedef struct qval_t {
-  union {
-    int           num;
-    qstring_t     str;
-    void          *ptr;
-  } data;
-  unsigned short  type;
-} qval_t;
-
-#define QVAL_NUMBER(val, n) do { (val).data.num = (n); (val).type = QDICT_VAL_NUMBER; } while(0)
-#define QVAL_STRING(val, s) do { (val).data.str = (s); (val).type = QDICT_VAL_STRING; } while(0)
-
 typedef struct qdict_entry_t {
-  unsigned int  hash;
-  qlist_t       entry;
-  qkey_t        key;
-  qval_t        val;
+  unsigned int    hash;
+
+  qstring_t       key;
+
+  union {
+    int           num;
+    qstring_t     str;
+  } value;
+
+  unsigned int    type:1;
+  qlist_t         entry;
 } qdict_entry_t;
 
 typedef struct qdict_t {
-  qlist_t       **buckets;
-  int           hashsize;
-  unsigned int  num;
+  int             hashsize;
+  unsigned int    num;
+  qlist_t        *buckets[];
 } qdict_t;
 
 typedef struct qdict_iter_t {
-  qdict_t       *dict;
-  int           hash;
-  qdict_entry_t *entry;
+  int             hash;
+  qdict_t        *dict;
+  qdict_entry_t  *entry;
 } qdict_iter_t;
 
 qdict_t*        qdict_new(int hashsize);
 void            qdict_destroy(qdict_t *dict);
 int             qdict_add(qdict_t *dict, qkey_t *key, qval_t *val);
 int             qdict_replace(qdict_t *dict, qkey_t *key, qval_t *val);
-qval_t*         qdict_get(qdict_t *dict, qkey_t *key);
+qdict_entry_t*  qdict_get(qdict_t *dict, const char *key);
+
 qdict_iter_t*   qdict_iterator(qdict_t *dict);
 void            qdict_iterator_destroy(qdict_iter_t *iter);
 qdict_entry_t*  qdict_next(qdict_iter_t *iter);
