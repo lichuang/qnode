@@ -16,5 +16,6 @@ typedef struct qserver_t      qserver_t;
 typedef struct qsignal_t      qsignal_t;
 typedef struct qthread_t      qthread_t;
 typedef struct qthread_log_t  qthread_log_t;
+typedef struct qvalue_t       qvalue_t;
 
 #endif  /* __QCORE_H__ */
