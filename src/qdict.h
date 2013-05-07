@@ -8,17 +8,13 @@
 #include "qcore.h"
 #include "qlist.h"
 #include "qstring.h"
-
-enum {
-  QDICT_VAL_NUMBER    = 0,
-  QDICT_VAL_STRING    = 1,
-};
+#include "qvalue.h"
 
 typedef struct qdict_node_t {
   unsigned int    hash;
 
   qstring_t       key;
-  qvalue_t       *value;
+  qvalue_t        value;
 
   qlist_t         entry;
 } qdict_node_t;
@@ -35,15 +31,12 @@ typedef struct qdict_iter_t {
   qdict_node_t   *node;
 } qdict_iter_t;
 
-#define qdict_entry_key(entry)   ((entry)->key)
-#define qdict_entry_value(entry) ((entry)->value)
-
 qdict_t*        qdict_new(int hashsize);
 void            qdict_destroy(qdict_t *dict);
 
-qdict_node_t*   qdict_set(qdict_t *dict,
-                          const char *key, qvalue_t *value);
-qdict_node_t*   qdict_get(qdict_t *dict, const char *key);
+qvalue_t*       qdict_setnum(qdict_t *dict, const char *key, qnumber_t num);
+qvalue_t*       qdict_setstr(qdict_t *dict, const char *key, qstring_t str);
+qvalue_t*       qdict_get(qdict_t *dict, const char *key);
 
 qdict_iter_t*   qdict_iterator(qdict_t *dict);
 void            qdict_iterator_destroy(qdict_iter_t *iter);

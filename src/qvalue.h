@@ -21,11 +21,14 @@ struct qvalue_t {
   } data;
 };
 
-#define qvalue_isnumber(value) ((value).type == QNUMBER_TYPE)
-#define qvalue_isstring(value) ((value).type == QSTRING_TYPE)
+#define   qvalue_isnumber(value)    ((value).type == QNUMBER_TYPE)
+#define   qvalue_isstring(value)    ((value).type == QSTRING_TYPE)
 
-qvalue_t* qvalue_newnum(qnumber_t num);
-qvalue_t* qvalue_newstr(const char *str);
+#define   qvalue_number(num)        {QNUMBER_TYPE, (num)}
+#define   qvalue_string(str)        {QSTRING_TYPE, (str)}
+
+#define   qvalue_clone(val1, val2)  memcpy((val1), (val2), sizeof(qvalue_t))
+
 void      qvalue_destroy(qvalue_t *value);
 
 #endif  /* __QVALUE_H__ */
