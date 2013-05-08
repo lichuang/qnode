@@ -10,16 +10,15 @@
 qdict_t* qdict_new(int hashsize) {
   int       i;
   qdict_t  *dict;
-  qlist_t  *list;
 
-  dict = qcalloc(sizeof(qdict_t) + hashsize * sizeof(qlist_t *));
+  dict = qcalloc(sizeof(qdict_t) + hashsize * sizeof(qlist_t));
   if (dict == NULL) {
     return NULL;
   }
   dict->hashsize = hashsize;
   dict->num = 0;
   for (i = 0; i < hashsize; ++i) {
-    qlist_entry_init(&(dict->buckets[i]));
+    dict->buckets[i] = NULL;
   }
 
   return dict;
@@ -41,7 +40,7 @@ void qdict_destroy(qdict_t *dict) {
       node = qlist_entry(pos, qdict_node_t, entry);
       next = pos->next;
       qstring_destroy(node->key);
-      qvalue_destroy(node->value);
+      qvalue_destroy(&(node->value));
       qfree(node);
       pos  = next;
     }
@@ -58,17 +57,14 @@ static inline int hashstring(const char *str, size_t len) {
   return hash;
 }
 
-static int mainposition(qdict_t *dict, qstring_t key) {
-  qstr_header_t *header;
-
-  header = str_to_header(key);
-  return hashstring(key, header->len) % dict->hashsize;
+static int mainposition(qdict_t *dict, const char *key) {
+  return hashstring(key, strlen(key)) % dict->hashsize;
 }
 
 static qdict_node_t* find(qdict_t *dict, const char *key, int *idx) {
-  int             idx;
+  int             hash;
   qlist_t        *list, *pos;
-  qdict_node_t  *node;
+  qdict_node_t   *node;
 
   hash = mainposition(dict, key);
   if (idx != NULL) {
@@ -85,7 +81,7 @@ static qdict_node_t* find(qdict_t *dict, const char *key, int *idx) {
   return NULL;
 }
 
-static qdict_node_t* set(qdict_t *dict, const char *key, qvalue_t *value) {
+static qvalue_t* set(qdict_t *dict, const char *key, qvalue_t *value) {
   int           idx;
   qdict_node_t *node;
 
@@ -93,9 +89,8 @@ static qdict_node_t* set(qdict_t *dict, const char *key, qvalue_t *value) {
   
   if (node) {
     qvalue_clone(&(node->value), value);
-    qstring_destroy(str);
 
-    return entry;
+    return &(node->value);
   }
 
   node = qalloc(sizeof(qdict_node_t));
@@ -108,7 +103,11 @@ static qdict_node_t* set(qdict_t *dict, const char *key, qvalue_t *value) {
     return NULL;
   }
   qvalue_clone(&(node->value), value);
-  qlist_add(&(node->entry), &(dict->buckets[idx]));
+  if (dict->buckets[idx] == NULL) {
+    dict->buckets[idx] = &(node->entry);
+  } else {
+    qlist_add(&(node->entry), dict->buckets[idx]);
+  }
 
   return &(node->value);
 }
@@ -116,20 +115,19 @@ static qdict_node_t* set(qdict_t *dict, const char *key, qvalue_t *value) {
 qvalue_t* qdict_setnum(qdict_t *dict, const char *key, qnumber_t num) {
   qvalue_t value = qvalue_number(num);
 
-  return set(dict, set, &value);
+  return set(dict, key, &value);
 }
 
-qvalue_t* qdict_setstr(qdict_t *dict, const char *key, qstring_t str) {
+qvalue_t* qdict_setstr(qdict_t *dict, const char *key, const char* str) {
   qvalue_t value = qvalue_string(str);
 
-  return set(dict, set, &value);
+  return set(dict, key, &value);
 }
 
 qvalue_t* qdict_get(qdict_t *dict, const char *key) {
   qdict_node_t *node;
-  qstring_t     str;
 
-  node = find(dict, str, NULL);
+  node = find(dict, key, NULL);
   if (node) {
     return &(node->value);
   }
@@ -137,30 +135,22 @@ qvalue_t* qdict_get(qdict_t *dict, const char *key) {
   return NULL;
 }
 
-qdict_iter_t* qdict_iterator(qdict_t *dict) {
-  qdict_iter_t *iter;
-
-  iter = qalloc(sizeof(qdict_iter_t));
+void qdict_iterator_init(qdict_t *dict, qdict_iter_t *iter) {
   iter->dict  = dict;
   iter->hash  = 0;
-  iter->entry = NULL;
-  return iter;
-}
-
-void qdict_iterator_destroy(qdict_iter_t *iter) {
-  qfree(iter);
+  iter->node  = NULL;
 }
 
 qdict_node_t* qdict_next(qdict_iter_t *iter) {
   qdict_t       *dict;
   qlist_t       *list, *pos;
-  qdict_node_t *node;
+  qdict_node_t  *node;
 
   dict = iter->dict;
   if (iter->node == NULL) {
     list = dict->buckets[iter->hash];
     /* find the first non-empty hash list */
-    while (qlist_empty(list)) {
+    while (list == NULL) {
       ++(iter->hash);
       if (iter->hash < dict->hashsize) {
         list = dict->buckets[iter->hash];

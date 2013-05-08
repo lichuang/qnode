@@ -7,6 +7,8 @@
 #include <string.h>
 
 static int qnode_strtoul(lua_State *state) {
+  state = state;
+  return 1;
 }
 
 luaL_Reg string_apis[] = {

@@ -20,14 +20,7 @@
 static void init_tcp_listen_params(qactor_t *actor) {
   actor->listen_params = qdict_new(5);
 
-  {
-    qkey_t key;
-    qval_t val;
-
-    QKEY_STRING(key, "packet");
-    QVAL_NUMBER(val, 0);
-    qdict_add(actor->listen_params, &key, &val);
-  }
+  qdict_setnum(actor->listen_params, "packet", 0);
 }
 
 static int qnode_tcp_listen(lua_State *state) {

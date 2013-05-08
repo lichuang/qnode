@@ -15,20 +15,16 @@ qstring_t qstring_new(const char *data) {
   len = (data == NULL) ? 0 : strlen(data);
   header = qalloc(sizeof(qstr_header_t) + len + 1); 
 
-  if (header = NULL) {
+  if (header == NULL) {
     return NULL;
   }
 
   if (data) {
-    strncpy(header->data, data, length);
-    header->data[len] = '\0';
-    header->free      = 0;
-    header->length    = len;
-  } else {
-    header->len       = 0;
-    header->free      = 0;
-    str->data[0]      = '\0';
+    strncpy(header->data, data, len);
   }
+  header->data[len] = '\0';
+  header->free      = 0;
+  header->len       = len;
 
   return &(header->data[0]);
 }
@@ -40,14 +36,11 @@ void qstring_destroy(qstring_t string) {
   qfree(header);
 }
 
-static qstring_t string_reserve(qstring_t string, size_t len) {
+static qstring_t string_reserve(qstr_header_t *header, size_t len) {
   size_t          new_len;
-  char           *data;
-  qstr_header_t  *header;
 
-  header = str_to_header(string);
   if (header->free > len) {
-    return string;
+    return header->data;
   }
 
   new_len = header->len + len;
@@ -57,49 +50,46 @@ static qstring_t string_reserve(qstring_t string, size_t len) {
   }
   header->free = new_len - header->len;
 
-  return string;
+  return header->data;
 }
 
-qstring_t qstring_assign(qstring_t *string, const char *data) {
+qstring_t qstring_assign(qstring_t str, const char *data) {
   qstr_header_t *header;
   size_t len;
 
   if (data == NULL) {
-    return string;
+    return str;
   }
 
   len = strlen(data);
-  if (string_reserve(string, len + 1, 0) < 0) {
-    return -1;
+  header = str_to_header(str);
+  if (string_reserve(header, len + 1) == NULL) {
+    return NULL;
   }
-  header = str_to_header(string);
-  strncpy(string, str, len);
+  strncpy(str, data, len);
   header->len = len;
   header->free -= len;
   header->data[len] = '\0';
 
-  return string;
+  return str;
 }
 
-qstring_t qstring_append(qstring_t string, const char *str) {
+qstring_t qstring_append(qstring_t str, const char *data) {
   size_t len;
   qstr_header_t *header;
 
-  qassert(string);
-  qassert(str);
-
-  len = strlen(str);
-  if (string_reserve(string, len + 1) == NULL) {
+  len = strlen(data);
+  header = str_to_header(str);
+  if (string_reserve(header, len + 1) == NULL) {
     return NULL;
   }
 
-  header = str_to_header(string);
-  strncpy(string + header->len, str, len);
+  strncpy(str + header->len, data, len);
   header->len += len;
-  string[header->len] = '\0';
+  str[header->len] = '\0';
   header->free -= len;
 
-  return string;
+  return str;
 }
 
 int qstring_equal(qstring_t str1, qstring_t str2) {

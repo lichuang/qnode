@@ -19,7 +19,7 @@ lua_State* qlua_new_thread(struct qthread_t *thread);
 #define qlua_get_global_table(state, key) qlua_get_table(state, LUA_GLOBALSINDEX, key)
 
 int qlua_get_table(lua_State *state, int idx, const char *key);
-int qlua_get_table_string(lua_State *state, const char *key, qstring_t *string);
+int qlua_get_table_string(lua_State *state, const char *key, qstring_t string);
 int qlua_get_table_number(lua_State *state, const char *key, int *number);
 
 int qlua_call(lua_State *state, int args, int results);

@@ -34,15 +34,14 @@ static int qnode_spawn(lua_State *state) {
   thread = g_server->threads[actor->tid];
   new_state = qlua_new_thread(thread);
 
-  qstring_null_set(&string);
-  qstring_assign(&string, mod);
-  qstring_append(&string, ".lua");
-  if (qlua_threadloadfile(actor, new_state, string.data) != 0) {
+  string = qstring_new(mod);
+  qstring_append(string, ".lua");
+  if (qlua_threadloadfile(actor, new_state, string) != 0) {
     lua_pushnil(state);
-    lua_pushfstring(state, "load file %s error", string.data);
+    lua_pushfstring(state, "load file %s error", string);
     return 2;
   }
-  qstring_destroy(&string);
+  qstring_destroy(string);
 
   /* copy args table */
   qlua_copy_state_table(state, new_state, 3);
