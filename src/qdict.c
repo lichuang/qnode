@@ -36,7 +36,7 @@ void qdict_destroy(qdict_t *dict) {
     if (list == NULL) {
       continue;
     }
-    for (pos = list->next; pos != list; ) {
+    for (pos = list; pos != list; ) {
       node = qlist_entry(pos, qdict_node_t, entry);
       next = pos->next;
       qstring_destroy(node->key);
@@ -99,7 +99,6 @@ static qvalue_t* set(qdict_t *dict, const char *key, qvalue_t *value) {
   
   if (node) {
     qvalue_clone(&(node->value), value);
-
     return &(node->value);
   }
 
@@ -107,12 +106,14 @@ static qvalue_t* set(qdict_t *dict, const char *key, qvalue_t *value) {
   if (node == NULL) {
     return NULL;
   }
+  memset(&node->value, 0, sizeof(qvalue_t));
   node->hash  = idx;
   node->key   = qstring_new(key);
   if (node->key == NULL) {
     return NULL;
   }
   qvalue_clone(&(node->value), value);
+  qlist_entry_init(&(node->entry));
   if (dict->buckets[idx] == NULL) {
     dict->buckets[idx] = &(node->entry);
   } else {
@@ -168,7 +169,7 @@ qdict_node_t* qdict_next(qdict_iter_t *iter) {
         return NULL;
       }
     }
-    node = qlist_entry(list->next, qdict_node_t, entry);
+    node = qlist_entry(list, qdict_node_t, entry);
   } else {
     pos = iter->node->entry.next;
     list = dict->buckets[iter->hash];

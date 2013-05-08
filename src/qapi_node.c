@@ -35,7 +35,17 @@ static int qnode_spawn(lua_State *state) {
   new_state = qlua_new_thread(thread);
 
   string = qstring_new(mod);
-  qstring_append(string, ".lua");
+  if (string == NULL) {
+    lua_pushnil(state);
+    lua_pushliteral(state, "spawn error");
+    return 2;
+  }
+  string = qstring_append(string, ".lua");
+  if (string == NULL) {
+    lua_pushnil(state);
+    lua_pushliteral(state, "spawn error");
+    return 2;
+  }
   if (qlua_threadloadfile(actor, new_state, string) != 0) {
     lua_pushnil(state);
     lua_pushfstring(state, "load file %s error", string);

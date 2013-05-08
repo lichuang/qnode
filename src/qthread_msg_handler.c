@@ -64,10 +64,10 @@ static int thread_handle_sstop_msg(qthread_t *thread, qmsg_t *msg) {
 }
 
 static int thread_handle_spawn_msg(qthread_t *thread, qmsg_t *msg) {
-  qinfo("handle spawn msg");
-
   int       ret;
   qactor_t *actor;
+
+  qinfo("handle spawn msg");
 
   actor = msg->args.spawn.actor;
   actor->state = msg->args.spawn.state;

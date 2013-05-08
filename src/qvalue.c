@@ -14,7 +14,7 @@ void qvalue_destroy(qvalue_t *value) {
 
 void qvalue_clone(qvalue_t *value1, qvalue_t *value2) {
   if (qvalue_isstring(value2)) {
-    if (qvalue_isnumber(value1)) {
+    if (!qvalue_isstring(value1)) {
       value1->data.str = qstring_new(value2->data.str);
       value1->type = QSTRING_TYPE;
     } else {
