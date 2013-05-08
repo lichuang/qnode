@@ -220,13 +220,20 @@ void qlua_dump_dict(lua_State *state, qdict_t *dict) {
   }
 }
 
-static void lua_init_filename(const char *filename, qstring_t full_name) {
-  qserver_t *server;
+static qstring_t lua_init_filename(const char *filename) {
+  qstring_t full_name;
 
-  server = g_server;
-  qstring_assign(full_name, server->config->script_path);
-  qstring_append(full_name, "/");
-  qstring_append(full_name, filename);
+  full_name = qstring_new(g_server->config->script_path);
+  if (!full_name) {
+    return NULL;
+  }
+  full_name = qstring_append(full_name, "/");
+  if (!full_name) {
+    return NULL;
+  }
+  full_name = qstring_append(full_name, filename);
+
+  return full_name;
 }
 
 int qlua_threadloadfile(qactor_t *actor, lua_State *state, const char *filename) {
@@ -235,12 +242,11 @@ int qlua_threadloadfile(qactor_t *actor, lua_State *state, const char *filename)
 
   UNUSED(actor);
 
-  full_name = qstring_new("");;
+  /* TODO: check the state is a lua thread */
+  full_name = lua_init_filename(filename);
   if (full_name == NULL) {
     return -1;
   }
-  /* TODO: check the state is a lua thread */
-  lua_init_filename(filename, full_name);
   ret = luaL_loadfile(state, full_name);
   qstring_destroy(full_name);
   /* start the coroutine */
@@ -253,11 +259,10 @@ int qlua_dofile(lua_State *state, const char *filename) {
   int       ret;
   qstring_t full_name;
 
-  full_name = qstring_new("");
+  full_name = lua_init_filename(filename);
   if (full_name == NULL) {
     return -1;
   }
-  lua_init_filename(filename, full_name);
   ret = luaL_dofile(state, full_name);
   qstring_destroy(full_name);
 

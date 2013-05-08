@@ -20,19 +20,18 @@ qstring_t qstring_new(const char *data) {
   size_t          len;
   qstr_header_t  *header;
 
-  len = (data == NULL) ? 0 : strlen(data) + 1;
-  header = qalloc(sizeof(qstr_header_t) + len); 
+  len = (data == NULL) ? 0 : strlen(data);
+  header = qalloc(sizeof(qstr_header_t) + len + 1); 
 
   if (header == NULL) {
     return NULL;
   }
 
   if (data) {
-    strncpy(header->data, data, len);
+    strcpy(header->data, data);
   }
-  header->data[len - 1] = '\0';
   header->free          = 0;
-  header->len           = len - 1;
+  header->len           = len;
 
   return header->data;
 }
@@ -44,21 +43,22 @@ void qstring_destroy(qstring_t str) {
   qfree(header);
 }
 
-static qstring_t reserve(qstr_header_t *header, size_t len) {
-  size_t new_len;
+static qstr_header_t* reserve(qstr_header_t *header, size_t len) {
+  size_t          new_len;
+  qstr_header_t  *new_header;
 
   if (header->free > len) {
-    return header->data;
+    return header;
   }
 
   new_len = header->len + len;
-  header  = qrealloc(header, new_len);
-  if (header == NULL) {
+  new_header  = qrealloc(header, sizeof(qstr_header_t) + new_len + 1);
+  if (new_header == NULL) {
     return NULL;
   }
-  header->free = new_len - header->len;
+  new_header->free = len;
 
-  return header->data;
+  return new_header;
 }
 
 qstring_t qstring_assign(qstring_t str, const char *data) {
@@ -69,15 +69,17 @@ qstring_t qstring_assign(qstring_t str, const char *data) {
     return str;
   }
 
-  len    = strlen(data) + 1;
+  len    = strlen(data);
   header = str_to_header(str);
-  if (reserve(header, len) == NULL) {
+
+  header = reserve(header, len);
+  if (header == NULL) {
     return NULL;
   }
-  strncpy(str, data, len);
-  header->len = len;
+  str = header->data;
+  strcpy(str, data);
+  header->len   = len;
   header->free -= len;
-  header->data[len - 1] = '\0';
 
   return str;
 }
@@ -86,15 +88,16 @@ qstring_t qstring_append(qstring_t str, const char *data) {
   size_t         len;
   qstr_header_t *header;
 
-  len    = strlen(data) + 1;
+  len    = strlen(data);
   header = str_to_header(str);
-  if (reserve(header, len) == NULL) {
+  header = reserve(header, len);
+  if (header == NULL) {
     return NULL;
   }
 
-  strncpy(str + header->len, data, len);
-  header->len += len - 1;
-  str[header->len] = '\0';
+  str = header->data;
+  strcpy(str + header->len, data);
+  header->len += len;
   header->free -= len;
 
   return str;

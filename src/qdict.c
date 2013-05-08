@@ -78,6 +78,9 @@ static qdict_node_t* find(qdict_t *dict, const char *key, int *idx) {
     *idx = hash;
   }
   list = dict->buckets[hash];
+  if (list == NULL) {
+    return NULL;
+  }
   qlist_for_each(pos, list) {
     node = qlist_entry(pos, qdict_node_t, entry);
     if (qstring_equal_raw(node->key, key) == 0) {

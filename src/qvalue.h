@@ -7,13 +7,13 @@
 
 #include "qcore.h"
 
-#define QSTRING_TYPE 0
-#define QNUMBER_TYPE 1 
+#define QSTRING_TYPE 1
+#define QNUMBER_TYPE 2
 
 typedef int qnumber_t;
 
 struct qvalue_t {
-  unsigned int  type:1;
+  unsigned short  type;
 
   union {
     qstring_t str;
