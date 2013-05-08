@@ -65,7 +65,7 @@ static int mainposition(qdict_t *dict, qstring_t key) {
   return hashstring(key, header->len) % dict->hashsize;
 }
 
-static qdict_node_t* find(qdict_t *dict, qstring_t *key, int *idx) {
+static qdict_node_t* find(qdict_t *dict, const char *key, int *idx) {
   int             idx;
   qlist_t        *list, *pos;
   qdict_node_t  *node;
@@ -77,7 +77,7 @@ static qdict_node_t* find(qdict_t *dict, qstring_t *key, int *idx) {
   list = dict->buckets[hash];
   qlist_for_each(pos, list) {
     node = qlist_entry(pos, qdict_node_t, entry);
-    if (qstring_equal(node->key, key) == 0) {
+    if (qstring_equal_raw(node->key, key) == 0) {
       return node;
     }
   }
@@ -88,14 +88,8 @@ static qdict_node_t* find(qdict_t *dict, qstring_t *key, int *idx) {
 static qdict_node_t* set(qdict_t *dict, const char *key, qvalue_t *value) {
   int           idx;
   qdict_node_t *node;
-  qstring_t     str;
 
-  str = qstring_new(key);
-  if (str == NULL) {
-    return NULL;
-  }
-
-  node = find(dict, str, &idx);
+  node = find(dict, key, &idx);
   
   if (node) {
     qvalue_clone(&(node->value), value);
@@ -106,11 +100,13 @@ static qdict_node_t* set(qdict_t *dict, const char *key, qvalue_t *value) {
 
   node = qalloc(sizeof(qdict_node_t));
   if (node == NULL) {
-    qstring_destroy(str);
     return NULL;
   }
   node->hash  = idx;
-  node->key   = str;
+  node->key   = qstring_new(key);
+  if (node->key == NULL) {
+    return NULL;
+  }
   qvalue_clone(&(node->value), value);
   qlist_add(&(node->entry), &(dict->buckets[idx]));
 
@@ -129,18 +125,16 @@ qvalue_t* qdict_setstr(qdict_t *dict, const char *key, qstring_t str) {
   return set(dict, set, &value);
 }
 
-qdict_node_t*  qdict_get(qdict_t *dict, const char *key) {
+qvalue_t* qdict_get(qdict_t *dict, const char *key) {
   qdict_node_t *node;
-  qstring_t str;
+  qstring_t     str;
 
-  str = qstring_new(key);
-  if (str == NULL) {
-    return NULL;
-  }
   node = find(dict, str, NULL);
-  qstring_destroy(str);
+  if (node) {
+    return &(node->value);
+  }
 
-  return node;
+  return NULL;
 }
 
 qdict_iter_t* qdict_iterator(qdict_t *dict) {
