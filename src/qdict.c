@@ -48,17 +48,24 @@ void qdict_destroy(qdict_t *dict) {
   qfree(dict);
 }
 
-static inline int hashstring(const char *str, size_t len) {
+static inline int hashstring(const char *str) {
   unsigned int hash = 5381;
+  const char *s;
 
-  while (len--) {
-    hash = ((hash << 5) + hash) + (*str++); /* hash * 33 + c */
+  if (str == NULL) {
+    return 0;
   }
+
+  for (s = str; *s; s++) { 
+    hash = ((hash << 5) + hash) + *s;
+  }
+  hash &= 0x7FFFFFFF;
+
   return hash;
 }
 
 static int mainposition(qdict_t *dict, const char *key) {
-  return hashstring(key, strlen(key)) % dict->hashsize;
+  return hashstring(key) % dict->hashsize;
 }
 
 static qdict_node_t* find(qdict_t *dict, const char *key, int *idx) {
