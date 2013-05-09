@@ -83,7 +83,7 @@ static qdict_node_t* find(qdict_t *dict, const char *key, int *idx) {
   }
   qlist_for_each(pos, list) {
     node = qlist_entry(pos, qdict_node_t, entry);
-    if (qstring_equal_raw(node->key, key) == 0) {
+    if (qstring_compare_raw(node->key, key) == 0) {
       return node;
     }
   }
