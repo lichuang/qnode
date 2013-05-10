@@ -22,12 +22,12 @@ static int create_socket() {
 
   on = 1;
   if ((fd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
-    qerror("creating socket: %s", strerror(errno));
+    qerror("create socket error, %s", strerror(errno));
     return -1;
   }
 
   if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) == -1) {
-    qerror("setsockopt SO_REUSEADDR: %s", strerror(errno));
+    qerror("setsockopt SO_REUSEADDR error %s", strerror(errno));
     return -1;
   }
 
@@ -185,3 +185,4 @@ int qnet_tcp_send(struct qdescriptor_t *desc) {
   }
   return nbytes;
 }
+

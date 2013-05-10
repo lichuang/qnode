@@ -7,7 +7,6 @@
 #include <string.h>
 
 static int qnode_strtoul(lua_State *state) {
-  state = state;
   return 1;
 }
 
