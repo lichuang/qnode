@@ -2,6 +2,9 @@ local server = {}
 
 local COMMAND_TOKEN = 1
 local KEY_TOKEN     = 2
+local TOKEN_FLAGS   = 3
+local TOKEN_EXPIRY  = 4
+local TOKEN_VLEN    = 5
 
 local NREAD_ADD     = 1
 local NREAD_SET     = 2
@@ -61,22 +64,33 @@ function process_update_command(_tokens, _ntokens, _comm, _handle_cas)
   local flag = 0
   local exptime = 0
   local vlen = 0
+  local data = {}
 
-  key  = _tokens[KEY_TOKEN].value
-  nkey = _tokens[KEY_TOKEN].length
+  key     = _tokens[KEY_TOKEN].value
+  nkey    = _tokens[KEY_TOKEN].length
 
-  flag = lua
+  flag    = qnode_strtoul(_tokens[TOKEN_FLAGS].value)
+  exptime = qnode_strtoul(_tokens[TOKEN_EXPIRY].value)
+  vlen    = qnode_strtoul(_tokens[TOKEN_VLEN].value)
+
+  data.key      = key
+  data.flag     = flag
+  data.exptime  = exptime
+  data.vlen     = vlen
+  print("vlen: " .. vlen)
 end
 
 function process_command(_tokens)
   local ntokens = #_tokens
 
+  --[[
   for i, data in ipairs(_tokens) do
     print(i .. " : ".. data.value .. ", len: " .. data.length)
   end
+  ]]
 
-  if _tokens[COMMAND_TOKEN] == "set" then
-    print("set!!!!!!!!!")
+  print("command: " .. _tokens[COMMAND_TOKEN].value)
+  if _tokens[COMMAND_TOKEN].value == "set" then
     process_update_command(_tokens, ntokens, NREAD_SET, false)
   end
 end
