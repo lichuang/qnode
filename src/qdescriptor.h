@@ -7,6 +7,7 @@
 
 #include <ifaddrs.h>
 #include <netinet/in.h>
+#include <sys/socket.h>
 #include "qcore.h"
 #include "qbuffer.h"
 #include "qlist.h"
@@ -36,8 +37,11 @@ typedef struct qinet_descriptor_t {
 } qinet_descriptor_t;
 
 typedef struct qtcp_descriptor_t {
-  qinet_descriptor_t inet;
-  qbuffer_t buffer;
+  qinet_descriptor_t  inet;
+  qbuffer_t           buffer;
+  struct sockaddr     remote;
+  char                addr[50];
+  int                 port;
 } qtcp_descriptor_t;
 
 typedef struct qfile_descriptor_t {

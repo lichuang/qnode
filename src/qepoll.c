@@ -54,7 +54,8 @@ static int epoll_add(struct qengine_t *engine, int fd, int flags) {
 
   epoll = (epoll_t*)engine->data;
 
-  op = engine->events[fd].flags == QEVENT_NONE ?  EPOLL_CTL_ADD : EPOLL_CTL_MOD;
+  op = engine->events[fd].flags == QEVENT_NONE ?
+        EPOLL_CTL_ADD : EPOLL_CTL_MOD;
 
   flags |= engine->events[fd].flags;
   events = 0;
@@ -65,6 +66,7 @@ static int epoll_add(struct qengine_t *engine, int fd, int flags) {
     events |= EPOLLOUT;
   }
 
+  events |= EPOLLET;
   event.events = events;
   event.data.fd = fd;
   if (epoll_ctl(epoll->fd, op, fd, &event) == -1) {
@@ -88,6 +90,7 @@ static int epoll_del(struct qengine_t *engine, int fd, int delflags) {
   if (flags & QEVENT_WRITE) {
     events |= EPOLLOUT;
   }
+  events |= EPOLLET;
   event.data.fd = fd;
   event.events = events;
   if (flags != QEVENT_NONE) {

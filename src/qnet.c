@@ -17,7 +17,8 @@
 #include "qlog.h"
 #include "qnet.h"
 
-static int create_socket() {
+static int
+create_listen_socket() {
   int fd, on;
 
   on = 1;
@@ -34,23 +35,8 @@ static int create_socket() {
   return fd;
 }
 
-static int net_listen(int fd, struct sockaddr *sa, socklen_t len) {
-  if (bind(fd, sa, len) < 0) {
-    qerror("bind error: %s", strerror(errno));
-    close(fd);
-    return -1;
-  }
-
-  if (listen(fd, 511) == -1) {
-    qerror("listen: %s", strerror(errno));
-    close(fd);
-    return -1;
-  }
-
-  return 0;
-}
-
-int set_nonblocking(int fd) {
+static int
+set_nonblocking(int fd) {
   int flags;
 
   if ((flags = fcntl(fd, F_GETFL)) == -1) {
@@ -64,13 +50,14 @@ int set_nonblocking(int fd) {
   return 0;
 }
 
-int qnet_tcp_listen(int port, const char *bindaddr) {
-  UNUSED(bindaddr);
-
+int
+qnet_tcp_listen(int port, const char *bindaddr) {
   int                 fd;
   struct sockaddr_in  sa;
 
-  if ((fd = create_socket()) < 0) {
+  UNUSED(bindaddr);
+
+  if ((fd = create_listen_socket()) < 0) {
     return -1;
   }
 
@@ -87,7 +74,15 @@ int qnet_tcp_listen(int port, const char *bindaddr) {
     close(fd);
     return -1;
   }
-  if (net_listen(fd,(struct sockaddr*)&sa, sizeof(sa)) < 0) {
+
+  if (bind(fd, (struct sockaddr*)&sa, sizeof(sa)) < 0) {
+    qerror("bind error: %s", strerror(errno));
+    close(fd);
+    return -1;
+  }
+
+  if (listen(fd, 511) == -1) {
+    qerror("listen: %s", strerror(errno));
     close(fd);
     return -1;
   }
@@ -95,22 +90,30 @@ int qnet_tcp_listen(int port, const char *bindaddr) {
   return fd;
 }
 
-int qnet_tcp_accept(int listen_fd,
-                    struct sockaddr *addr, socklen_t *addrlen) {
+int
+qnet_tcp_accept(int listen_fd,
+                struct sockaddr *addr, socklen_t *addrlen) {
   int fd;
 
-  fd = accept(listen_fd, addr, addrlen);
-  if (fd == -1) { 
-    if (errno == EAGAIN || errno == EWOULDBLOCK) {
-      return 0;
+  while (1) {
+    fd = accept(listen_fd, addr, addrlen);
+    if (fd == -1) { 
+      if (errno == EAGAIN || errno == EWOULDBLOCK) {
+        return 0;
+      }
+      if (errno == EINTR) {
+        continue;
+      }
+      return -1;
     }
-    return -1;
+    set_nonblocking(fd);
+    break;
   }
-  set_nonblocking(fd);
   return fd;
 }
 
-int qnet_tcp_recv(struct qdescriptor_t *desc, uint32_t size) {
+int
+qnet_tcp_recv(struct qdescriptor_t *desc, uint32_t size) {
   int                 fd, nbytes;
   qbuffer_t          *buffer;
   qtcp_descriptor_t  *tcp;
@@ -163,7 +166,8 @@ int qnet_tcp_recv(struct qdescriptor_t *desc, uint32_t size) {
   return nbytes;
 }
 
-int qnet_tcp_send(struct qdescriptor_t *desc) {
+int
+qnet_tcp_send(struct qdescriptor_t *desc) {
   int                 fd, nbytes;
   qbuffer_t          *buffer;
   qtcp_descriptor_t  *tcp;
@@ -185,4 +189,3 @@ int qnet_tcp_send(struct qdescriptor_t *desc) {
   }
   return nbytes;
 }
-

@@ -3,6 +3,7 @@
  */
 
 #include <errno.h>
+#include <arpa/inet.h>
 #include "qactor.h"
 #include "qassert.h"
 #include "qdefines.h"
@@ -17,13 +18,15 @@
 #include "qstring.h"
 #include "qthread.h"
 
-static void init_tcp_listen_params(qactor_t *actor) {
+static void
+init_tcp_listen_params(qactor_t *actor) {
   actor->listen_params = qdict_new(5);
 
   qdict_setnum(actor->listen_params, "packet", 0);
 }
 
-static int qnode_tcp_listen(lua_State *state) {
+static int
+qnode_tcp_listen(lua_State *state) {
   const char  *addr;
   qactor_t    *actor;
   int          port, fd;
@@ -48,21 +51,46 @@ static int qnode_tcp_listen(lua_State *state) {
   return 1;
 }
 
-static void socket_accept(int fd, int flags, void *data) {
+static int
+new_tcp_descriptor(int fd, lua_State *state, qactor_t *actor,
+                   struct sockaddr_in *remote) {
+  qdescriptor_t      *desc;
+  qtcp_descriptor_t  *tcp;
+
+  desc = qdescriptor_new(fd, QDESCRIPTOR_TCP, actor);
+  if (desc == NULL) {
+    lua_pushnil(state);
+    lua_pushliteral(state, "create descriptor error");
+    lua_resume(state, 2);
+    return -1;
+  }
+
+  tcp = &(desc->data.tcp);
+  tcp->inet.state = QINET_STATE_CONNECTED;
+  memcpy(&(tcp->remote), remote, sizeof(*remote));
+  inet_ntop(AF_INET, &remote->sin_addr, tcp->addr, sizeof(tcp->addr));
+  tcp->port = ntohs(remote->sin_port);
+  qinfo("accept connection from %s:%d", tcp->addr, tcp->port);
+
+  lua_pushlightuserdata(state, desc);
+  return 0;
+}
+
+static void
+socket_accept(int fd, int flags, void *data) {
   int                 sock;
-  struct sockaddr     remote;
+  struct sockaddr_in  remote;
   socklen_t           n;
   qdescriptor_t      *desc;
   qtcp_descriptor_t  *tcp;
   qactor_t           *actor;
   lua_State          *state;
   qengine_t          *engine;
-  qdescriptor_t      *accept_desc;
 
   UNUSED(fd);
   UNUSED(flags);
 
-  n = sizeof(struct sockaddr);
+  n = sizeof(remote);
   desc = (qdescriptor_t *)data;
   tcp = &(desc->data.tcp);
 
@@ -70,7 +98,7 @@ static void socket_accept(int fd, int flags, void *data) {
   actor = qdescriptor_get_actor(desc);
   state = actor->state;
   qinfo("add a socket....");
-  sock = qnet_tcp_accept(desc->fd, &remote, &n);
+  sock = qnet_tcp_accept(desc->fd, (struct sockaddr*)&remote, &n);
   if (sock == -1) {
     lua_pushnil(state);
     lua_pushliteral(state, "socket closed");
@@ -81,24 +109,24 @@ static void socket_accept(int fd, int flags, void *data) {
   engine = qactor_get_engine(actor);
   qengine_del_event(engine, desc->fd, QEVENT_READ);
   desc->data.tcp.inet.state = QINET_STATE_LISTENING;
-
-  accept_desc = qdescriptor_new(sock, QDESCRIPTOR_TCP, actor);
-  accept_desc->data.tcp.inet.state = QINET_STATE_CONNECTED;
-  lua_pushlightuserdata(state, accept_desc);
+  
+  if (new_tcp_descriptor(sock, state, actor, &remote) < 0) {
+    return;
+  }
   lua_resume(state, 1);
-  return;
 }
 
-static int qnode_tcp_accept(lua_State *state) {
+static int
+qnode_tcp_accept(lua_State *state) {
   int                 fd;
   int                 timeout;
-  struct sockaddr     remote;
+  struct sockaddr_in  remote;
   socklen_t           n;
   qactor_t           *actor;
   qdescriptor_t      *desc;
   qtcp_descriptor_t  *tcp;
 
-  n = sizeof(struct sockaddr);
+  n = sizeof(remote);
   actor = qlua_get_actor(state);
   desc = (qdescriptor_t*)lua_touserdata(state, 1);
   tcp = &(desc->data.tcp);
@@ -112,7 +140,7 @@ static int qnode_tcp_accept(lua_State *state) {
     return 2;
   }
 
-  fd = qnet_tcp_accept(desc->fd, &remote, &n);
+  fd = qnet_tcp_accept(desc->fd, (struct sockaddr*)&remote, &n);
   if (fd == -1) {
     lua_pushnil(state);
     lua_pushliteral(state, "socket closed");
@@ -124,13 +152,12 @@ static int qnode_tcp_accept(lua_State *state) {
     tcp->inet.state = QINET_STATE_ACCEPTING;
     return lua_yield(state, 0); 
   }
-  qdescriptor_t *accept_desc = qdescriptor_new(fd, QDESCRIPTOR_TCP, actor);
-  accept_desc->data.tcp.inet.state = QINET_STATE_CONNECTED;
-  lua_pushlightuserdata(state, accept_desc);
-  return 1;
+
+  return new_tcp_descriptor(fd, state, actor, &remote);
 }
 
-static void socket_recv(int fd, int flags, void *data) {
+static void
+socket_recv(int fd, int flags, void *data) {
   int                nret;
   qdescriptor_t     *desc;
   qtcp_descriptor_t *tcp;
@@ -163,7 +190,8 @@ static void socket_recv(int fd, int flags, void *data) {
   lua_resume(state, 1);
 }
 
-static int qnode_tcp_recv(lua_State *state) {
+static int
+qnode_tcp_recv(lua_State *state) {
   int                 nret;
   qdescriptor_t      *desc;
   qtcp_descriptor_t  *tcp;
@@ -195,7 +223,8 @@ static int qnode_tcp_recv(lua_State *state) {
   return 1;
 }
 
-static void socket_send(int fd, int flags, void *data) {
+static void
+socket_send(int fd, int flags, void *data) {
   int                 nret;
   qdescriptor_t      *desc;
   qtcp_descriptor_t  *tcp;
@@ -228,7 +257,8 @@ static void socket_send(int fd, int flags, void *data) {
   lua_resume(state, 1);
 }
 
-static int qnode_tcp_send(lua_State *state) {
+static int
+qnode_tcp_send(lua_State *state) {
   int                 nret;
   qdescriptor_t      *desc;
   qtcp_descriptor_t  *tcp;
@@ -260,7 +290,8 @@ static int qnode_tcp_send(lua_State *state) {
   return 1;
 }
 
-static int qnode_tcp_buffer(lua_State *state) {
+static int
+qnode_tcp_buffer(lua_State *state) {
   qdescriptor_t     *desc;
   qtcp_descriptor_t *tcp;
 

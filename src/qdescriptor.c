@@ -33,7 +33,7 @@ qdescriptor_t* qdescriptor_new(int fd, unsigned short type,
     qassert(desc->aid == -1);
     qassert(desc->fd == fd);
   } else {
-    desc = qalloc(sizeof(qdescriptor_t));
+    desc = qcalloc(sizeof(qdescriptor_t));
     desc->aid = -1;
     desc->fd = fd;
     g_server->descriptors[fd] = desc;
