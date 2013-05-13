@@ -105,8 +105,7 @@ static void* worker_thread_main_loop(void *arg) {
 
   thread = (qthread_t*)arg;
   /* init the worker thread log structure */
-  g_server->thread_log[thread->tid] = qthread_log_init(thread->engine,
-                                                       thread->tid);
+  g_server->thread_log[thread->tid] = qthread_log_init(thread->tid);
   thread->running = 1;
   qserver_worker_started();
   while (thread->running && qengine_loop(thread->engine) == 0) {

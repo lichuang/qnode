@@ -19,6 +19,7 @@ function tokenize_command(_buffer)
   local tokens = {}
   local length = 0
   local c = ""
+  local left = 0
 
   length = qnode_buffer_length(_buffer)
 
@@ -41,6 +42,8 @@ function tokenize_command(_buffer)
         pos = pos - 1
         qnode_buffer_set(_buffer, pos, "\0")
       end
+      
+      left = length - pos - 2
       break
     end
 
@@ -55,16 +58,19 @@ function tokenize_command(_buffer)
     table.insert(tokens, data)
   end
 
-  return tokens
+  print("left " .. left)
+  return tokens, left, pos + 2
 end
 
-function process_update_command(_tokens, _ntokens, _comm, _handle_cas)
+function process_update_command(_buffer, _tokens, _ntokens, _comm, _handle_cas, _left, _pos)
   local key = ""
   local nkey = 0
   local flag = 0
   local exptime = 0
   local vlen = 0
   local data = {}
+  local c = ""
+  local start = 0
 
   key     = _tokens[KEY_TOKEN].value
   nkey    = _tokens[KEY_TOKEN].length
@@ -73,14 +79,33 @@ function process_update_command(_tokens, _ntokens, _comm, _handle_cas)
   exptime = qnode_strtoul(_tokens[TOKEN_EXPIRY].value)
   vlen    = qnode_strtoul(_tokens[TOKEN_VLEN].value)
 
+  data.cmd      = "set"
   data.key      = key
   data.flag     = flag
   data.exptime  = exptime
   data.vlen     = vlen
-  print("vlen: " .. vlen)
+
+  if _left == vlen + 2 then
+    print("vlen: " .. vlen)
+    length = qnode_buffer_length(_buffer)
+
+    start = _pos
+    while _pos < length do
+      c = qnode_buffer_get(_buffer, _pos, 1)
+      if c == "\r" then
+        qnode_buffer_set(_buffer, _pos, "\0")
+        local str = qnode_buffer_get(_buffer, start, _pos - start)
+        print("value: " .. str)
+        data.value = str
+        return data
+      end
+
+      _pos = _pos + 1
+    end
+  end
 end
 
-function process_command(_tokens)
+function process_command(_buffer, _tokens, _left, _pos)
   local ntokens = #_tokens
 
   --[[
@@ -91,15 +116,14 @@ function process_command(_tokens)
 
   print("command: " .. _tokens[COMMAND_TOKEN].value)
   if _tokens[COMMAND_TOKEN].value == "set" then
-    process_update_command(_tokens, ntokens, NREAD_SET, false)
+    return process_update_command(_buffer, _tokens, ntokens, NREAD_SET, false, _left, _pos)
   end
 end
 
 server.child = function (_args)
   print("in child")
-  local socket = _args["sock"]
-  local aid    = _args["aid"]
-  qnode_send(aid, {key = "val111222"})
+  local socket        = _args["sock"]
+  local storage_id    = _args["storage_id"]
   -- attach the socket to the actor
   qnode_attach(socket)
   -- recv data from the socket
@@ -107,8 +131,17 @@ server.child = function (_args)
   print("after recv")
   buffer = qnode_tcp_buffer(socket)
 
-  local tokens = tokenize_command(buffer)
-  process_command(tokens)
+  local tokens, left, pos = tokenize_command(buffer)
+  local data = process_command(buffer, tokens, left, pos)
+
+  print("out of process_command")
+  for k, v in pairs(data) do
+    print(k .. " : ".. v)
+  end
+
+  if data ~= nil then
+    qnode_send(storage_id, data)
+  end
 
   qnode_tcp_send(socket)
 end

@@ -10,23 +10,23 @@ server.storage = function (_args)
   print("out child2" .. arg["key"])
 end
 
-function accept(_listen, _aid)
+function accept(_listen, _storage_id)
   print("in accept")
   local socket = qnode_tcp_accept(_listen)
   -- spawn a child to handle the request
-  local aid = qnode_spawn("child", "child", {sock = socket, aid = _aid});
-  accept(_listen, _aid)
+  local aid = qnode_spawn("child", "child", {sock = socket, storage_id = _storage_id});
+  accept(_listen, _storage_id)
 end
 
 server.start = function()
   print("server start");
 
   -- spawn storage process
-  local aid = qnode_spawn("server", "storage")
+  local storage_id = qnode_spawn("server", "storage")
 
   -- accept connection
   local socket = qnode_tcp_listen(22880);
-  accept(socket, aid)
+  accept(socket, storage_id)
 end
 
 _G["server"] = server

@@ -11,7 +11,7 @@
 struct qsignal_t {
   int       rfd;
   int       wfd;
-  qatomic_t active;        /* active if there is mail */
+  qatomic_t active;
 };
 
 qsignal_t* qsignal_new();

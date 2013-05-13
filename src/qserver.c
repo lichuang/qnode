@@ -279,7 +279,7 @@ static int server_init(qconfig_t *config) {
   qmutex_init(&server->id_map_mutex);
   setup_signal();
 
-  server->thread_log[0] = qthread_log_init(server->engine, 0);
+  server->thread_log[0] = qthread_log_init(0);
   server_start(server);
 
   return 0;

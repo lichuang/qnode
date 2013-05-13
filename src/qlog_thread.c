@@ -23,6 +23,7 @@ qlog_thread_t *g_log_thread = NULL;
 
 static void log_thread_box(int fd, int flags, void *data) {
   int           i, idx;
+  //int            idx;
   qsignal_t     *signal;
   qlist_t       *list, *pos, *next;
   qlog_t        *log;

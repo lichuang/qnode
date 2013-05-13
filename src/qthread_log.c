@@ -16,7 +16,7 @@
 
 extern pthread_key_t g_thread_log_key;
 
-qthread_log_t* qthread_log_init(struct qengine_t* engine, int idx) {
+qthread_log_t* qthread_log_init(int idx) {
   qthread_log_t *thread_log;
 
   thread_log = qcalloc(sizeof(qthread_log_t));
@@ -27,7 +27,6 @@ qthread_log_t* qthread_log_init(struct qengine_t* engine, int idx) {
   qlist_entry_init(&thread_log->lists[1]);
   thread_log->write = &thread_log->lists[0];
   thread_log->read  = &thread_log->lists[0];
-  thread_log->engine = engine;
   if (pthread_setspecific(g_thread_log_key, thread_log) < 0) {
     qfree(thread_log);
     return NULL;
