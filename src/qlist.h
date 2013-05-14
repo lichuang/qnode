@@ -47,7 +47,7 @@ static inline void qlist_del_init(struct qlist_t *entry) {
 }
 
 static inline int qlist_empty(struct qlist_t *head) {
-  return (head == NULL || head->next == head);
+  return (head->next == head);
 }
 
 static inline void qlist_assign(qlist_t *dst, qlist_t* src) {

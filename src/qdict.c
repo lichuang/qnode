@@ -183,8 +183,8 @@ qdict_node_t* qdict_next(qdict_iter_t *iter) {
         } else {
           return NULL;
         }
-      } while (qlist_empty(list));
-      pos = list->next;
+      } while (list == NULL);
+      pos = list;
     }
     node = qlist_entry(pos, qdict_node_t, entry);
   }

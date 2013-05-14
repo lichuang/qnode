@@ -210,6 +210,7 @@ void qlua_dump_dict(lua_State *state, qdict_t *dict) {
   while ((node = qdict_next(&iter)) != NULL) {
     key = node->key;
     val = &(node->value);
+
     lua_pushstring(state, key);
     if (qvalue_isstring(val)) {
       lua_pushstring(state, val->data.str);

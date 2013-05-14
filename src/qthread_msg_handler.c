@@ -96,7 +96,8 @@ static int thread_handle_tsend_msg(qthread_t *thread, qmsg_t *msg) {
   state = actor->state;
 
   /*
-   * if the state yield waiting for msg, push the msg into stack and resume
+   * if the state yield waiting for msg, push the msg
+   * into stack and resume
    */
   if (lua_status(state) == LUA_YIELD && actor->waiting_msg) {
     actor->waiting_msg = 0;
@@ -104,9 +105,7 @@ static int thread_handle_tsend_msg(qthread_t *thread, qmsg_t *msg) {
     qlua_dump_dict(state, actor_msg->arg_dict);
     return lua_resume(state, 1);
   }
-  /*
-   * else add the msg to the actor msg list
-   */
+  /* else add the msg to the actor msg list */
   qlist_add_tail(&actor_msg->entry, &(actor->msg_list));
 
   return 0;
