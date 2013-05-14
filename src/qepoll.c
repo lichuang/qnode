@@ -13,7 +13,7 @@
 static int  epoll_init(qengine_t *engine);
 static int  epoll_add(qengine_t *engine, int fd, int flags);
 static int  epoll_del(qengine_t *engine, int fd, int flags);
-static int  epoll_poll(qengine_t *engine, uint32_t timeout_ms);
+static int  epoll_poll(qengine_t *engine, int timeout_ms);
 static void epoll_destroy(qengine_t *engine);
 
 const struct qdispatcher_t epoll_dispatcher = {
@@ -101,7 +101,7 @@ static int epoll_del(struct qengine_t *engine, int fd, int delflags) {
   return 0;
 }
 
-static int epoll_poll (qengine_t *engine, uint32_t timeout_ms) {
+static int epoll_poll (qengine_t *engine, int timeout_ms) {
   int                 num;
   int                 flags;
   int                 i;

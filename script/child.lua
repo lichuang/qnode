@@ -134,10 +134,12 @@ server.child = function (_args)
   local tokens, left, pos = tokenize_command(buffer)
   local data = process_command(buffer, tokens, left, pos)
 
+  --[[
   print("out of process_command")
   for k, v in pairs(data) do
     print(k .. " : ".. v)
   end
+  ]]
 
   if data ~= nil then
     qnode_send(storage_id, data)

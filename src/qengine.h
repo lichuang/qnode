@@ -36,7 +36,7 @@ typedef struct qdispatcher_t {
   int  (*init)(struct qengine_t*);
   int  (*add)(struct qengine_t *engine, int fd, int flags);
   int  (*del)(struct qengine_t *engine, int fd, int flags);
-  int  (*poll)(struct qengine_t *, uint32_t timeout_ms);
+  int  (*poll)(struct qengine_t *, int timeout_ms);
   void (*destroy)(struct qengine_t *);
 } qdispatcher_t;
 

@@ -1,13 +1,23 @@
 local server = {}
 
+local cache = {}
+
 server.storage = function (_args)
-  print("in child2")
   arg = qnode_recv()
-  print("out child2... " .. type(arg))
   for k, v in pairs(arg) do
     print("k: " .. k .. ", v: " .. v)
   end
-  print("out child2" .. arg["key"])
+
+  local key = arg.key
+  local cmd = arg.cmd
+  if not key then
+    return
+  end
+
+  if cmd == "set" then
+    cache[key] = arg
+    print("set " .. key .. ":" .. arg.value)
+  end
 end
 
 function accept(_listen, _storage_id)
