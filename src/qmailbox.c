@@ -12,11 +12,11 @@
 #include "qlog.h"
 #include "qmsg.h"
 #include "qmailbox.h"
-#include "qsignal.h"
+#include "qchannel.h"
 
 qmailbox_t* qmailbox_new(qevent_func_t *callback, void *reader) {
   qmailbox_t  *box;
-  qsignal_t   *signal;
+  qchannel_t   *channel;
 
   box = qcalloc(sizeof(qmailbox_t));
   if (box == NULL) {
@@ -28,12 +28,12 @@ qmailbox_t* qmailbox_new(qevent_func_t *callback, void *reader) {
   box->read   = &(box->lists[1]);
   box->callback = callback;
   box->reader = reader;
-  signal = qsignal_new();
-  if (signal == NULL) {
+  channel = qchannel_new();
+  if (channel == NULL) {
     qfree(box);
     return NULL;
   }
-  box->signal = signal;
+  box->channel = channel;
   box->active = 1;
   return box;
 }
@@ -43,7 +43,7 @@ int qmailbox_active(qengine_t *engine, qmailbox_t *box) {
   void          *data;
   qevent_func_t *callback;
 
-  fd = qsignal_get_fd(box->signal);
+  fd = qchannel_get_fd(box->channel);
   callback = box->callback;
   data = box->reader;
 
@@ -66,10 +66,10 @@ void qmailbox_add(qmailbox_t *box, struct qmsg_t *msg) {
    */
   p = box->write;
   qlist_add_tail(&(msg->entry), p);
-  if (qsignal_active(box->signal, 1) == 0) {
-    qsignal_send(box->signal);
+  if (qchannel_active(box->channel, 1) == 0) {
+    qchannel_send(box->channel);
   }
-  qassert(box->signal->active == 1 || box->signal->active == 0);
+  qassert(box->channel->active == 1 || box->channel->active == 0);
 }
 
 int qmailbox_get(qmailbox_t *box, qlist_t **list) {
@@ -88,8 +88,8 @@ int qmailbox_get(qmailbox_t *box, qlist_t **list) {
   *list = qatomic_ptr_xchg(&(box->write), read);
   qassert(box->read != box->write);
   qassert(*list == box->read);
-  if (qsignal_active(box->signal, 0) == 1) {
-    qsignal_recv(box->signal);
+  if (qchannel_active(box->channel, 0) == 1) {
+    qchannel_recv(box->channel);
   }
   return qlist_empty(*list);
 }
