@@ -10,7 +10,8 @@
 #include "qassert.h"
 #include "qchannel.h"
 
-static void channel_make_pair(int *rfd, int *wfd) {
+static void
+channel_make_pair(int *rfd, int *wfd) {
   int fds[2], result;
 
   result = socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
@@ -20,7 +21,8 @@ static void channel_make_pair(int *rfd, int *wfd) {
   *rfd = fds[1];
 }
 
-qchannel_t* qchannel_new() {
+qchannel_t*
+qchannel_new() {
   qchannel_t *channel;
 
   channel = qalloc(sizeof(qchannel_t));
@@ -33,38 +35,43 @@ qchannel_t* qchannel_new() {
   return channel;
 }
 
-int qchannel_get_fd(qchannel_t *channel) {
+int
+qchannel_get_fd(qchannel_t *channel) {
   return channel->rfd;
 }
 
-int qchannel_active(qchannel_t *channel, int active) {
+int
+qchannel_active(qchannel_t *channel, int active) {
   qatomic_t cmp = !active;
   qatomic_t val = active;
   return qatomic_cas(&(channel->active), cmp, val);
 }
 
-void qchannel_send(qchannel_t *channel) {
-  unsigned char dummy;
+void
+qchannel_send(qchannel_t *channel) {
+  char    dummy;
+  ssize_t n;
 
   dummy = 0;
   while (1) {
-    ssize_t n = send(channel->wfd, &dummy, sizeof(dummy), 0);
+    n = send(channel->wfd, &dummy, sizeof(dummy), 0);
     if (n == -1 && errno == EINTR) {
       continue;
     }
-    //qassert(n == sizeof(dummy));
     break;
   }
 }
 
-void qchannel_recv(qchannel_t *channel) {
-  unsigned char dummy;
+void
+qchannel_recv(qchannel_t *channel) {
+  char    dummy;
   ssize_t n;
 
-  n = recv(channel->rfd, &dummy, sizeof(dummy), 0);
-  /*
-  qassert(n >= 0);
-  qassert(n == sizeof(dummy));
-  qassert(dummy == 0);
-  */
+  while (1) {
+    n = recv(channel->rfd, &dummy, sizeof(dummy), 0);
+    if (n == -1 && errno == EINTR) {
+      continue;
+    }
+    break;
+  }
 }
