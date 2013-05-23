@@ -14,6 +14,8 @@
 
 #define QRETIRED_FD -1
 
+extern volatile int g_quit;
+
 extern const qdispatcher_t epoll_dispatcher;
 
 static void init_qevent(qevent_t *event) {
@@ -120,25 +122,30 @@ int qengine_loop(qengine_t* engine) {
   int       read;
   qevent_t *event;
 
-  next = qtimer_next(&engine->timer_mng);
-  num  = engine->dispatcher->poll(engine, next);
-  for (i = 0; i < num; i++) {
-    event = &(engine->events[engine->active_events[i].fd]);
-    flags = engine->active_events[i].flags;
-    fd = engine->active_events[i].fd;
-    read = 0;
-
-    if (event->flags & flags & QEVENT_READ) {
-      read = 1;
-      event->read(fd, flags, event->data);
+  while (1) {
+    if (g_quit) {
+      break;
     }
-    if (event->flags & flags & QEVENT_WRITE) {
-      if (!read || event->write != event->read) {
-        event->write(fd, flags, event->data);
+    next = qtimer_next(&engine->timer_mng);
+    num  = engine->dispatcher->poll(engine, next);
+    for (i = 0; i < num; i++) {
+      event = &(engine->events[engine->active_events[i].fd]);
+      flags = engine->active_events[i].flags;
+      fd = engine->active_events[i].fd;
+      read = 0;
+
+      if (event->flags & flags & QEVENT_READ) {
+        read = 1;
+        event->read(fd, flags, event->data);
+      }
+      if (event->flags & flags & QEVENT_WRITE) {
+        if (!read || event->write != event->read) {
+          event->write(fd, flags, event->data);
+        }
       }
     }
+    qtimer_process(&(engine->timer_mng));
   }
-  qtimer_process(&(engine->timer_mng));
   return 0;
 }
 

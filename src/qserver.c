@@ -21,24 +21,24 @@
 
 extern qserver_msg_handler g_server_msg_handlers[];
 
-qserver_t *g_server;
+qserver_t    *g_server;
+volatile int  g_quit = 0;
 
 /* thread init condition */
 static int          init_thread_count;
 static qcond_t      init_thread_cond;
 static qmutex_t     init_thread_lock; 
 
-/* server running flag */
-static volatile int running;
-
-static void server_accept(int fd, int flags, void *data) {
+static void
+server_accept(int fd, int flags, void *data) {
   UNUSED(fd);
   UNUSED(flags);
   UNUSED(data);
   qinfo("add a socket....");
 }
 
-static int init_server_event(struct qserver_t *server) {
+static int
+init_server_event(struct qserver_t *server) {
   return 0;
   int fd = qnet_tcp_listen(22222, "127.0.0.1");
   if (fd < 0) {
@@ -52,7 +52,8 @@ static int init_server_event(struct qserver_t *server) {
   return 0;
 }
 
-static void server_box(int fd, int flags, void *data) {
+static void
+server_box(int fd, int flags, void *data) {
   qmsg_t      *msg;
   qlist_t     *list;
   qmailbox_t  *box;
@@ -88,7 +89,8 @@ next:
   }
 }
 
-qtid_t qserver_worker_thread() {
+qtid_t
+qserver_worker_thread() {
   static qtid_t i;
 
   i = 1;
@@ -96,11 +98,13 @@ qtid_t qserver_worker_thread() {
   return i;
 }
 
-qactor_t* qserver_get_actor(qid_t id) {
+qactor_t*
+qserver_get_actor(qid_t id) {
   return g_server->actors[id];
 }
 
-static void server_start(qserver_t *server) {
+static void
+server_start(qserver_t *server) {
   qid_t   aid;
   qtid_t  tid;
   qmsg_t *msg;
@@ -117,7 +121,8 @@ static void server_start(qserver_t *server) {
   qmsg_send(msg);
 }
 
-static void wait_threads(int thread_num) {
+static void
+wait_threads(int thread_num) {
   qmutex_lock(&init_thread_lock);
   while (init_thread_count < thread_num) {
     qcond_wait(&init_thread_cond, &init_thread_lock);
@@ -125,7 +130,8 @@ static void wait_threads(int thread_num) {
   qmutex_unlock(&init_thread_lock);
 }
 
-static int init_worker_threads(qserver_t *server) {
+static int
+init_worker_threads(qserver_t *server) {
   int           i, j;
   int           thread_num;
   qconfig_t    *config;
@@ -207,21 +213,23 @@ error:
   return -1;
 }
 
-static void sig_handler(int sig) {
+static void
+sig_handler(int sig) {
   qinfo("caught signal %d", sig);
   switch (sig) {
   case SIGTERM:
   case SIGINT:
   case SIGQUIT:
   case SIGABRT:
-    running = 0;
+    g_quit = 1;
     break;
   default:
     break;
   }
 }
 
-static void setup_signal() {
+static void
+setup_signal() {
   struct sigaction act;
 
   sigemptyset(&act.sa_mask);
@@ -233,7 +241,8 @@ static void setup_signal() {
   sigaction(SIGABRT, &act, NULL);
 }
 
-static int server_init(qconfig_t *config) {
+static int
+server_init(qconfig_t *config) {
   qserver_t   *server;
 
   qassert(config);
@@ -288,7 +297,8 @@ error:
   return -1;
 }
 
-static void destroy_threads() {
+static void
+destroy_threads() {
   int         i;
   qthread_t  *thread;
 
@@ -299,28 +309,30 @@ static void destroy_threads() {
   qlog_thread_destroy();
 }
 
-static void destroy_server() {
+static void
+destroy_server() {
   destroy_threads();
 }
 
-int qserver_run(qconfig_t *config) {
+int
+qserver_run(qconfig_t *config) {
   if (server_init(config) != 0) {
     return -1;
   }
-  running = 1;
-  while (running && qengine_loop(g_server->engine) == 0) {
-  }
+  qengine_loop(g_server->engine);
   destroy_server();
   return 0;
 }
 
-void qserver_new_actor(qactor_t *actor) {
+void
+qserver_new_actor(qactor_t *actor) {
   qassert(g_server->actors[actor->aid] == NULL);
   g_server->actors[actor->aid] = actor;
   g_server->num_actor++;
 }
 
-void qserver_worker_started() {
+void
+qserver_worker_started() {
   qmutex_lock(&init_thread_lock);
   init_thread_count++;
   qcond_signal(&init_thread_cond);

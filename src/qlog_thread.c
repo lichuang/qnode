@@ -69,10 +69,8 @@ static void* log_thread_main_loop(void *arg) {
   qlog_thread_t *thread;
 
   thread = (qlog_thread_t*)arg;
-  thread->running = 1;
   qserver_worker_started();
-  while (thread->running && qengine_loop(thread->engine) == 0) {
-  }
+  qengine_loop(thread->engine);
 
   /* now the server terminate, do the clean work */
   for (i = 0; i < g_log_thread->thread_num; ++i) {
@@ -144,7 +142,6 @@ int qlog_thread_new(int thread_num) {
 }
 
 void qlog_thread_destroy() {
-  g_log_thread->running = 0;
   /* wait for the thread */
   pthread_join(g_log_thread->id, NULL);
 }
