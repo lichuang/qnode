@@ -12,11 +12,12 @@
 #include "qlog.h"
 #include "qmsg.h"
 #include "qmailbox.h"
-#include "qchannel.h"
+#include "qsignal.h"
 
-qmailbox_t* qmailbox_new(qevent_func_t *callback, void *reader) {
+qmailbox_t*
+qmailbox_new(qevent_func_t *callback, void *reader) {
   qmailbox_t  *box;
-  qchannel_t   *channel;
+  qsignal_t   *signal;
 
   box = qcalloc(sizeof(qmailbox_t));
   if (box == NULL) {
@@ -28,29 +29,31 @@ qmailbox_t* qmailbox_new(qevent_func_t *callback, void *reader) {
   box->read   = &(box->lists[1]);
   box->callback = callback;
   box->reader = reader;
-  channel = qchannel_new();
-  if (channel == NULL) {
+  signal = qsignal_new();
+  if (signal == NULL) {
     qfree(box);
     return NULL;
   }
-  box->channel = channel;
+  box->signal = signal;
   box->active = 1;
   return box;
 }
 
-int qmailbox_active(qengine_t *engine, qmailbox_t *box) {
+int
+qmailbox_active(qengine_t *engine, qmailbox_t *box) {
   int            fd;
   void          *data;
   qevent_func_t *callback;
 
-  fd = qchannel_get_fd(box->channel);
+  fd = qsignal_get_fd(box->signal);
   callback = box->callback;
   data = box->reader;
 
   return qengine_add_event(engine, fd, QEVENT_READ, callback, data);
 }
 
-void qmailbox_add(qmailbox_t *box, struct qmsg_t *msg) {
+void
+qmailbox_add(qmailbox_t *box, struct qmsg_t *msg) {
   qlist_t *p;
 
   if (!box->active) {
@@ -66,13 +69,14 @@ void qmailbox_add(qmailbox_t *box, struct qmsg_t *msg) {
    */
   p = box->write;
   qlist_add_tail(&(msg->entry), p);
-  if (qchannel_active(box->channel, 1) == 0) {
-    qchannel_send(box->channel);
+  if (qsignal_active(box->signal, 1) == 0) {
+    qsignal_send(box->signal);
   }
-  qassert(box->channel->active == 1 || box->channel->active == 0);
+  qassert(box->signal->active == 1 || box->signal->active == 0);
 }
 
-int qmailbox_get(qmailbox_t *box, qlist_t **list) {
+int
+qmailbox_get(qmailbox_t *box, qlist_t **list) {
   qassert(box->write);
   qlist_t *read;
 
@@ -88,8 +92,8 @@ int qmailbox_get(qmailbox_t *box, qlist_t **list) {
   *list = qatomic_ptr_xchg(&(box->write), read);
   qassert(box->read != box->write);
   qassert(*list == box->read);
-  if (qchannel_active(box->channel, 0) == 1) {
-    qchannel_recv(box->channel);
+  if (qsignal_active(box->signal, 0) == 1) {
+    qsignal_recv(box->signal);
   }
   return qlist_empty(*list);
 }

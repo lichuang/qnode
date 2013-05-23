@@ -12,7 +12,7 @@ typedef struct qlog_thread_t {
   pthread_t     id;
   int           thread_num;
   qengine_t    *engine;
-  qchannel_t  **channels;
+  qsignal_t   **signals;
   char          time_buff[20];
 } qlog_thread_t;
 

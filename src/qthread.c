@@ -149,7 +149,7 @@ qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
     if (i == 0) {
       /* communicate with main thread */
       thread->in_box[i] = qmailbox_new(thread_box, thread);
-      qassert(thread->in_box[i]->channel);
+      qassert(thread->in_box[i]->signal);
     } else {
       /* communicate with other worker thread */
       thread->thread_box[i] = qcalloc(sizeof(qthread_box_t));
@@ -159,7 +159,7 @@ qthread_t* qthread_new(struct qserver_t *server, qtid_t tid) {
       qassert((char*)(thread->in_box[i]) != (char*)thread);
 
       thread->thread_box[i]->box = thread->in_box[i];
-      qassert(thread->in_box[i]->channel);
+      qassert(thread->in_box[i]->signal);
     }
     if (thread->in_box[i] == NULL) {
       return NULL;

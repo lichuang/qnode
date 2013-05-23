@@ -16,7 +16,7 @@ struct qmailbox_t {
   qlist_t          *read;       /* current read  list ptr */
   qevent_func_t    *callback;   /* mailbox reader callback */
   void             *reader;     /* mailbox reader */
-  qchannel_t       *channel;
+  qsignal_t        *signal;
 };
 
 qmailbox_t* qmailbox_new(qevent_func_t *callback, void *reader);

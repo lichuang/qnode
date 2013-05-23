@@ -8,10 +8,10 @@
 #include <sys/types.h>
 #include "qalloc.h"
 #include "qassert.h"
-#include "qchannel.h"
+#include "qsignal.h"
 
 static void
-channel_make_pair(int *rfd, int *wfd) {
+signal_make_pair(int *rfd, int *wfd) {
   int fds[2], result;
 
   result = socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
@@ -21,40 +21,40 @@ channel_make_pair(int *rfd, int *wfd) {
   *rfd = fds[1];
 }
 
-qchannel_t*
-qchannel_new() {
-  qchannel_t *channel;
+qsignal_t*
+qsignal_new() {
+  qsignal_t *signal;
 
-  channel = qalloc(sizeof(qchannel_t));
-  if (channel == NULL) {
+  signal = qalloc(sizeof(qsignal_t));
+  if (signal == NULL) {
     return NULL;
   }
-  channel_make_pair(&(channel->rfd), &(channel->wfd));
-  channel->active = 0;
+  signal_make_pair(&(signal->rfd), &(signal->wfd));
+  signal->active = 0;
 
-  return channel;
+  return signal;
 }
 
 int
-qchannel_get_fd(qchannel_t *channel) {
-  return channel->rfd;
+qsignal_get_fd(qsignal_t *signal) {
+  return signal->rfd;
 }
 
 int
-qchannel_active(qchannel_t *channel, int active) {
+qsignal_active(qsignal_t *signal, int active) {
   qatomic_t cmp = !active;
   qatomic_t val = active;
-  return qatomic_cas(&(channel->active), cmp, val);
+  return qatomic_cas(&(signal->active), cmp, val);
 }
 
 void
-qchannel_send(qchannel_t *channel) {
+qsignal_send(qsignal_t *signal) {
   char    dummy;
   ssize_t n;
 
   dummy = 0;
   while (1) {
-    n = send(channel->wfd, &dummy, sizeof(dummy), 0);
+    n = send(signal->wfd, &dummy, sizeof(dummy), 0);
     if (n == -1 && errno == EINTR) {
       continue;
     }
@@ -63,12 +63,12 @@ qchannel_send(qchannel_t *channel) {
 }
 
 void
-qchannel_recv(qchannel_t *channel) {
+qsignal_recv(qsignal_t *signal) {
   char    dummy;
   ssize_t n;
 
   while (1) {
-    n = recv(channel->rfd, &dummy, sizeof(dummy), 0);
+    n = recv(signal->rfd, &dummy, sizeof(dummy), 0);
     if (n == -1 && errno == EINTR) {
       continue;
     }

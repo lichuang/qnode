@@ -15,7 +15,7 @@
 #include "qmailbox.h"
 #include "qmsg.h"
 #include "qserver.h"
-#include "qchannel.h"
+#include "qsignal.h"
 #include "qthread_log.h"
 
 pthread_key_t g_thread_log_key = PTHREAD_ONCE_INIT;
@@ -23,7 +23,7 @@ qlog_thread_t *g_log_thread = NULL;
 
 static void log_thread_box(int fd, int flags, void *data) {
   int           i, idx;
-  qchannel_t     *channel;
+  qsignal_t     *signal;
   qlist_t       *list, *pos, *next;
   qlog_t        *log;
   qthread_log_t *thread_log;
@@ -31,9 +31,9 @@ static void log_thread_box(int fd, int flags, void *data) {
   UNUSED(fd);
   UNUSED(flags);
 
-  channel = (qchannel_t*)data;
+  signal = (qsignal_t*)data;
   for (i = 0; ; i++) {
-    if (channel == g_log_thread->channels[i]) {
+    if (signal == g_log_thread->signals[i]) {
       idx = i;
       break;
     }
@@ -44,8 +44,8 @@ static void log_thread_box(int fd, int flags, void *data) {
    * -1 means destroy the log thread
    */
   if (flags != -1) {
-    qchannel_recv(channel);
-    qchannel_active(channel, 0);
+    qsignal_recv(signal);
+    qsignal_active(signal, 0);
   }
 
   for (pos = list->next; pos != list; ) {
@@ -65,7 +65,7 @@ static void log_thread_box(int fd, int flags, void *data) {
 
 static void* log_thread_main_loop(void *arg) {
   int         i, fd;
-  qchannel_t  *channel;
+  qsignal_t  *signal;
   qlog_thread_t *thread;
 
   thread = (qlog_thread_t*)arg;
@@ -74,10 +74,10 @@ static void* log_thread_main_loop(void *arg) {
 
   /* now the server terminate, do the clean work */
   for (i = 0; i < g_log_thread->thread_num; ++i) {
-    channel = g_log_thread->channels[i];
-    fd = qchannel_get_fd(channel);
+    signal = g_log_thread->signals[i];
+    fd = qsignal_get_fd(signal);
     qengine_del_event(g_log_thread->engine, fd, QEVENT_READ);
-    log_thread_box(0, -1, channel);
+    log_thread_box(0, -1, signal);
   }
   qengine_destroy(g_log_thread->engine);
 
@@ -121,16 +121,16 @@ int qlog_thread_new(int thread_num) {
   }
 
   g_log_thread->thread_num = thread_num;
-  g_log_thread->channels = qcalloc(thread_num * sizeof(qchannel_t*));
-  if (g_log_thread->channels == NULL) {
+  g_log_thread->signals = qcalloc(thread_num * sizeof(qsignal_t*));
+  if (g_log_thread->signals == NULL) {
     return -1;
   }
 
   for (i = 0; i < thread_num; ++i) {
-    g_log_thread->channels[i] = qchannel_new();
-    fd = qchannel_get_fd(g_log_thread->channels[i]);
+    g_log_thread->signals[i] = qsignal_new();
+    fd = qsignal_get_fd(g_log_thread->signals[i]);
     qengine_add_event(g_log_thread->engine, fd, QEVENT_READ,
-                      log_thread_box, g_log_thread->channels[i]);
+                      log_thread_box, g_log_thread->signals[i]);
   }
   log_time_handler(NULL);
   qengine_add_timer(g_log_thread->engine, 1000, log_time_handler,
@@ -147,7 +147,7 @@ void qlog_thread_destroy() {
 }
 
 void qlog_thread_active(int idx) {
-  if (qchannel_active(g_log_thread->channels[idx], 1) == 0) {
-    qchannel_send(g_log_thread->channels[idx]);
+  if (qsignal_active(g_log_thread->signals[idx], 1) == 0) {
+    qsignal_send(g_log_thread->signals[idx]);
   }
 }
