@@ -12,7 +12,7 @@
 #include "qlog.h"
 #include "qthread_log.h"
 
-#define QRETIRED_FD -1
+static const int QRETIRED_FD = -1;
 
 extern volatile int g_quit;
 
@@ -136,10 +136,13 @@ int qengine_loop(qengine_t* engine) {
 
       if (event->flags & flags & QEVENT_READ) {
         read = 1;
-        event->read(fd, flags, event->data);
+        if (event->read) {
+          event->read(fd, flags, event->data);
+        }
       }
       if (event->flags & flags & QEVENT_WRITE) {
-        if (!read || event->write != event->read) {
+        if ((!read || event->write != event->read) &&
+            event->write != NULL) {
           event->write(fd, flags, event->data);
         }
       }

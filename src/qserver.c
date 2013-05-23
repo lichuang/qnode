@@ -16,6 +16,7 @@
 #include "qmsg.h"
 #include "qnet.h"
 #include "qserver.h"
+#include "qsignal.h"
 #include "qthread.h"
 #include "qthread_log.h"
 
@@ -28,6 +29,9 @@ volatile int  g_quit = 0;
 static int          init_thread_count;
 static qcond_t      init_thread_cond;
 static qmutex_t     init_thread_lock; 
+
+/* for handle signals */
+static qsignal_t   *g_signal       = NULL;
 
 static void
 server_accept(int fd, int flags, void *data) {
@@ -226,11 +230,28 @@ sig_handler(int sig) {
   default:
     break;
   }
+
+  qsignal_send(g_signal);
+}
+
+static void
+read_signal(int fd, int flags, void *data) {
+  UNUSED(fd);
+  UNUSED(flags);
+  UNUSED(data);
+  qsignal_recv(g_signal);
 }
 
 static void
 setup_signal() {
   struct sigaction act;
+
+  g_signal = qsignal_new();
+  if (g_signal == NULL) {
+    return;
+  }
+  qengine_add_event(g_server->engine,
+                    g_signal->rfd, QEVENT_READ, read_signal, NULL);
 
   sigemptyset(&act.sa_mask);
   act.sa_flags = SA_NODEFER | SA_ONSTACK | SA_RESETHAND;
