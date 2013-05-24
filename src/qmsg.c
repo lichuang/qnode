@@ -76,14 +76,15 @@ void qmsg_send(qmsg_t *msg) {
   /* main thread send to worker thread */
   if (sender_id == QMAIN_THREAD_TID) {
     qassert(receiver_id != QMAIN_THREAD_TID);
-    qmailbox_add(g_server->out_box[receiver_id], msg);
+    thread = g_server->threads[receiver_id];
+    qmailbox_add(thread->box, msg);
     return;
   }
 
   /* worker thread send to server thread */
   if (receiver_id == QMAIN_THREAD_TID) {
     qassert(sender_id != QMAIN_THREAD_TID);
-    qmailbox_add(g_server->in_box[receiver_id], msg);
+    qmailbox_add(g_server->box, msg);
     return;
   }
 
@@ -97,6 +98,6 @@ void qmsg_send(qmsg_t *msg) {
   } 
   
   /* worker thread send to worker thread */
-  thread = g_server->threads[sender_id];
-  qmailbox_add(thread->out_box[receiver_id], msg);
+  thread = g_server->threads[receiver_id];
+  qmailbox_add(thread->box, msg);
 }

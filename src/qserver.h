@@ -18,8 +18,7 @@ struct qserver_t {
   qconfig_t        *config;       /* server config */
   qdescriptor_t   **descriptors;  /* descriptor array */
   qengine_t        *engine;       /* event dispatch engine */
-  qmailbox_t      **in_box;       /* for worker-server message */
-  qmailbox_t      **out_box;      /* for server-worker message */
+  qmailbox_t       *box;          /* for worker-server message */
   qthread_t       **threads;      /* worker threads array */
   qthread_log_t   **thread_log;   /* thread log array(include main) */
   unsigned int      num_actor;    /* actor number */

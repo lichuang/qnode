@@ -136,11 +136,9 @@ wait_threads(int thread_num) {
 
 static int
 init_worker_threads(qserver_t *server) {
-  int           i, j;
+  int           i;
   int           thread_num;
   qconfig_t    *config;
-  qmailbox_t   *box;
-  qthread_t    *thread1, *thread2;
   
   config = server->config;
   thread_num = config->thread_num;
@@ -151,41 +149,27 @@ init_worker_threads(qserver_t *server) {
   }
   server->threads[0] = NULL;
 
-  server->in_box = qalloc(thread_num * sizeof(qmailbox_t*));
-  if (server->in_box == NULL) {
-    goto error;
-  }
-  server->in_box[0] = NULL;
-
   server->thread_log = qalloc(thread_num * sizeof(qthread_log_t*));
   if (server->thread_log == NULL) {
     goto error;
   }
 
-  server->out_box = qalloc(thread_num * sizeof(qmailbox_t*));
-  if (server->out_box == NULL) {
-    goto error;
-  }
-  server->out_box[0] = NULL;
-
   init_thread_count = 0;
 
-  /* create worker thread and mailbox */
+  /* create main thread mailbox */
+  server->box = qmailbox_new(server_box, NULL);
+  if (!server->box) {
+    goto error;
+  }
+  server->box->reader = server->box;
+  qmailbox_active(server->engine, server->box);
+
+  /* create worker threads */
   for (i = 1; i <= thread_num; ++i) {
-    box = qmailbox_new(server_box, NULL);
-    if (box == NULL) {
-      goto error;
-    }
-    box->reader = box;
-    /* add the worker-main box into main thread event engine */
-    qmailbox_active(server->engine, box);
-    server->in_box[i] = box;
-    server->threads[i] = qthread_new(server, i); 
+    server->threads[i] = qthread_new(i); 
     if (server->threads[i] == NULL) {
       goto error;
     }
-    server->out_box[i] = server->threads[i]->in_box[0];
-    server->threads[i]->out_box[0] = box;
   }
     
   /* wait for the worker threads start */
@@ -194,19 +178,6 @@ init_worker_threads(qserver_t *server) {
   qmutex_destroy(&init_thread_lock);
   qcond_destroy(&init_thread_cond);
 
-  /* link worker thread mailbox */
-  for (i = 1; i <= thread_num; ++i) {
-    thread1 = server->threads[i];
-    for (j = 1; j <= thread_num; ++j) {
-      if (j == i) {
-        continue;
-      }
-      thread2 = server->threads[j];
-
-      thread1->out_box[j] = thread2->in_box[i];
-      thread2->out_box[i] = thread1->in_box[j];
-    }
-  }
   return 0;
 
 error:

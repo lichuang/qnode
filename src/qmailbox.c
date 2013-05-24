@@ -23,6 +23,10 @@ qmailbox_new(qevent_func_t *callback, void *reader) {
   if (box == NULL) {
     return NULL;
   }
+  if (qmutex_init(&(box->mutex)) != 0) {
+    qfree(box);
+    return NULL;
+  }
   qlist_entry_init(&(box->lists[0]));
   qlist_entry_init(&(box->lists[1]));
   box->write  = &(box->lists[0]);
@@ -63,16 +67,14 @@ qmailbox_add(qmailbox_t *box, struct qmsg_t *msg) {
   if (box->write == NULL) {
     qassert(box->write);
   }
-  /* 
-   * save the write ptr first cause add_tail below
-   * is-not atomic operation and the write ptr maybe changed 
-   */
+  qmutex_lock(&(box->mutex));
   p = box->write;
   qlist_add_tail(&(msg->entry), p);
   if (qsignal_active(box->signal, 1) == 0) {
     qsignal_send(box->signal);
   }
   qassert(box->signal->active == 1 || box->signal->active == 0);
+  qmutex_unlock(&(box->mutex));
 }
 
 int
@@ -80,6 +82,7 @@ qmailbox_get(qmailbox_t *box, qlist_t **list) {
   qassert(box->write);
   qlist_t *read;
 
+  qmutex_lock(&(box->mutex));
   *list = NULL;
   /* first save the read ptr */
   read = box->read;
@@ -92,6 +95,7 @@ qmailbox_get(qmailbox_t *box, qlist_t **list) {
   *list = qatomic_ptr_xchg(&(box->write), read);
   qassert(box->read != box->write);
   qassert(*list == box->read);
+  qmutex_unlock(&(box->mutex));
   if (qsignal_active(box->signal, 0) == 1) {
     qsignal_recv(box->signal);
   }

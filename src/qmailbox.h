@@ -8,6 +8,7 @@
 #include "qcore.h"
 #include "qengine.h"
 #include "qlist.h"
+#include "qmutex.h"
 
 struct qmailbox_t {
   unsigned int      active:1;
@@ -17,11 +18,12 @@ struct qmailbox_t {
   qevent_func_t    *callback;   /* mailbox reader callback */
   void             *reader;     /* mailbox reader */
   qsignal_t        *signal;
+  qmutex_t          mutex;
 };
 
 qmailbox_t* qmailbox_new(qevent_func_t *callback, void *reader);
 int         qmailbox_active(qengine_t *engine, qmailbox_t *box);
-void        qmailbox_add(qmailbox_t *box, struct qmsg_t *msg);
+void        qmailbox_add(qmailbox_t *box, qmsg_t *msg);
 int         qmailbox_get(qmailbox_t *box, qlist_t **list);
 
 #endif  /* __QMAILBOX_H__ */
