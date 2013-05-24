@@ -45,7 +45,7 @@ enum {
 struct qmsg_t {
   qlist_t         entry;
 
-  unsigned int    handled:1;            /* whether the msg has been handler by receiver */
+  unsigned int    handled:1;  /* whether the msg has been handler by receiver */
   unsigned short  flag;
   unsigned int    type;
 
