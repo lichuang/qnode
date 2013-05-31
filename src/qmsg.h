@@ -39,6 +39,8 @@ enum {
   MSG_FLAG  = 4,        /* both side message flag */
 };
 
+typedef int (*qmsg_fun_t)(qmsg_t *msg, void *acceptor);
+
 /* 
  * define messages between worker-thread and main-thread 
  */

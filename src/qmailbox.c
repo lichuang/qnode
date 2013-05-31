@@ -4,6 +4,8 @@
 
 #include <errno.h>
 #include <unistd.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <stdio.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -12,7 +14,17 @@
 #include "qlog.h"
 #include "qmsg.h"
 #include "qmailbox.h"
-#include "qsignal.h"
+
+void
+qmailbox_init(qmailbox_t *box, qacceptor_t *acceptor) {
+  qmutex_init(&(box->mutex));
+  qlist_entry_init(&(box->lists[0]));
+  qlist_entry_init(&(box->lists[1]));
+
+  box->write    = &(box->lists[0]);
+  box->read     = &(box->lists[1]);
+  box->acceptor = acceptor;
+}
 
 qmailbox_t*
 qmailbox_new(qevent_func_t *callback, void *reader) {
@@ -57,7 +69,7 @@ qmailbox_active(qengine_t *engine, qmailbox_t *box) {
 }
 
 void
-qmailbox_add(qmailbox_t *box, struct qmsg_t *msg) {
+qmailbox_add(qmailbox_t *box, qmsg_t *msg) {
   qlist_t *p;
 
   if (!box->active) {
@@ -100,4 +112,35 @@ qmailbox_get(qmailbox_t *box, qlist_t **list) {
     qsignal_recv(box->signal);
   }
   return qlist_empty(*list);
+}
+
+void
+qmailbox_handle(qmailbox_t *box) {
+  qlist_t     *read;
+  qlist_t     *pos, *next;
+  qacceptor_t *acceptor;
+
+  qmutex_lock(&(box->mutex));
+  read = box->write;
+  box->write = box->read;
+  box->read  = read;
+  box->handled = 0;
+  qmutex_unlock(&(box->mutex));
+
+  for (pos = read->next; pos != read; ) {
+    msg = qlist_entry(pos, qmsg_t, entry);
+    next = pos->next;
+    qlist_del_init(&(msg->entry));
+    if (msg == NULL) {
+      goto next;
+    }
+    qinfo("handle %d msg", msg->type);
+
+    acceptor->handle(msg, owner);
+
+next:
+    msg->handled = 1;
+    qmsg_destroy(msg);
+    pos = next;
+  }
 }

@@ -8,36 +8,35 @@
 #include <sys/types.h>
 #include "qalloc.h"
 #include "qassert.h"
+#include "qengine.h"
 #include "qsignal.h"
 
 static void
-signal_make_pair(int *rfd, int *wfd) {
+signal_handle(int fd, int flags, void *data) {
+  qsignal_t  *signal;
+
+  UNUSED(fd);
+  UNUSED(flags);
+
+  signal = (qsignal_t*)data;
+  qsignal_recv(signal);
+  qsignal_active(signal, 0);
+  qmailbox_handle(signal->box);
+}
+
+void
+qsignal_init(qsignal_t *signal, qmailbox_t *box) {
   int fds[2], result;
+
+  signal->box = box;
+  signal->active = 0;
 
   result = socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
 
   qassert(result == 0);
-  *wfd = fds[0];
-  *rfd = fds[1];
-}
-
-qsignal_t*
-qsignal_new() {
-  qsignal_t *signal;
-
-  signal = qalloc(sizeof(qsignal_t));
-  if (signal == NULL) {
-    return NULL;
-  }
-  signal_make_pair(&(signal->rfd), &(signal->wfd));
-  signal->active = 0;
-
-  return signal;
-}
-
-int
-qsignal_get_fd(qsignal_t *signal) {
-  return signal->rfd;
+  signal->wfd = fds[0];
+  signal->rfd = fds[1];
+  qengine_add_event(box->engine, signal->rfd, QEVENT_READ, signal_handle, signal);
 }
 
 int

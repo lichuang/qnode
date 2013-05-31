@@ -9,15 +9,19 @@
 #include "qcore.h"
 
 struct qsignal_t {
-  int       rfd;
-  int       wfd;
-  qatomic_t active;
+  int         rfd;
+  int         wfd;
+  qatomic_t   active;
+  qmailbox_t *box;
 };
 
-qsignal_t*  qsignal_new();
-int         qsignal_get_fd(qsignal_t *channel);
+#define qsignal_get_fd(signal)  \
+  (signal)->rfd
+
 void        qsignal_send(qsignal_t *channel);
 void        qsignal_recv(qsignal_t *channel);
 int         qsignal_active(qsignal_t *channel, int active);
+
+void        qsignal_init(qsignal_t *, qmailbox_t *);
 
 #endif /* __QSIGNAL_H__ */
