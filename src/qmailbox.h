@@ -5,10 +5,12 @@
 #ifndef __QMAILBOX_H__
 #define __QMAILBOX_H__
 
+#include "qatomic.h"
 #include "qcore.h"
 #include "qengine.h"
 #include "qlist.h"
 #include "qmutex.h"
+#include "qsignal.h"
 
 struct qmailbox_t {
   unsigned int      active:1;
@@ -18,16 +20,15 @@ struct qmailbox_t {
   void             *reader;     /* mailbox reader */
   qmutex_t          mutex;
 
-  int               rfd;
-  int               wfd;
+  qsignal_t         signal;
   qatomic_t         handled;
   qacceptor_t      *acceptor;
 };
 
-qmailbox_t* qmailbox_new(qevent_func_t *callback, void *reader);
-int         qmailbox_active(qengine_t *engine, qmailbox_t *box);
+//qmailbox_t* qmailbox_new(qevent_func_t *callback, void *reader);
+//int         qmailbox_active(qengine_t *engine, qmailbox_t *box);
 void        qmailbox_add(qmailbox_t *box, qmsg_t *msg);
-int         qmailbox_get(qmailbox_t *box, qlist_t **list);
+//int         qmailbox_get(qmailbox_t *box, qlist_t **list);
 
 void        qmailbox_init(qmailbox_t *box, qacceptor_t *acceptor);
 void        qmailbox_handle(qmailbox_t *box);

@@ -8,15 +8,14 @@
 #include "qcore.h"
 #include "qmailbox.h"
 
-int (*qmsg_func_t)(qmsg_t *msg, void *reader);
-
 struct qacceptor_t {
   qmailbox_t    box;
   qengine_t    *engine;
-  qmsg_func_t   handle;
+  qmsg_func_t  *handle;
   void         *owner;
 };
 
-void  qacceptor_init(qacceptor_t *, qengine_t *, qmsg_fun_t, void *);
+void qacceptor_init(qacceptor_t *acceptor, qengine_t *engine,
+                    qmsg_func_t *func, void *reader);
 
 #endif  /* __QACCEPTOR_H__ */

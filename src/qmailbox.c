@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include "qacceptor.h"
 #include "qalloc.h"
 #include "qassert.h"
 #include "qlog.h"
@@ -24,48 +25,7 @@ qmailbox_init(qmailbox_t *box, qacceptor_t *acceptor) {
   box->write    = &(box->lists[0]);
   box->read     = &(box->lists[1]);
   box->acceptor = acceptor;
-}
-
-qmailbox_t*
-qmailbox_new(qevent_func_t *callback, void *reader) {
-  qmailbox_t  *box;
-  qsignal_t   *signal;
-
-  box = qcalloc(sizeof(qmailbox_t));
-  if (box == NULL) {
-    return NULL;
-  }
-  if (qmutex_init(&(box->mutex)) != 0) {
-    qfree(box);
-    return NULL;
-  }
-  qlist_entry_init(&(box->lists[0]));
-  qlist_entry_init(&(box->lists[1]));
-  box->write  = &(box->lists[0]);
-  box->read   = &(box->lists[1]);
-  box->callback = callback;
-  box->reader = reader;
-  signal = qsignal_new();
-  if (signal == NULL) {
-    qfree(box);
-    return NULL;
-  }
-  box->signal = signal;
-  box->active = 1;
-  return box;
-}
-
-int
-qmailbox_active(qengine_t *engine, qmailbox_t *box) {
-  int            fd;
-  void          *data;
-  qevent_func_t *callback;
-
-  fd = qsignal_get_fd(box->signal);
-  callback = box->callback;
-  data = box->reader;
-
-  return qengine_add_event(engine, fd, QEVENT_READ, callback, data);
+  qsignal_init(&(box->signal), box);
 }
 
 void
@@ -76,50 +36,23 @@ qmailbox_add(qmailbox_t *box, qmsg_t *msg) {
     qmsg_destroy(msg);
     return;
   }
-  if (box->write == NULL) {
-    qassert(box->write);
-  }
   qmutex_lock(&(box->mutex));
   p = box->write;
   qlist_add_tail(&(msg->entry), p);
-  if (qsignal_active(box->signal, 1) == 0) {
-    qsignal_send(box->signal);
+  if (qsignal_active(&(box->signal), 1) == 0) {
+    qsignal_send(&(box->signal));
   }
-  qassert(box->signal->active == 1 || box->signal->active == 0);
   qmutex_unlock(&(box->mutex));
-}
-
-int
-qmailbox_get(qmailbox_t *box, qlist_t **list) {
-  qassert(box->write);
-  qlist_t *read;
-
-  qmutex_lock(&(box->mutex));
-  *list = NULL;
-  /* first save the read ptr */
-  read = box->read;
-  /* second change the read ptr to the write ptr */
-  qatomic_ptr_xchg(&(box->read), box->write);
-  /* 
-   * last change the write ptr to the read ptr saved before
-   * and return to list
-   */
-  *list = qatomic_ptr_xchg(&(box->write), read);
-  qassert(box->read != box->write);
-  qassert(*list == box->read);
-  qmutex_unlock(&(box->mutex));
-  if (qsignal_active(box->signal, 0) == 1) {
-    qsignal_recv(box->signal);
-  }
-  return qlist_empty(*list);
 }
 
 void
 qmailbox_handle(qmailbox_t *box) {
   qlist_t     *read;
   qlist_t     *pos, *next;
+  qmsg_t      *msg;
   qacceptor_t *acceptor;
 
+  acceptor = box->acceptor;
   qmutex_lock(&(box->mutex));
   read = box->write;
   box->write = box->read;
@@ -136,11 +69,12 @@ qmailbox_handle(qmailbox_t *box) {
     }
     qinfo("handle %d msg", msg->type);
 
-    acceptor->handle(msg, owner);
+    msg->handled = 1;
+    if (acceptor->handle(msg, acceptor->owner) == 0) {
+      qmsg_destroy(msg);
+    }
 
 next:
-    msg->handled = 1;
-    qmsg_destroy(msg);
     pos = next;
   }
 }

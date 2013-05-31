@@ -18,6 +18,10 @@
 #include "qthread.h"
 #include "qthread_log.h"
 
+static int
+worker_msg_handler(qmsg_t *msg, void *reader) {
+}
+
 static void thread_box(int fd, int flags, void *data) {
   UNUSED(fd);
   UNUSED(flags);
@@ -80,6 +84,8 @@ qthread_t* qthread_new(qtid_t tid) {
     qerror("create thread engine error");
     return NULL;
   }
+  qacceptor_init(&(thread->acceptor), thread->engine,
+                 worker_msg_handler, thread);
   thread->tid = tid;
 
   thread->box = qmailbox_new(thread_box, thread);

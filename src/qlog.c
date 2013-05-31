@@ -60,5 +60,5 @@ void qlog(int level, const char* file, long line, const char *format, ...) {
   log->n += sprintf(log->buff + log->n, " %s:%d] ", log->file, log->line);
   vsprintf(log->buff + log->n, log->format, args);
 
-  qlog_thread_active(log->idx);
+  qlog_thread_add(log);
 }

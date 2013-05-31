@@ -7,17 +7,18 @@
 
 #include <lua.h>
 #include <pthread.h>
+#include "qacceptor.h"
 #include "qlist.h"
 #include "qmsg.h"
 #include "qtype.h"
 
 struct qthread_t {
-  pthread_t           id;
-  qtid_t              tid;
-  qengine_t          *engine;
-  qmailbox_t         *box;
-  qlist_t             actor_list;
-  lua_State          *state;
+  qacceptor_t   acceptor;
+  pthread_t     id;
+  qtid_t        tid;
+  qengine_t    *engine;
+  qlist_t       actor_list;
+  lua_State    *state;
 };
 
 qthread_t*  qthread_new(qtid_t tid);

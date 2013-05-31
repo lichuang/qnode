@@ -56,6 +56,10 @@ init_server_event(struct qserver_t *server) {
   return 0;
 }
 
+static int
+server_msg_handler(qmsg_t *msg, void *reader) {
+}
+
 static void
 server_box(int fd, int flags, void *data) {
   qmsg_t      *msg;
@@ -263,6 +267,8 @@ server_init(qconfig_t *config) {
   if (init_server_event(server) < 0) {
     goto error;
   }
+  qacceptor_init(&(server->acceptor), server->engine,
+                 server);
   server->actors = qalloc(QID_MAX * sizeof(qactor_t*));
   if (server->actors == NULL) {
     goto error;

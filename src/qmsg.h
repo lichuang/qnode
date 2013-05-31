@@ -29,6 +29,7 @@ enum {
   s_start = 1,
   spawn   = 2,
   t_send  = 3,
+  LOG     = 4,
   QMAX_MSG_TYPE
 };
 
@@ -38,8 +39,6 @@ enum {
   TMSG_FLAG = 3,        /* worker-worker message flag */
   MSG_FLAG  = 4,        /* both side message flag */
 };
-
-typedef int (*qmsg_fun_t)(qmsg_t *msg, void *acceptor);
 
 /* 
  * define messages between worker-thread and main-thread 
@@ -69,6 +68,10 @@ struct qmsg_t {
     struct {
       qactor_msg_t *actor_msg;
     } t_send;
+
+    struct {
+      qlog_t *log;
+    } log;
   } args;
 };
 
@@ -83,8 +86,6 @@ void qmsg_destroy(qmsg_t *msg);
 qactor_msg_t* qactor_msg_new();
 void qactor_msg_destroy(qactor_msg_t *msg);
 qmsg_t* qmsg_clone(qmsg_t *msg);
-
-void qmsg_send(qmsg_t *msg);
 
 #define qmsg_is_smsg(msg)         ((msg)->flag == SMSG_FLAG || (msg)->flag == MSG_FLAG)
 #define qmsg_is_wmsg(msg)         ((msg)->flag == WMSG_FLAG || (msg)->flag == MSG_FLAG)
@@ -111,5 +112,8 @@ void qmsg_send(qmsg_t *msg);
   (msg)->type = t_send;                           \
   (msg)->flag = TMSG_FLAG;                        \
   (msg)->args.t_send.actor_msg = (actor_msg)               
-
+#define qmsg_init_log(msg, log)                   \
+  qlist_entry_init(&((msg)->entry));              \
+  (msg)->type = LOG;                              \
+  (msg)->args.log.log = (log)               
 #endif  /* __QMSG_H__ */
