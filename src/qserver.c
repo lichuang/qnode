@@ -58,8 +58,13 @@ init_server_event(struct qserver_t *server) {
 
 static int
 server_msg_handler(qmsg_t *msg, void *reader) {
+  UNUSED(msg);
+  UNUSED(reader);
+
+  return 0;
 }
 
+#if 0
 static void
 server_box(int fd, int flags, void *data) {
   qmsg_t      *msg;
@@ -96,6 +101,7 @@ next:
     pos = next;
   }
 }
+#endif
 
 qtid_t
 qserver_worker_thread() {
@@ -126,7 +132,7 @@ server_start(qserver_t *server) {
     return;
   }
   qmsg_init_sstart(msg, aid);
-  qmsg_send(msg);
+  //qmsg_send(msg);
 }
 
 static void
@@ -159,14 +165,6 @@ init_worker_threads(qserver_t *server) {
   }
 
   init_thread_count = 0;
-
-  /* create main thread mailbox */
-  server->box = qmailbox_new(server_box, NULL);
-  if (!server->box) {
-    goto error;
-  }
-  server->box->reader = server->box;
-  qmailbox_active(server->engine, server->box);
 
   /* create worker threads */
   for (i = 1; i <= thread_num; ++i) {
@@ -209,6 +207,7 @@ sig_handler(int sig) {
   qsignal_send(g_signal);
 }
 
+#if 0
 static void
 read_signal(int fd, int flags, void *data) {
   UNUSED(fd);
@@ -216,17 +215,20 @@ read_signal(int fd, int flags, void *data) {
   UNUSED(data);
   qsignal_recv(g_signal);
 }
+#endif
 
 static void
 setup_signal() {
   struct sigaction act;
 
+  /*
   g_signal = qsignal_new();
   if (g_signal == NULL) {
     return;
   }
   qengine_add_event(g_server->engine,
                     g_signal->rfd, QEVENT_READ, read_signal, NULL);
+  */
 
   sigemptyset(&act.sa_mask);
   act.sa_flags = SA_NODEFER | SA_ONSTACK | SA_RESETHAND;
@@ -268,7 +270,7 @@ server_init(qconfig_t *config) {
     goto error;
   }
   qacceptor_init(&(server->acceptor), server->engine,
-                 server);
+                 server_msg_handler, server);
   server->actors = qalloc(QID_MAX * sizeof(qactor_t*));
   if (server->actors == NULL) {
     goto error;

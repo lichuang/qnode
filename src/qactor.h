@@ -8,6 +8,7 @@
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
+#include "qacceptor.h"
 #include "qcore.h"
 #include "qdict.h"
 #include "qtype.h"
@@ -15,7 +16,8 @@
 #include "qmutex.h"
 
 struct qactor_t {
-  lua_State       *state;
+  qacceptor_t     acceptor; 
+  lua_State      *state;
   /*
    * lua thread YIELD reason
    */
@@ -38,6 +40,7 @@ void        qactor_destroy(qactor_t *actor);
 
 /* spawn an actor as child, return the actor ID */
 qid_t       qactor_spawn(qactor_t *actor, lua_State *state);
+void        qactor_send(qid_t aid, qmsg_t *msg);
 
 qengine_t*  qactor_get_engine(qactor_t *actor);
 qthread_t*  qactor_get_thread(qactor_t *actor);

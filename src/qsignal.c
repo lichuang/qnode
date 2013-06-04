@@ -7,8 +7,12 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include "qalloc.h"
+#include "qacceptor.h"
 #include "qassert.h"
+#include "qcore.h"
+#include "qdefines.h"
 #include "qengine.h"
+#include "qmailbox.h"
 #include "qsignal.h"
 
 static void
@@ -36,7 +40,7 @@ qsignal_init(qsignal_t *signal, qmailbox_t *box) {
   qassert(result == 0);
   signal->wfd = fds[0];
   signal->rfd = fds[1];
-  qengine_add_event(box->engine, signal->rfd,
+  qengine_add_event(box->acceptor->engine, signal->rfd,
                     QEVENT_READ, signal_handle, signal);
 }
 

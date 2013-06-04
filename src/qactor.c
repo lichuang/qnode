@@ -19,7 +19,8 @@
 #include "qserver.h"
 #include "qthread.h"
 
-qid_t qactor_new_id() {
+qid_t
+qactor_new_id() {
   qid_t id;
 
   qmutex_lock(&g_server->id_map_mutex);
@@ -28,7 +29,8 @@ qid_t qactor_new_id() {
   return id;
 }
 
-qactor_t* qactor_new(qid_t aid) {
+qactor_t*
+qactor_new(qid_t aid) {
   qactor_t *actor;
 
   actor = qalloc(sizeof(qactor_t));
@@ -50,7 +52,8 @@ qactor_t* qactor_new(qid_t aid) {
   return actor;
 }
 
-void qactor_destroy(qactor_t *actor) {
+void
+qactor_destroy(qactor_t *actor) {
   qlist_t *pos, *next;
   qmsg_t  *msg;
 
@@ -81,15 +84,15 @@ void qactor_destroy(qactor_t *actor) {
   qfree(actor);
 }
 
-void qactor_attach(qactor_t *actor, lua_State *state) {
+void
+qactor_attach(qactor_t *actor, lua_State *state) {
   qassert(actor->state == NULL);
   qapi_register(state, actor);
   actor->state = state;
 }
 
-qid_t qactor_spawn(qactor_t *actor, lua_State *state) {
-  qassert(actor);
-
+qid_t
+qactor_spawn(qactor_t *actor, lua_State *state) {
   qtid_t    receiver_id;
   qid_t     aid;
   qid_t     parent;
@@ -117,18 +120,31 @@ qid_t qactor_spawn(qactor_t *actor, lua_State *state) {
   qactor_attach(new_actor, state);
   new_actor->parent = actor->aid;
   msg->args.spawn.actor = new_actor;
-  qmsg_send(msg);
+  qthread_send(receiver_id, msg);
 
   return aid;
 }
 
-qengine_t* qactor_get_engine(qactor_t *actor) {
+qengine_t*
+qactor_get_engine(qactor_t *actor) {
   qassert(actor);
   qassert(actor->tid > 0);
   return g_server->threads[actor->tid]->engine;
 }
 
-qthread_t* qactor_get_thread(qactor_t *actor) {
+qthread_t*
+qactor_get_thread(qactor_t *actor) {
   qassert(actor);
   return g_server->threads[actor->tid];
+}
+
+void
+qactor_send(qid_t aid, qmsg_t *msg) {
+  qactor_t   *actor;
+  qmailbox_t *box;
+
+  actor = g_server->actors[aid];
+  box   = &(actor->acceptor.box);
+
+  qmailbox_add(box, msg);
 }

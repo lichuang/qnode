@@ -20,8 +20,13 @@
 
 static int
 worker_msg_handler(qmsg_t *msg, void *reader) {
+  UNUSED(msg);
+  UNUSED(reader);
+
+  return 0;
 }
 
+#if 0
 static void thread_box(int fd, int flags, void *data) {
   UNUSED(fd);
   UNUSED(flags);
@@ -59,8 +64,10 @@ next:
     pos = next;
   }
 }
+#endif
 
-static void* worker_thread_main_loop(void *arg) {
+static void*
+worker_thread_main_loop(void *arg) {
   qthread_t *thread;
 
   thread = (qthread_t*)arg;
@@ -71,7 +78,8 @@ static void* worker_thread_main_loop(void *arg) {
   return NULL;
 }
 
-qthread_t* qthread_new(qtid_t tid) {
+qthread_t*
+qthread_new(qtid_t tid) {
   qthread_t    *thread;
 
   thread = qcalloc(sizeof(qthread_t));
@@ -88,13 +96,6 @@ qthread_t* qthread_new(qtid_t tid) {
                  worker_msg_handler, thread);
   thread->tid = tid;
 
-  thread->box = qmailbox_new(thread_box, thread);
-  if (thread->box == NULL) {
-    qerror("create thread box error");
-    return NULL;
-  }
-  qmailbox_active(thread->engine, thread->box);
-
   /* create the lua VM for the thread */
   thread->state = qlua_new_state();
   /* init the actor list */
@@ -105,7 +106,18 @@ qthread_t* qthread_new(qtid_t tid) {
   return thread;
 }
 
-void qthread_destroy(qthread_t *thread) {
+void
+qthread_destroy(qthread_t *thread) {
   /* wait for the thread stop */
   pthread_join(thread->id, NULL);
+}
+
+void
+qthread_send(qtid_t tid, qmsg_t *msg) {
+  qthread_t  *thread;
+  qmailbox_t *box;
+
+  thread = g_server->threads[tid];
+  box    = &(thread->acceptor.box);
+  qmailbox_add(box, msg);
 }
