@@ -33,6 +33,18 @@ static qmutex_t     init_thread_lock;
 /* for handle signals */
 static qsignal_t   *g_signal       = NULL;
 
+static void server_accept(int fd, int flags, void *data);
+static int  init_server_event(qserver_t *server);
+static int  server_msg_handler(qmsg_t *msg, void *reader);
+static void server_start(qserver_t *server);
+static void wait_threads(int thread_num);
+static int  init_worker_threads(qserver_t *server);
+static void sig_handler(int sig);
+static void setup_signal();
+static int  server_init(qconfig_t *config);
+static void destroy_threads();
+static void destroy_server();
+
 static void
 server_accept(int fd, int flags, void *data) {
   UNUSED(fd);
@@ -42,7 +54,7 @@ server_accept(int fd, int flags, void *data) {
 }
 
 static int
-init_server_event(struct qserver_t *server) {
+init_server_event(qserver_t *server) {
   return 0;
   int fd = qnet_tcp_listen(22222, "127.0.0.1");
   if (fd < 0) {
@@ -58,50 +70,12 @@ init_server_event(struct qserver_t *server) {
 
 static int
 server_msg_handler(qmsg_t *msg, void *reader) {
-  UNUSED(msg);
-  UNUSED(reader);
+  qserver_t *server;
 
-  return 0;
+  qinfo("handle %d msg", msg->type);
+  server = (qserver_t*)reader;
+  return g_server_msg_handlers[msg->type](server, msg);
 }
-
-#if 0
-static void
-server_box(int fd, int flags, void *data) {
-  qmsg_t      *msg;
-  qlist_t     *list;
-  qmailbox_t  *box;
-  qlist_t     *pos, *next;
-
-  UNUSED(fd);
-  UNUSED(flags);
-
-  box = (qmailbox_t*)data;
-  qmailbox_get(box, &list);
-  for (pos = list->next; pos != list; ) {
-    msg = qlist_entry(pos, qmsg_t, entry);
-    next = pos->next;
-    qlist_del_init(&(msg->entry));
-    if (msg == NULL) {
-      goto next;
-    }
-    if (!qmsg_is_wmsg(msg)) {
-      qerror("msg %d is not worker msg", msg->type);
-      goto next;
-    }
-    if (qmsg_invalid_type(msg->type)) {
-      qerror("msg %d is not valid msg type", msg->type);
-      goto next;
-    }
-    qinfo("handle %d msg", msg->type);
-    (g_server_msg_handlers[msg->type])(g_server, msg);
-
-next:
-    msg->handled = 1;
-    qmsg_destroy(msg);
-    pos = next;
-  }
-}
-#endif
 
 qtid_t
 qserver_worker_thread() {
@@ -132,7 +106,7 @@ server_start(qserver_t *server) {
     return;
   }
   qmsg_init_sstart(msg, aid);
-  //qmsg_send(msg);
+  qthread_send(tid, msg);
 }
 
 static void

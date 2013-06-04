@@ -18,53 +18,19 @@
 #include "qthread.h"
 #include "qthread_log.h"
 
+static int worker_msg_handler(qmsg_t *msg, void *reader);
+static void* worker_thread_main_loop(void *arg);
+
+extern qthread_msg_handler g_thread_msg_handlers[];
+
 static int
 worker_msg_handler(qmsg_t *msg, void *reader) {
-  UNUSED(msg);
-  UNUSED(reader);
+  qthread_t *thread;
 
-  return 0;
+  thread = (qthread_t*)reader;
+  qinfo("handle %d msg", msg->type);
+  return g_thread_msg_handlers[msg->type](thread, msg);
 }
-
-#if 0
-static void thread_box(int fd, int flags, void *data) {
-  UNUSED(fd);
-  UNUSED(flags);
-
-  qmsg_t      *msg;
-  qlist_t     *list;
-  qlist_t     *pos, *next;
-  qthread_t   *thread;
-
-  thread = (qthread_t*)data;
-  qmailbox_get(thread->box, &list);
-  for (pos = list->next; pos != list; ) {
-    msg = qlist_entry(pos, qmsg_t, entry);
-    qassert(msg);
-    next = pos->next;
-    qlist_del_init(&(msg->entry));
-    if (msg == NULL) {
-      qinfo("msg NULL");
-      goto next;
-    }
-    qinfo("handle %d msg %p", msg->type, msg);
-    if (!qmsg_is_smsg(msg)) {
-      qerror("msg %d , flag %d is not server msg", msg->type, msg->flag);
-      goto next;
-    }
-    if (qmsg_invalid_type(msg->type)) {
-      qerror("msg %d is not valid msg type", msg->type);
-      goto next;
-    }
-    (g_thread_msg_handlers[msg->type])(thread, msg);
-
-next:
-    msg->handled = 1;
-    qmsg_destroy(msg);
-    pos = next;
-  }
-}
-#endif
 
 static void*
 worker_thread_main_loop(void *arg) {

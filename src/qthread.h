@@ -25,6 +25,4 @@ qthread_t*  qthread_new(qtid_t tid);
 void        qthread_destroy(qthread_t *thread);
 void        qthread_send(qtid_t tid, qmsg_t *msg);
 
-extern qthread_msg_handler g_thread_msg_handlers[];
-
 #endif  /* __QTHREAD_H__ */

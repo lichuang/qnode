@@ -13,14 +13,16 @@
 #include "qserver.h"
 #include "qthread.h"
 
-static int server_handle_wrong_msg(qserver_t *server, qmsg_t *msg) {
+static int
+server_handle_wrong_msg(qserver_t *server, qmsg_t *msg) {
   UNUSED(server);
   UNUSED(msg);
   qerror("handle server type %d msg error", msg->type);
   return 0;
 }
 
-static int server_handle_spawn_msg(qserver_t *server, qmsg_t *msg) {
+static int
+server_handle_spawn_msg(qserver_t *server, qmsg_t *msg) {
   qmsg_t     *new_msg;
   qid_t       aid;
   lua_State  *state;
@@ -38,7 +40,7 @@ static int server_handle_spawn_msg(qserver_t *server, qmsg_t *msg) {
   new_msg->args.spawn.actor = actor;
   new_msg->sender_id = QMAIN_THREAD_TID;
   new_msg->receiver_id = qserver_worker_thread();
-  qmsg_send(new_msg);
+  qthread_send(new_msg->receiver_id, new_msg);
   server->actors[aid] = actor;
 
   return 0;

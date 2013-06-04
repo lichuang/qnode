@@ -25,6 +25,7 @@ qmailbox_init(qmailbox_t *box, qacceptor_t *acceptor) {
   box->write    = &(box->lists[0]);
   box->read     = &(box->lists[1]);
   box->acceptor = acceptor;
+  box->active   = 1;
   qsignal_init(&(box->signal), box);
 }
 
