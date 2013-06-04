@@ -29,7 +29,8 @@ enum {
   s_start = 1,
   spawn   = 2,
   t_send  = 3,
-  LOG     = 4,
+  SIGNAL  = 4,
+  LOG     = 5,
   QMAX_MSG_TYPE
 };
 
@@ -72,6 +73,10 @@ struct qmsg_t {
     struct {
       qlog_t *log;
     } log;
+
+    struct {
+      int signo;
+    } signal;
   } args;
 };
 
@@ -112,8 +117,15 @@ qmsg_t* qmsg_clone(qmsg_t *msg);
   (msg)->type = t_send;                           \
   (msg)->flag = TMSG_FLAG;                        \
   (msg)->args.t_send.actor_msg = (actor_msg)               
+
 #define qmsg_init_log(msg, log)                   \
   qlist_entry_init(&((msg)->entry));              \
   (msg)->type = LOG;                              \
   (msg)->args.log.log = (log)               
+
+#define qmsg_init_signal(msg, signo)              \
+  qlist_entry_init(&((msg)->entry));              \
+  (msg)->type = SIGNAL;                           \
+  (msg)->args.signal.signo = (signo)               
+
 #endif  /* __QMSG_H__ */

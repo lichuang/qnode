@@ -13,24 +13,17 @@
 #include "qsignal.h"
 
 struct qmailbox_t {
-  unsigned int      active:1;
   qlist_t           lists[2];   /* one for read, one for write */
   qlist_t          *write;      /* current write list ptr */
   qlist_t          *read;       /* current read  list ptr */
   void             *reader;     /* mailbox reader */
-  qmutex_t          mutex;
-
-  qsignal_t         signal;
-  qatomic_t         handled;
-  qacceptor_t      *acceptor;
+  qmutex_t          mutex;      /* mutex for protect msg */
+  qsignal_t         signal;     /* signaler */
+  qacceptor_t      *acceptor;   /* owner acceptor */
 };
 
-//qmailbox_t* qmailbox_new(qevent_func_t *callback, void *reader);
-//int         qmailbox_active(qengine_t *engine, qmailbox_t *box);
-void        qmailbox_add(qmailbox_t *box, qmsg_t *msg);
-//int         qmailbox_get(qmailbox_t *box, qlist_t **list);
-
-void        qmailbox_init(qmailbox_t *box, qacceptor_t *acceptor);
-void        qmailbox_handle(qmailbox_t *box);
+void  qmailbox_add(qmailbox_t *box, qmsg_t *msg);
+void  qmailbox_init(qmailbox_t *box, qacceptor_t *acceptor);
+void  qmailbox_handle(qmailbox_t *box);
 
 #endif  /* __QMAILBOX_H__ */

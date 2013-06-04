@@ -30,9 +30,6 @@ static int          init_thread_count;
 static qcond_t      init_thread_cond;
 static qmutex_t     init_thread_lock; 
 
-/* for handle signals */
-static qsignal_t   *g_signal       = NULL;
-
 static void server_accept(int fd, int flags, void *data);
 static int  init_server_event(qserver_t *server);
 static int  server_msg_handler(qmsg_t *msg, void *reader);
@@ -177,32 +174,11 @@ sig_handler(int sig) {
   default:
     break;
   }
-
-  qsignal_send(g_signal);
 }
-
-#if 0
-static void
-read_signal(int fd, int flags, void *data) {
-  UNUSED(fd);
-  UNUSED(flags);
-  UNUSED(data);
-  qsignal_recv(g_signal);
-}
-#endif
 
 static void
 setup_signal() {
   struct sigaction act;
-
-  /*
-  g_signal = qsignal_new();
-  if (g_signal == NULL) {
-    return;
-  }
-  qengine_add_event(g_server->engine,
-                    g_signal->rfd, QEVENT_READ, read_signal, NULL);
-  */
 
   sigemptyset(&act.sa_mask);
   act.sa_flags = SA_NODEFER | SA_ONSTACK | SA_RESETHAND;
