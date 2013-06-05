@@ -35,14 +35,14 @@ enum {
   QWMSG_NUM
 };
 
-/* L_* means logger thread handle message */
+/* L_* means Logger thread handle message */
 enum {
   L_LOG     = 0,
   L_SIGNAL  = 1,
   QLMSG_NUM
 };
 
-/* A_* means actor handle message */
+/* A_* means Actor handle message */
 enum {
   A_SEND    = 0,
   QAMSG_NUM
@@ -57,11 +57,14 @@ enum {
   QMAX_MSG_TYPE
 };
 
-enum {
-  SMSG_FLAG = 1,        /* server-worker message flag */
-  WMSG_FLAG = 2,        /* worker-server message flag */
-  TMSG_FLAG = 3,        /* worker-worker message flag */
-  MSG_FLAG  = 4,        /* both side message flag */
+#define qmsg_header_fields  \
+  qlist_t       entry;      \
+  unsigned int  type;       \
+  qid_t         sender_id;  \
+  qid_t         recver_id;  
+
+struct qmsg_t {
+  qmsg_header_fields;
 };
 
 /* 
@@ -101,7 +104,7 @@ struct qmsg_t {
   } args;
 };
 
-qmsg_t*       qmsg_new(qid_t sender_id, qid_t receiver_id);
+qmsg_t*       qmsg_new(qid_t sender_id, qid_t recver_id);
 void          qmsg_destroy(qmsg_t *msg);
 qactor_msg_t* qactor_msg_new();
 void          qactor_msg_destroy(qactor_msg_t *msg);

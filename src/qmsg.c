@@ -13,7 +13,7 @@
 #include "qworker.h"
 
 qmsg_t*
-qmsg_new(qid_t sender_id, qid_t receiver_id) {
+qmsg_new(qid_t sender_id, qid_t recv_id) {
   qmsg_t *msg;
 
   msg = qcalloc(sizeof(qmsg_t));
