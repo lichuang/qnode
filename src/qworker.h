@@ -2,8 +2,8 @@
  * See Copyright Notice in qnode.h
  */
 
-#ifndef __QTHREAD_H__
-#define __QTHREAD_H__
+#ifndef __qworker_H__
+#define __qworker_H__
 
 #include <lua.h>
 #include <pthread.h>
@@ -12,7 +12,7 @@
 #include "qmsg.h"
 #include "qtype.h"
 
-struct qthread_t {
+struct qworker_t {
   qmailbox_t    box;
   pthread_t     id;
   qtid_t        tid;
@@ -21,8 +21,8 @@ struct qthread_t {
   lua_State    *state;
 };
 
-qthread_t*  qthread_new(qtid_t tid);
-void        qthread_destroy(qthread_t *thread);
-void        qthread_send(qtid_t tid, qmsg_t *msg);
+qworker_t*  qworker_new(qtid_t tid);
+void        qworker_destroy(qworker_t *thread);
+void        qworker_send(qtid_t tid, qmsg_t *msg);
 
-#endif  /* __QTHREAD_H__ */
+#endif  /* __qworker_H__ */

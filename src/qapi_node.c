@@ -14,7 +14,7 @@
 #include "qmutex.h"
 #include "qserver.h"
 #include "qstring.h"
-#include "qthread.h"
+#include "qworker.h"
 
 /*
  * spawn an actor, return the actor ID
@@ -24,15 +24,15 @@ static int qnode_spawn(lua_State *state) {
   const char *mod;
   const char *fun;
   qactor_t   *actor;
-  qthread_t  *thread;
+  qworker_t  *worker;
   lua_State  *new_state;
   qstring_t   string;
 
   actor = qlua_get_actor(state);
   mod = lua_tostring(state, 1);
   fun = lua_tostring(state, 2);
-  thread = g_server->threads[actor->tid];
-  new_state = qlua_new_thread(thread);
+  worker = g_server->workers[actor->tid];
+  new_state = qlua_new_thread(worker);
 
   string = qstring_new(mod);
   if (string == NULL) {

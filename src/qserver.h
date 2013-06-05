@@ -20,7 +20,7 @@ struct qserver_t {
   qconfig_t        *config;       /* server config */
   qdescriptor_t   **descriptors;  /* descriptor array */
   qengine_t        *engine;       /* event dispatch engine */
-  qthread_t       **threads;      /* worker threads array */
+  qworker_t       **workers;      /* worker threads array */
   qthread_log_t   **thread_log;   /* thread log array(include main) */
   unsigned int      num_actor;    /* actor number */
   qidmap_t          id_map;       /* id map for allocate actor id */
@@ -33,7 +33,7 @@ void qserver_new_actor(qactor_t *actor);
 
 void qserver_worker_started();
 
-qtid_t qserver_worker_thread();
+qtid_t qserver_worker();
 
 qactor_t* qserver_get_actor(qid_t id);
 

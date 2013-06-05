@@ -73,17 +73,11 @@ struct qmsg_t {
   } args;
 };
 
-/* handler for worker thread msg */
-typedef int (*qthread_msg_handler)(qthread_t *thread, qmsg_t *msg);
-
-/* handler for server thread msg */
-typedef int (*qserver_msg_handler)(qserver_t *server, qmsg_t *msg);
-
-qmsg_t* qmsg_new(qtid_t sender_id, qtid_t receiver_id);
-void qmsg_destroy(qmsg_t *msg);
+qmsg_t*       qmsg_new(qtid_t sender_id, qtid_t receiver_id);
+void          qmsg_destroy(qmsg_t *msg);
 qactor_msg_t* qactor_msg_new();
-void qactor_msg_destroy(qactor_msg_t *msg);
-qmsg_t* qmsg_clone(qmsg_t *msg);
+void          qactor_msg_destroy(qactor_msg_t *msg);
+qmsg_t*       qmsg_clone(qmsg_t *msg);
 
 #define qmsg_invalid_type(type)   ((type) <= 0 || (type) >= QMAX_MSG_TYPE)
 

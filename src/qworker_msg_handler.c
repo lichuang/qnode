@@ -12,10 +12,11 @@
 #include "qmailbox.h"
 #include "qmsg.h"
 #include "qserver.h"
-#include "qthread.h"
+#include "qworker.h"
 
 static int
-thread_handle_start_msg(qthread_t *thread, qmsg_t *msg) {
+worker_handle_start_msg(qmsg_t *msg, void *reader) {
+  qworker_t  *worker;
   int         ret;
   qid_t       aid;
   qactor_t   *actor;
@@ -23,6 +24,7 @@ thread_handle_start_msg(qthread_t *thread, qmsg_t *msg) {
 
   qinfo("handle start msg");
 
+  worker = (qworker_t*)reader;
   aid = msg->args.start.aid;
   actor = qactor_new(aid);
   if (actor == NULL) {
@@ -30,8 +32,8 @@ thread_handle_start_msg(qthread_t *thread, qmsg_t *msg) {
     return -1;
   }
   qassert(actor->state == NULL);
-  qactor_attach(actor, qlua_new_thread(thread));
-  actor->tid = thread->tid;
+  qactor_attach(actor, qlua_new_thread(worker));
+  actor->tid = worker->tid;
 
   if (qlua_threadloadfile(actor, actor->state, "server.lua") != 0) {
     qerror("load server start script error");
@@ -59,15 +61,17 @@ thread_handle_start_msg(qthread_t *thread, qmsg_t *msg) {
 }
 
 static int
-thread_handle_spawn_msg(qthread_t *thread, qmsg_t *msg) {
-  int       ret;
-  qactor_t *actor;
+worker_handle_spawn_msg(qmsg_t *msg, void *reader) {
+  int        ret;
+  qactor_t  *actor;
+  qworker_t *worker;
 
   qinfo("handle spawn msg");
 
+  worker = (qworker_t*)reader;
   actor = msg->args.spawn.actor;
   actor->state = msg->args.spawn.state;
-  actor->tid = thread->tid;
+  actor->tid = worker->tid;
   lua_State *state = actor->state;
   if (qlua_call(state, 1, 0) == 0) {
     ret = (int)lua_tonumber(state, -1);
@@ -80,12 +84,12 @@ thread_handle_spawn_msg(qthread_t *thread, qmsg_t *msg) {
 }
 
 static int
-thread_handle_send_msg(qthread_t *thread, qmsg_t *msg) {
+worker_handle_send_msg(qmsg_t *msg, void *reader) {
   qactor_t      *actor;
   qactor_msg_t  *actor_msg;
   lua_State     *state;
 
-  UNUSED(thread);
+  UNUSED(reader);
   qinfo("handle send msg");
 
   actor_msg = msg->args.send.actor_msg;
@@ -108,16 +112,16 @@ thread_handle_send_msg(qthread_t *thread, qmsg_t *msg) {
   return 0;
 }
 
-static int thread_handle_wrong_msg(qthread_t *thread, qmsg_t *msg) {
-  UNUSED(thread);
+static int worker_handle_wrong_msg(qmsg_t *msg, void *reader) {
+  UNUSED(reader);
   UNUSED(msg);
-  qerror("handle thread type %d msg error", msg->type);
+  qerror("handle worker type %d msg error", msg->type);
   return 0;
 }
 
-qthread_msg_handler g_thread_msg_handlers[] = {
-  &thread_handle_wrong_msg,     /* WRONG */
-  &thread_handle_start_msg,     /* start */
-  &thread_handle_spawn_msg,     /* spawn */
-  &thread_handle_send_msg,      /* send */
+qmsg_func_t* g_worker_msg_handlers[] = {
+  &worker_handle_wrong_msg,     /* WRONG */
+  &worker_handle_start_msg,     /* start */
+  &worker_handle_spawn_msg,     /* spawn */
+  &worker_handle_send_msg,      /* send */
 };

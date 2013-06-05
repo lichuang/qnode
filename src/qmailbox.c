@@ -37,12 +37,9 @@ qmailbox_add(qmailbox_t *box, qmsg_t *msg) {
   p = box->write;
   qlist_add_tail(&(msg->entry), p);
   if (qsignal_active(&(box->signal), 1) == 0) {
-    printf("111add msg %d\n", msg->type);
     qsignal_send(&(box->signal));
   }
   qmutex_unlock(&(box->mutex));
-
-  printf("add msg %d\n", msg->type);
 }
 
 void
@@ -52,7 +49,7 @@ qmailbox_handle(qmailbox_t *box) {
   qmsg_t      *msg;
 
   qmutex_lock(&(box->mutex));
-  read = box->write;
+  read       = box->write;
   box->write = box->read;
   box->read  = read;
   qmutex_unlock(&(box->mutex));
@@ -61,8 +58,6 @@ qmailbox_handle(qmailbox_t *box) {
     msg = qlist_entry(pos, qmsg_t, entry);
     next = pos->next;
     qlist_del_init(&(msg->entry));
-
-    printf("!!!!!!!!!!1handle %d msg, %p\n", msg->type, box->handler);
 
     msg->handled = 1;
     if (box->handler(msg, box->reader) == 0) {

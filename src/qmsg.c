@@ -10,7 +10,7 @@
 #include "qmsg.h"
 #include "qserver.h"
 #include "qstring.h"
-#include "qthread.h"
+#include "qworker.h"
 
 qmsg_t*
 qmsg_new(qtid_t sender_id, qtid_t receiver_id) {

@@ -43,6 +43,6 @@ qid_t       qactor_spawn(qactor_t *actor, lua_State *state);
 void        qactor_send(qid_t aid, qmsg_t *msg);
 
 qengine_t*  qactor_get_engine(qactor_t *actor);
-qthread_t*  qactor_get_thread(qactor_t *actor);
+qworker_t*  qactor_get_worker(qactor_t *actor);
 
 #endif  /* __QACTOR_H__ */

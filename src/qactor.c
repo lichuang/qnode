@@ -17,7 +17,7 @@
 #include "qmsg.h"
 #include "qnet.h"
 #include "qserver.h"
-#include "qthread.h"
+#include "qworker.h"
 
 qid_t
 qactor_new_id() {
@@ -99,7 +99,7 @@ qactor_spawn(qactor_t *actor, lua_State *state) {
   qmsg_t   *msg;
   qactor_t *new_actor;
 
-  receiver_id = qserver_worker_thread();
+  receiver_id = qserver_worker();
   msg = qmsg_new(actor->tid, receiver_id);
   if (msg == NULL) {
     return QID_INVALID;
@@ -120,7 +120,7 @@ qactor_spawn(qactor_t *actor, lua_State *state) {
   qactor_attach(new_actor, state);
   new_actor->parent = actor->aid;
   msg->args.spawn.actor = new_actor;
-  qthread_send(receiver_id, msg);
+  qworker_send(receiver_id, msg);
 
   return aid;
 }
@@ -129,13 +129,13 @@ qengine_t*
 qactor_get_engine(qactor_t *actor) {
   qassert(actor);
   qassert(actor->tid > 0);
-  return g_server->threads[actor->tid]->engine;
+  return g_server->workers[actor->tid]->engine;
 }
 
-qthread_t*
-qactor_get_thread(qactor_t *actor) {
+qworker_t*
+qactor_get_worker(qactor_t *actor) {
   qassert(actor);
-  return g_server->threads[actor->tid];
+  return g_server->workers[actor->tid];
 }
 
 void

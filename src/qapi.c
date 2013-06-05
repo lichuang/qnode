@@ -4,7 +4,7 @@
 
 #include "qapi.h"
 #include "qluautil.h"
-#include "qthread.h"
+#include "qworker.h"
 
 extern luaL_Reg buffer_apis[];
 extern luaL_Reg net_apis[];

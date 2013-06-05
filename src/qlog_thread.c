@@ -26,8 +26,6 @@ logger_msg_handler(qmsg_t *msg, void *reader) {
   qlog_t        *log;
   qlog_thread_t *thread;
   
-  printf("!!!!!!!1type: %d\n", msg->type);
-
   thread = (qlog_thread_t*)reader;
   log = msg->args.log.log;
   printf("%s\n", log->buff);

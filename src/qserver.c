@@ -17,10 +17,10 @@
 #include "qnet.h"
 #include "qserver.h"
 #include "qsignal.h"
-#include "qthread.h"
+#include "qworker.h"
 #include "qthread_log.h"
 
-extern qserver_msg_handler g_server_msg_handlers[];
+extern qmsg_func_t* g_server_msg_handlers[];
 
 qserver_t    *g_server;
 volatile int  g_quit = 0;
@@ -68,15 +68,11 @@ init_server_event(qserver_t *server) {
 
 static int
 server_msg_handler(qmsg_t *msg, void *reader) {
-  qserver_t *server;
-
-  printf("!!!!handle %d msg", msg->type);
-  server = (qserver_t*)reader;
-  return g_server_msg_handlers[msg->type](server, msg);
+  return (*g_server_msg_handlers[msg->type])(msg, reader);
 }
 
 qtid_t
-qserver_worker_thread() {
+qserver_worker() {
   static qtid_t i;
 
   i = 1;
@@ -98,13 +94,13 @@ server_start(qserver_t *server) {
   UNUSED(server);
   aid = qactor_new_id();
   qassert(aid != QID_INVALID);
-  tid = qserver_worker_thread();
+  tid = qserver_worker();
   msg = qmsg_new(QMAIN_THREAD_TID, tid);
   if (msg == NULL) {
     return;
   }
   qmsg_init_start(msg, aid);
-  qthread_send(tid, msg);
+  qworker_send(tid, msg);
 }
 
 static void
@@ -125,11 +121,11 @@ init_worker_threads(qserver_t *server) {
   config = server->config;
   thread_num = config->thread_num;
 
-  server->threads = qalloc(thread_num * sizeof(qthread_t*));
-  if (server->threads == NULL) {
+  server->workers = qalloc(thread_num * sizeof(qworker_t*));
+  if (server->workers == NULL) {
     goto error;
   }
-  server->threads[0] = NULL;
+  server->workers[0] = NULL;
 
   server->thread_log = qalloc(thread_num * sizeof(qthread_log_t*));
   if (server->thread_log == NULL) {
@@ -140,8 +136,8 @@ init_worker_threads(qserver_t *server) {
 
   /* create worker threads */
   for (i = 1; i <= thread_num; ++i) {
-    server->threads[i] = qthread_new(i); 
-    if (server->threads[i] == NULL) {
+    server->workers[i] = qworker_new(i); 
+    if (server->workers[i] == NULL) {
       goto error;
     }
   }
@@ -166,18 +162,6 @@ static void
 signal_handler(int sig) {
   qmsg_t     *msg;
   qmailbox_t *box;
-
-  //qinfo("caught signal %d", sig);
-  switch (sig) {
-  case SIGTERM:
-  case SIGINT:
-  case SIGQUIT:
-  case SIGABRT:
-    g_quit = 1;
-    break;
-  default:
-    break;
-  }
 
   msg = qmsg_new(0, 0);
   if (msg == NULL) {
@@ -232,7 +216,6 @@ server_init(qconfig_t *config) {
   if (init_server_event(server) < 0) {
     goto error;
   }
-  printf("server handler: %p", server_msg_handler);
   qmailbox_init(&(server->box), server_msg_handler,
                 server->engine, server);
   server->actors = qalloc(QID_MAX * sizeof(qactor_t*));
@@ -264,11 +247,11 @@ error:
 static void
 destroy_threads() {
   int         i;
-  qthread_t  *thread;
+  qworker_t  *worker;
 
   for (i = 1; i <= g_server->config->thread_num; ++i) {
-    thread = g_server->threads[i];
-    qthread_destroy(thread);
+    worker = g_server->workers[i];
+    qworker_destroy(worker);
   }
   qlog_thread_destroy();
 }

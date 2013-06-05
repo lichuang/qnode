@@ -14,8 +14,6 @@
 #include "qmailbox.h"
 #include "qsignal.h"
 
-#include <stdio.h>
-
 static void
 signal_handle(int fd, int flags, void *data) {
   qsignal_t  *signal;
@@ -71,8 +69,6 @@ void
 qsignal_recv(qsignal_t *signal) {
   char    dummy;
   ssize_t n;
-
-  printf("qsignal_recv\n");
 
   while (1) {
     n = recv(signal->rfd, &dummy, sizeof(dummy), 0);

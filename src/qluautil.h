@@ -6,15 +6,16 @@
 #define __QLUAUTIL_H__
 
 #include <lua.h>
+#include "qcore.h"
 #include "qdict.h"
 #include "qstring.h"
 
 struct qactor_t;
 struct qactor_msg_t;
-struct qthread_t;
+struct qworker_t;
 
 lua_State* qlua_new_state();
-lua_State* qlua_new_thread(struct qthread_t *thread);
+lua_State* qlua_new_thread(qworker_t *worker);
 
 #define qlua_get_global_table(state, key) qlua_get_table(state, LUA_GLOBALSINDEX, key)
 

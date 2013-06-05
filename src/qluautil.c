@@ -15,7 +15,7 @@
 #include "qmsg.h"
 #include "qserver.h"
 #include "qstring.h"
-#include "qthread.h"
+#include "qworker.h"
 
 static int panic(lua_State *state) {
   qerror("PANIC: unprotected error in call to Lua API (%s)\n", lua_tostring(state, -1));
@@ -31,8 +31,8 @@ lua_State* qlua_new_state() {
   return state;
 }
 
-lua_State* qlua_new_thread(qthread_t *thread) {
-  return lua_newthread(thread->state);
+lua_State* qlua_new_thread(qworker_t *worker) {
+  return lua_newthread(worker->state);
 }
 
 static int err_func(lua_State * state) {

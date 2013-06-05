@@ -16,7 +16,7 @@
 #include "qnet.h"
 #include "qserver.h"
 #include "qstring.h"
-#include "qthread.h"
+#include "qworker.h"
 
 static void
 init_tcp_listen_params(qactor_t *actor) {
