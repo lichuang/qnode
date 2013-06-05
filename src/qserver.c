@@ -11,7 +11,7 @@
 #include "qengine.h"
 #include "qdefines.h"
 #include "qlog.h"
-#include "qlog_thread.h"
+#include "qlogger.h"
 #include "qmailbox.h"
 #include "qmsg.h"
 #include "qnet.h"
@@ -205,7 +205,7 @@ server_init(qconfig_t *config) {
   g_server = server;
 
   init_thread_count = 0;
-  if (qlog_thread_new(config->thread_num + 1) < 0) {
+  if (qlogger_new(config->thread_num + 1) < 0) {
     goto error;
   }
   /* wait for the log thread start */
@@ -253,7 +253,7 @@ destroy_threads() {
     worker = g_server->workers[i];
     qworker_destroy(worker);
   }
-  qlog_thread_destroy();
+  qlogger_destroy();
 }
 
 static void

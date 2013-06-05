@@ -11,7 +11,7 @@
 #include "qengine.h"
 #include "qlist.h"
 #include "qlog.h"
-#include "qlog_thread.h"
+#include "qlogger.h"
 #include "qmailbox.h"
 #include "qmsg.h"
 #include "qserver.h"
@@ -19,14 +19,14 @@
 #include "qthread_log.h"
 
 pthread_key_t g_thread_log_key = PTHREAD_ONCE_INIT;
-qlog_thread_t *g_log_thread = NULL;
+qlogger_t *g_logger = NULL;
 
 static int
 logger_msg_handler(qmsg_t *msg, void *reader) {
   qlog_t        *log;
-  qlog_thread_t *thread;
+  qlogger_t *thread;
   
-  thread = (qlog_thread_t*)reader;
+  thread = (qlogger_t*)reader;
   log = msg->args.log.log;
   printf("%s\n", log->buff);
   qfree(log);
@@ -36,22 +36,22 @@ logger_msg_handler(qmsg_t *msg, void *reader) {
 
 static void*
 log_thread_main_loop(void *arg) {
-  qlog_thread_t *thread;
+  qlogger_t *thread;
 
-  thread = (qlog_thread_t*)arg;
+  thread = (qlogger_t*)arg;
   qserver_worker_started();
   qengine_loop(thread->engine);
 
 #if 0
   /* now the server terminate, do the clean work */
-  for (i = 0; i < g_log_thread->thread_num; ++i) {
-    signal = g_log_thread->signals[i];
+  for (i = 0; i < g_logger->thread_num; ++i) {
+    signal = g_logger->signals[i];
     fd = qsignal_get_fd(signal);
-    qengine_del_event(g_log_thread->engine, fd, QEVENT_READ);
+    qengine_del_event(g_logger->engine, fd, QEVENT_READ);
     log_thread_box(0, -1, signal);
   }
 #endif
-  qengine_destroy(g_log_thread->engine);
+  qengine_destroy(g_logger->engine);
 
   return NULL;
 }
@@ -69,17 +69,17 @@ log_time_handler(void *data) {
 
   UNUSED(data);
 
-  engine = g_log_thread->engine;
+  engine = g_logger->engine;
   t = engine->timer_mng.now;
   localtime_r(&t, &tm);
-  strftime(g_log_thread->time_buff, sizeof(g_log_thread->time_buff),
+  strftime(g_logger->time_buff, sizeof(g_logger->time_buff),
            "[%m-%d %T", &tm);
 }
 
 int
-qlog_thread_new(int thread_num) {
-  g_log_thread = qcalloc(sizeof(qlog_thread_t));
-  if (g_log_thread == NULL) {
+qlogger_new(int thread_num) {
+  g_logger = qcalloc(sizeof(qlogger_t));
+  if (g_logger == NULL) {
     return -1;
   }
 
@@ -87,31 +87,31 @@ qlog_thread_new(int thread_num) {
     return -1;
   }
 
-  g_log_thread->engine = qengine_new();
-  if (g_log_thread->engine == NULL) {
+  g_logger->engine = qengine_new();
+  if (g_logger->engine == NULL) {
     return -1;
   }
-  qmailbox_init(&(g_log_thread->box), logger_msg_handler,
-                g_log_thread->engine,  g_log_thread);
+  qmailbox_init(&(g_logger->box), logger_msg_handler,
+                g_logger->engine,  g_logger);
 
-  g_log_thread->thread_num = thread_num;
+  g_logger->thread_num = thread_num;
   log_time_handler(NULL);
-  qengine_add_timer(g_log_thread->engine, 1000, log_time_handler,
+  qengine_add_timer(g_logger->engine, 1000, log_time_handler,
                     1000, NULL);
-  pthread_create(&g_log_thread->id, NULL,
-                 log_thread_main_loop, g_log_thread);
+  pthread_create(&g_logger->id, NULL,
+                 log_thread_main_loop, g_logger);
 
   return 0;
 }
 
 void
-qlog_thread_destroy() {
+qlogger_destroy() {
   /* wait for the thread */
-  pthread_join(g_log_thread->id, NULL);
+  pthread_join(g_logger->id, NULL);
 }
 
 void
-qlog_thread_add(qlog_t *log) {
+qlogger_add(qlog_t *log) {
   qmsg_t *msg;
 
   msg = qmsg_new(log->idx, 0);
@@ -120,5 +120,5 @@ qlog_thread_add(qlog_t *log) {
     return;
   }
   qmsg_init_log(msg, log);
-  qmailbox_add(&(g_log_thread->box), msg);
+  qmailbox_add(&(g_logger->box), msg);
 }

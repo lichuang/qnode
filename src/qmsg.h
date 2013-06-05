@@ -19,6 +19,35 @@ typedef struct qactor_msg_t {
   qid_t    dst;
 } qactor_msg_t;
 
+#define QINVALID_MSG  -1
+
+/* M_* means Main thread handle message */
+enum {
+  M_SPAWN   = 0,
+  M_SIGNAL  = 1,
+  QMMSG_NUM
+};
+
+/* W_* means Worker thread handle message */
+enum {
+  W_START   = 0,
+  W_SPAWN   = 1,
+  QWMSG_NUM
+};
+
+/* L_* means logger thread handle message */
+enum {
+  L_LOG     = 0,
+  L_SIGNAL  = 1,
+  QLMSG_NUM
+};
+
+/* A_* means actor handle message */
+enum {
+  A_SEND    = 0,
+  QAMSG_NUM
+};
+
 enum {
   START   = 1,
   SPAWN   = 2,
@@ -41,7 +70,6 @@ enum {
 struct qmsg_t {
   qlist_t         entry;
 
-  unsigned int    handled:1;  /* whether the msg has been handler by receiver */
   unsigned int    type;
 
   qtid_t          sender_id;

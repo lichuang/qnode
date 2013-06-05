@@ -59,7 +59,6 @@ qmailbox_handle(qmailbox_t *box) {
     next = pos->next;
     qlist_del_init(&(msg->entry));
 
-    msg->handled = 1;
     if (box->handler(msg, box->reader) == 0) {
       qmsg_destroy(msg);
     }

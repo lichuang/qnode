@@ -6,7 +6,8 @@
 #include "qalloc.h"
 #include "qassert.h"
 #include "qlog.h"
-#include "qlog_thread.h"
+#include "qlogger.h"
+#include "qworker.h"
 #include "qthread_log.h"
 
 static const char* log_levels[] = {
@@ -44,7 +45,7 @@ void
 qlog(int level, const char* file, long line, const char *format, ...) {
   va_list args;
 
-  if (g_log_thread == NULL) {
+  if (g_logger == NULL) {
     return;
   }
   if (g_log_level < level) {
@@ -59,9 +60,9 @@ qlog(int level, const char* file, long line, const char *format, ...) {
   log_init(log, level, file, line, format, args);
   va_end(args);
 
-  log->n = sprintf(log->buff, "%s %d", g_log_thread->time_buff, log->idx);
+  log->n = sprintf(log->buff, "%s %d", g_logger->time_buff, log->idx);
   log->n += sprintf(log->buff + log->n, " %s:%d] ", log->file, log->line);
   vsprintf(log->buff + log->n, log->format, args);
 
-  qlog_thread_add(log);
+  qlogger_add(log);
 }

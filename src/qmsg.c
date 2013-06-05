@@ -23,7 +23,7 @@ qmsg_new(qtid_t sender_id, qtid_t receiver_id) {
   qlist_entry_init(&(msg->entry));
   msg->sender_id = sender_id;
   msg->receiver_id = receiver_id;
-  msg->type = msg->handled = 0;
+  msg->type = QINVALID_MSG;
 
   return msg;
 }
@@ -36,9 +36,11 @@ qmsg_destroy(qmsg_t *msg) {
     case SPAWN:
       break;
     case SEND:
+      /*
       if (msg->handled == 0) {
         qactor_msg_destroy(msg->args.send.actor_msg);
       }
+      */
       break;
     default:
       break;
