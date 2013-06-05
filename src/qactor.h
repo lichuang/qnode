@@ -23,7 +23,7 @@ struct qactor_t {
    */
   unsigned int    waiting_netio:1;  /* waiting for network I/O */
   unsigned int    waiting_msg:1;    /* waiting for message */
-  qtid_t          tid;              /* thread id which belongs to */
+  qid_t           tid;              /* thread id which belongs to */
   qid_t           aid;              /* actor id */
   qid_t           parent;           /* parent actor id */
   qlist_t         entry;            /* entry for actor list in thread */

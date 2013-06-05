@@ -40,7 +40,7 @@ worker_main_loop(void *arg) {
 }
 
 qworker_t*
-qworker_new(qtid_t tid) {
+qworker_new(qid_t tid) {
   qworker_t *worker;
 
   worker = qcalloc(sizeof(qworker_t));
@@ -74,7 +74,7 @@ qworker_destroy(qworker_t *worker) {
 }
 
 void
-qworker_send(qtid_t tid, qmsg_t *msg) {
+qworker_send(qid_t tid, qmsg_t *msg) {
   qworker_t  *worker;
   qmailbox_t *box;
 

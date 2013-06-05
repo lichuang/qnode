@@ -12,7 +12,6 @@
 /* max id, equal to 2^15=32768 */
 #define QID_MAX 0x8000
 
-#define QID_INVALID  -1
 
 typedef struct qidmap_t {
   qid_t         last_qid;

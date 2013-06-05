@@ -15,14 +15,14 @@
 struct qworker_t {
   qmailbox_t    box;
   pthread_t     id;
-  qtid_t        tid;
+  qid_t        tid;
   qengine_t    *engine;
   qlist_t       actor_list;
   lua_State    *state;
 };
 
-qworker_t*  qworker_new(qtid_t tid);
+qworker_t*  qworker_new(qid_t tid);
 void        qworker_destroy(qworker_t *thread);
-void        qworker_send(qtid_t tid, qmsg_t *msg);
+void        qworker_send(qid_t tid, qmsg_t *msg);
 
 #endif  /* __qworker_H__ */

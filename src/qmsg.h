@@ -72,8 +72,8 @@ struct qmsg_t {
 
   unsigned int    type;
 
-  qtid_t          sender_id;
-  qtid_t          receiver_id;
+  qid_t          sender_id;
+  qid_t          receiver_id;
 
   union {
     struct {
@@ -101,7 +101,7 @@ struct qmsg_t {
   } args;
 };
 
-qmsg_t*       qmsg_new(qtid_t sender_id, qtid_t receiver_id);
+qmsg_t*       qmsg_new(qid_t sender_id, qid_t receiver_id);
 void          qmsg_destroy(qmsg_t *msg);
 qactor_msg_t* qactor_msg_new();
 void          qactor_msg_destroy(qactor_msg_t *msg);

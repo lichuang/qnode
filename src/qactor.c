@@ -43,7 +43,7 @@ qactor_new(qid_t aid) {
   qlist_entry_init(&(actor->desc_list));
   qlist_entry_init(&(actor->msg_list));
   actor->aid = aid;
-  actor->parent = QID_INVALID;
+  actor->parent = QINVALID_ID;
   actor->waiting_netio = 0;
   actor->waiting_msg   = 0;
   qspinlock_init(&(actor->desc_list_lock));
@@ -93,7 +93,7 @@ qactor_attach(qactor_t *actor, lua_State *state) {
 
 qid_t
 qactor_spawn(qactor_t *actor, lua_State *state) {
-  qtid_t    receiver_id;
+  qid_t    receiver_id;
   qid_t     aid;
   qid_t     parent;
   qmsg_t   *msg;
@@ -102,11 +102,11 @@ qactor_spawn(qactor_t *actor, lua_State *state) {
   receiver_id = qserver_worker();
   msg = qmsg_new(actor->tid, receiver_id);
   if (msg == NULL) {
-    return QID_INVALID;
+    return QINVALID_ID;
   }
 
   aid = qactor_new_id();
-  if (aid == QID_INVALID) {
+  if (aid == QINVALID_ID) {
     qfree(msg);
     return -1;
   }

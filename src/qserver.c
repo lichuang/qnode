@@ -71,9 +71,9 @@ server_msg_handler(qmsg_t *msg, void *reader) {
   return (*g_server_msg_handlers[msg->type])(msg, reader);
 }
 
-qtid_t
+qid_t
 qserver_worker() {
-  static qtid_t i;
+  static qid_t i;
 
   i = 1;
   i = (i + 1) % g_server->config->thread_num + 1;
@@ -88,12 +88,12 @@ qserver_get_actor(qid_t id) {
 static void
 server_start(qserver_t *server) {
   qid_t   aid;
-  qtid_t  tid;
+  qid_t  tid;
   qmsg_t *msg;
 
   UNUSED(server);
   aid = qactor_new_id();
-  qassert(aid != QID_INVALID);
+  qassert(aid != QINVALID_ID);
   tid = qserver_worker();
   msg = qmsg_new(QMAIN_THREAD_TID, tid);
   if (msg == NULL) {

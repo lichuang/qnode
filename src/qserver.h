@@ -33,7 +33,7 @@ void qserver_new_actor(qactor_t *actor);
 
 void qserver_worker_started();
 
-qtid_t qserver_worker();
+qid_t qserver_worker();
 
 qactor_t* qserver_get_actor(qid_t id);
 
