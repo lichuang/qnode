@@ -144,7 +144,7 @@ qactor_send(qid_t aid, qmsg_t *msg) {
   qmailbox_t *box;
 
   actor = g_server->actors[aid];
-  box   = &(actor->acceptor.box);
+  box   = &(actor->box);
 
   qmailbox_add(box, msg);
 }

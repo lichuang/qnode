@@ -46,8 +46,21 @@ server_handle_spawn_msg(qserver_t *server, qmsg_t *msg) {
   return 0;
 }
 
+static int
+server_handle_signal_msg(qserver_t *server, qmsg_t *msg) {
+
+  UNUSED(server);
+  UNUSED(msg);
+  printf("handle signal msg\n");
+
+  return 0;
+}
+
 qserver_msg_handler g_server_msg_handlers[] = {
-  &server_handle_wrong_msg,         /* wrong */
-  &server_handle_wrong_msg,         /* s_start, wrong */
-  &server_handle_spawn_msg,         /* spawn */
+  &server_handle_wrong_msg,   /* wrong */
+  &server_handle_wrong_msg,   /* start, wrong */
+  &server_handle_spawn_msg,   /* spawn */
+  &server_handle_wrong_msg,   /* send, wrong */
+  &server_handle_signal_msg,  /* signal */
+  &server_handle_wrong_msg,   /* log, wrong */
 };

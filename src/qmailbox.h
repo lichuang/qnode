@@ -19,11 +19,12 @@ struct qmailbox_t {
   void             *reader;     /* mailbox reader */
   qmutex_t          mutex;      /* mutex for protect msg */
   qsignal_t         signal;     /* signaler */
-  qacceptor_t      *acceptor;   /* owner acceptor */
+  qmsg_func_t      *handler;    /* msg handler */
 };
 
 void  qmailbox_add(qmailbox_t *box, qmsg_t *msg);
-void  qmailbox_init(qmailbox_t *box, qacceptor_t *acceptor);
+void  qmailbox_init(qmailbox_t *box, qmsg_func_t *func,
+                    qengine_t *engine, void *reader);
 void  qmailbox_handle(qmailbox_t *box);
 
 #endif  /* __QMAILBOX_H__ */

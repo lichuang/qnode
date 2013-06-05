@@ -5,7 +5,6 @@
 #ifndef __QCORE_H__
 #define __QCORE_H__
 
-typedef struct qacceptor_t    qacceptor_t; 
 typedef struct qactor_t       qactor_t; 
 typedef struct qconfig_t      qconfig_t; 
 typedef struct qengine_t      qengine_t; 

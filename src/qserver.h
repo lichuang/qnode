@@ -5,17 +5,17 @@
 #ifndef __QSERVER_H__
 #define __QSERVER_H__
 
-#include "qacceptor.h"
 #include "qconfig.h"
 #include "qcore.h"
 #include "qidmap.h"
+#include "qmailbox.h"
 #include "qmutex.h"
 #include "qtype.h"
 
 #define QMAIN_THREAD_TID 0
 
 struct qserver_t {
-  qacceptor_t       acceptor;     /* main-thread is an accptor */
+  qmailbox_t        box;
   qactor_t        **actors;       /* actor array */
   qconfig_t        *config;       /* server config */
   qdescriptor_t   **descriptors;  /* descriptor array */

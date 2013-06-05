@@ -13,7 +13,6 @@
 #include "qlist.h"
 #include "qlog.h"
 #include "qluautil.h"
-#include "qmailbox.h"
 #include "qserver.h"
 #include "qthread.h"
 #include "qthread_log.h"
@@ -58,8 +57,8 @@ qthread_new(qtid_t tid) {
     qerror("create thread engine error");
     return NULL;
   }
-  qacceptor_init(&(thread->acceptor), thread->engine,
-                 worker_msg_handler, thread);
+  qmailbox_init(&(thread->box), worker_msg_handler,
+                thread->engine, thread);
   thread->tid = tid;
 
   /* create the lua VM for the thread */
@@ -84,6 +83,6 @@ qthread_send(qtid_t tid, qmsg_t *msg) {
   qmailbox_t *box;
 
   thread = g_server->threads[tid];
-  box    = &(thread->acceptor.box);
+  box    = &(thread->box);
   qmailbox_add(box, msg);
 }

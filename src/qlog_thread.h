@@ -6,11 +6,11 @@
 #define __QLOG_THREAD_H__
 
 #include <pthread.h>
-#include "qacceptor.h"
 #include "qcore.h"
+#include "qmailbox.h"
 
 typedef struct qlog_thread_t {
-  qacceptor_t   acceptor;
+  qmailbox_t    box;
   pthread_t     id;
   int           thread_num;
   qengine_t    *engine;

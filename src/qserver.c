@@ -36,7 +36,7 @@ static int  server_msg_handler(qmsg_t *msg, void *reader);
 static void server_start(qserver_t *server);
 static void wait_threads(int thread_num);
 static int  init_worker_threads(qserver_t *server);
-static void sig_handler(int sig);
+static void signal_handler(int sig);
 static void setup_signal();
 static int  server_init(qconfig_t *config);
 static void destroy_threads();
@@ -59,7 +59,8 @@ init_server_event(qserver_t *server) {
   }
 
   qengine_t *engine = server->engine;
-  if (qengine_add_event(engine, fd, QEVENT_READ, server_accept, server) < 0) {
+  if (qengine_add_event(engine, fd, QEVENT_READ,
+                        server_accept, server) < 0) {
     return -1;
   }
   return 0;
@@ -69,7 +70,7 @@ static int
 server_msg_handler(qmsg_t *msg, void *reader) {
   qserver_t *server;
 
-  qinfo("handle %d msg", msg->type);
+  printf("!!!!handle %d msg", msg->type);
   server = (qserver_t*)reader;
   return g_server_msg_handlers[msg->type](server, msg);
 }
@@ -102,7 +103,7 @@ server_start(qserver_t *server) {
   if (msg == NULL) {
     return;
   }
-  qmsg_init_sstart(msg, aid);
+  qmsg_init_start(msg, aid);
   qthread_send(tid, msg);
 }
 
@@ -162,8 +163,11 @@ error:
 }
 
 static void
-sig_handler(int sig) {
-  qinfo("caught signal %d", sig);
+signal_handler(int sig) {
+  qmsg_t     *msg;
+  qmailbox_t *box;
+
+  //qinfo("caught signal %d", sig);
   switch (sig) {
   case SIGTERM:
   case SIGINT:
@@ -174,6 +178,15 @@ sig_handler(int sig) {
   default:
     break;
   }
+
+  msg = qmsg_new(0, 0);
+  if (msg == NULL) {
+    return;
+  }
+
+  qmsg_init_signal(msg, sig);
+  box = &(g_server->box);
+  qmailbox_add(box, msg);
 }
 
 static void
@@ -182,7 +195,7 @@ setup_signal() {
 
   sigemptyset(&act.sa_mask);
   act.sa_flags = SA_NODEFER | SA_ONSTACK | SA_RESETHAND;
-  act.sa_handler = sig_handler;
+  act.sa_handler = signal_handler;
   sigaction(SIGTERM, &act, NULL);
   sigaction(SIGINT,  &act, NULL);
   sigaction(SIGQUIT, &act, NULL);
@@ -219,8 +232,9 @@ server_init(qconfig_t *config) {
   if (init_server_event(server) < 0) {
     goto error;
   }
-  qacceptor_init(&(server->acceptor), server->engine,
-                 server_msg_handler, server);
+  printf("server handler: %p", server_msg_handler);
+  qmailbox_init(&(server->box), server_msg_handler,
+                server->engine, server);
   server->actors = qalloc(QID_MAX * sizeof(qactor_t*));
   if (server->actors == NULL) {
     goto error;

@@ -7,13 +7,13 @@
 
 #include <lua.h>
 #include <pthread.h>
-#include "qacceptor.h"
+#include "qmailbox.h"
 #include "qlist.h"
 #include "qmsg.h"
 #include "qtype.h"
 
 struct qthread_t {
-  qacceptor_t   acceptor;
+  qmailbox_t    box;
   pthread_t     id;
   qtid_t        tid;
   qengine_t    *engine;

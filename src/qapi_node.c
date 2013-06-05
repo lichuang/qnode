@@ -93,7 +93,7 @@ static int qnode_send(lua_State *state) {
   actor_msg->dst = dst_actor->aid;
 
   msg = qmsg_new(src_actor->tid, dst_actor->tid);
-  qmsg_init_tsend(msg, actor_msg);
+  qmsg_init_send(msg, actor_msg);
   qactor_send(dst_actor->aid, msg);
   lua_pushnumber(state, 0);
 

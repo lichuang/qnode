@@ -23,12 +23,14 @@ static const char* log_levels[] = {
 
 int g_log_level = QLOG_DEBUG;
 
-const char *level_str(int level) {
+const char *
+level_str(int level) {
   return log_levels[level];
 }
 
-static void log_init(qlog_t *log, int level, const char* file,
-                     long line, const char *format, va_list args) {
+static void
+log_init(qlog_t *log, int level, const char* file,
+         long line, const char *format, va_list args) {
   //log->file_len = strlen(file);
   strcpy(log->file, file);
   //log->fmt_len = strlen(format);
@@ -38,7 +40,8 @@ static void log_init(qlog_t *log, int level, const char* file,
   log->line = line;
 }
 
-void qlog(int level, const char* file, long line, const char *format, ...) {
+void
+qlog(int level, const char* file, long line, const char *format, ...) {
   va_list args;
 
   if (g_log_thread == NULL) {

@@ -26,6 +26,8 @@ logger_msg_handler(qmsg_t *msg, void *reader) {
   qlog_t        *log;
   qlog_thread_t *thread;
   
+  printf("!!!!!!!1type: %d\n", msg->type);
+
   thread = (qlog_thread_t*)reader;
   log = msg->args.log.log;
   printf("%s\n", log->buff);
@@ -91,8 +93,8 @@ qlog_thread_new(int thread_num) {
   if (g_log_thread->engine == NULL) {
     return -1;
   }
-  qacceptor_init(&(g_log_thread->acceptor), g_log_thread->engine,
-                 logger_msg_handler, g_log_thread);
+  qmailbox_init(&(g_log_thread->box), logger_msg_handler,
+                g_log_thread->engine,  g_log_thread);
 
   g_log_thread->thread_num = thread_num;
   log_time_handler(NULL);
@@ -115,6 +117,10 @@ qlog_thread_add(qlog_t *log) {
   qmsg_t *msg;
 
   msg = qmsg_new(log->idx, 0);
+  if (msg == NULL) {
+    qfree(log);
+    return;
+  }
   qmsg_init_log(msg, log);
-  qmailbox_add(&(g_log_thread->acceptor.box), msg);
+  qmailbox_add(&(g_log_thread->box), msg);
 }

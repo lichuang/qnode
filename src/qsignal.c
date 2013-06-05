@@ -7,13 +7,14 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include "qalloc.h"
-#include "qacceptor.h"
 #include "qassert.h"
 #include "qcore.h"
 #include "qdefines.h"
 #include "qengine.h"
 #include "qmailbox.h"
 #include "qsignal.h"
+
+#include <stdio.h>
 
 static void
 signal_handle(int fd, int flags, void *data) {
@@ -29,7 +30,7 @@ signal_handle(int fd, int flags, void *data) {
 }
 
 void
-qsignal_init(qsignal_t *signal, qmailbox_t *box) {
+qsignal_init(qsignal_t *signal, qmailbox_t *box, qengine_t *engine) {
   int fds[2], result;
 
   signal->box = box;
@@ -40,7 +41,7 @@ qsignal_init(qsignal_t *signal, qmailbox_t *box) {
   qassert(result == 0);
   signal->wfd = fds[0];
   signal->rfd = fds[1];
-  qengine_add_event(box->acceptor->engine, signal->rfd,
+  qengine_add_event(engine, signal->rfd,
                     QEVENT_READ, signal_handle, signal);
 }
 
@@ -70,6 +71,8 @@ void
 qsignal_recv(qsignal_t *signal) {
   char    dummy;
   ssize_t n;
+
+  printf("qsignal_recv\n");
 
   while (1) {
     n = recv(signal->rfd, &dummy, sizeof(dummy), 0);

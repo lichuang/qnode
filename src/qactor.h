@@ -8,16 +8,16 @@
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
-#include "qacceptor.h"
 #include "qcore.h"
 #include "qdict.h"
 #include "qtype.h"
 #include "qlist.h"
+#include "qmailbox.h"
 #include "qmutex.h"
 
 struct qactor_t {
-  qacceptor_t     acceptor; 
-  lua_State      *state;
+  qmailbox_t     box; 
+  lua_State     *state;
   /*
    * lua thread YIELD reason
    */

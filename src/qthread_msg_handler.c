@@ -14,15 +14,16 @@
 #include "qserver.h"
 #include "qthread.h"
 
-static int thread_handle_sstart_msg(qthread_t *thread, qmsg_t *msg) {
-  qinfo("handle start msg");
-
+static int
+thread_handle_start_msg(qthread_t *thread, qmsg_t *msg) {
   int         ret;
   qid_t       aid;
   qactor_t   *actor;
   lua_State  *state;
 
-  aid = msg->args.s_start.aid;
+  qinfo("handle start msg");
+
+  aid = msg->args.start.aid;
   actor = qactor_new(aid);
   if (actor == NULL) {
     qerror("new actor: %d error", aid);
@@ -57,7 +58,8 @@ static int thread_handle_sstart_msg(qthread_t *thread, qmsg_t *msg) {
   return ret;
 }
 
-static int thread_handle_spawn_msg(qthread_t *thread, qmsg_t *msg) {
+static int
+thread_handle_spawn_msg(qthread_t *thread, qmsg_t *msg) {
   int       ret;
   qactor_t *actor;
 
@@ -77,15 +79,16 @@ static int thread_handle_spawn_msg(qthread_t *thread, qmsg_t *msg) {
   return ret;
 }
 
-static int thread_handle_tsend_msg(qthread_t *thread, qmsg_t *msg) {
-  UNUSED(thread);
-  qinfo("handle tsend msg");
-
+static int
+thread_handle_send_msg(qthread_t *thread, qmsg_t *msg) {
   qactor_t      *actor;
   qactor_msg_t  *actor_msg;
   lua_State     *state;
 
-  actor_msg = msg->args.t_send.actor_msg;
+  UNUSED(thread);
+  qinfo("handle send msg");
+
+  actor_msg = msg->args.send.actor_msg;
   actor = qserver_get_actor(actor_msg->dst);
   state = actor->state;
 
@@ -114,7 +117,7 @@ static int thread_handle_wrong_msg(qthread_t *thread, qmsg_t *msg) {
 
 qthread_msg_handler g_thread_msg_handlers[] = {
   &thread_handle_wrong_msg,     /* WRONG */
-  &thread_handle_sstart_msg,    /* s_start */
+  &thread_handle_start_msg,     /* start */
   &thread_handle_spawn_msg,     /* spawn */
-  &thread_handle_tsend_msg,     /* t_send */
+  &thread_handle_send_msg,      /* send */
 };

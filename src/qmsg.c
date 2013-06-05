@@ -12,7 +12,8 @@
 #include "qstring.h"
 #include "qthread.h"
 
-qmsg_t* qmsg_new(qtid_t sender_id, qtid_t receiver_id) {
+qmsg_t*
+qmsg_new(qtid_t sender_id, qtid_t receiver_id) {
   qmsg_t *msg;
 
   msg = qcalloc(sizeof(qmsg_t));
@@ -22,19 +23,21 @@ qmsg_t* qmsg_new(qtid_t sender_id, qtid_t receiver_id) {
   qlist_entry_init(&(msg->entry));
   msg->sender_id = sender_id;
   msg->receiver_id = receiver_id;
-  msg->flag = msg->type = msg->handled = 0;
+  msg->type = msg->handled = 0;
+
   return msg;
 }
 
-void qmsg_destroy(qmsg_t *msg) {
+void
+qmsg_destroy(qmsg_t *msg) {
   switch (msg->type) {
-    case s_start:
+    case START:
       break;
-    case spawn:
+    case SPAWN:
       break;
-    case t_send:
+    case SEND:
       if (msg->handled == 0) {
-        qactor_msg_destroy(msg->args.t_send.actor_msg);
+        qactor_msg_destroy(msg->args.send.actor_msg);
       }
       break;
     default:
@@ -43,16 +46,19 @@ void qmsg_destroy(qmsg_t *msg) {
   qfree(msg);
 }
 
-qactor_msg_t* qactor_msg_new() {
+qactor_msg_t*
+qactor_msg_new() {
   return qalloc(sizeof(qactor_msg_t));
 }
 
-void qactor_msg_destroy(qactor_msg_t *msg) {
+void
+qactor_msg_destroy(qactor_msg_t *msg) {
   qdict_destroy(msg->arg_dict);
   qfree(msg);
 }
 
-qmsg_t* qmsg_clone(qmsg_t *msg) {
+qmsg_t*
+qmsg_clone(qmsg_t *msg) {
   qmsg_t *new_msg;
 
   new_msg = qmsg_new(msg->sender_id, msg->receiver_id);
