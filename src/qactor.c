@@ -18,6 +18,7 @@
 #include "qmmsg.h"
 #include "qnet.h"
 #include "qserver.h"
+#include "qwmsg.h"
 #include "qworker.h"
 
 qid_t
@@ -110,7 +111,7 @@ qactor_spawn(qactor_t *actor, lua_State *state) {
     return -1;
   }
 
-  msg = qmmsg_spawn_new(new_actor, actor, state,
+  msg = qwmsg_spawn_new(new_actor, actor, state,
                         actor->tid, receiver_id);
   if (msg == NULL) {
     qactor_destroy(new_actor);

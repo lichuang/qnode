@@ -2,6 +2,9 @@
  * See Copyright Notice in qnode.h
  */
 
+#ifndef __QWMSG_H__
+#define __QWMSG_H__
+
 #include "qmsg.h"
 #include "qmmsg.h"
 
@@ -17,6 +20,19 @@ typedef struct qwmsg_start_t {
   qid_t aid;
 } qwmsg_start_t;
 
-typedef qmmsg_spawn_t qwmsg_spawn_t;
+typedef struct qwmsg_spawn_t {
+  qmsg_header_fields;
+
+  qid_t       aid;
+  qid_t       parent;
+  lua_State  *state;
+  qactor_t   *actor;
+} qwmsg_spawn_t;
 
 qmsg_t* qwmsg_start_new(qid_t aid, qid_t sender, qid_t recver);
+
+qmsg_t* qwmsg_spawn_new(qactor_t *actor, qactor_t *parent,
+                        lua_State *state, qid_t sender, qid_t recver);
+
+#endif  /* __QWMSG_H__ */
+

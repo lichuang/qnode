@@ -126,4 +126,3 @@ worker_handle_send_msg(qmsg_t *msg, void *reader) {
   return 0;
 }
 #endif
-

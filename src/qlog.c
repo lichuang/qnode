@@ -64,5 +64,9 @@ qlog(int level, const char* file, long line, const char *format, ...) {
   log->n += sprintf(log->buff + log->n, " %s:%d] ", log->file, log->line);
   vsprintf(log->buff + log->n, log->format, args);
 
+#if 0  
   qlogger_add(log);
+#else
+  printf("%s\n", log->buff);
+#endif
 }

@@ -16,14 +16,13 @@
 #include "qworker.h"
 #include "qwmsg.h"
 
-static int server_handle_spawn_msg(qmsg_t *msg, void *reader);
 static int server_handle_signal_msg(qmsg_t *msg, void *reader);
 
 qmsg_func_t* g_server_msg_handlers[] = {
-  &server_handle_spawn_msg,   /* spawn */
   &server_handle_signal_msg,  /* signal */
 };
 
+#if 0
 static int
 server_handle_spawn_msg(qmsg_t *msg, void *reader) {
   qid_t           parent;
@@ -45,9 +44,9 @@ server_handle_spawn_msg(qmsg_t *msg, void *reader) {
   parent  = spawn->parent;
 
   qactor_attach(actor, state);
-  spawn   = (qmmsg_spawn_t*)new_msg;
+  spawn         = (qmmsg_spawn_t*)new_msg;
   actor->parent = parent;
-  spawn->actor = actor;
+  spawn->actor  = actor;
   spawn->sender = QMAIN_THREAD_TID;
   spawn->recver = qserver_worker();
   spawn->type   = W_SPAWN;
@@ -56,6 +55,7 @@ server_handle_spawn_msg(qmsg_t *msg, void *reader) {
 
   return 0;
 }
+#endif
 
 static int
 server_handle_signal_msg(qmsg_t *msg, void *reader) {
@@ -68,4 +68,3 @@ server_handle_signal_msg(qmsg_t *msg, void *reader) {
 
   return 0;
 }
-

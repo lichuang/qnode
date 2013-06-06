@@ -27,6 +27,7 @@ qmsg_new(qid_t sender, qid_t recver, int size, int type) {
   msg->size    = size;
   msg->destroy = NULL;
 
+  qinfo("new msg: %d", type);
   return msg;
 }
 
