@@ -117,7 +117,7 @@ qactor_spawn(qactor_t *actor, lua_State *state) {
     qactor_destroy(new_actor);
     return QINVALID_ID;
   }
-  qworker_send(receiver_id, msg);
+  qworker_send(msg);
 
   return aid;
 }
@@ -136,11 +136,11 @@ qactor_get_worker(qactor_t *actor) {
 }
 
 void
-qactor_send(qid_t aid, qmsg_t *msg) {
+qactor_send(qmsg_t *msg) {
   qactor_t   *actor;
   qmailbox_t *box;
 
-  actor = g_server->actors[aid];
+  actor = g_server->actors[msg->recver];
   box   = &(actor->box);
 
   qmailbox_add(box, msg);

@@ -23,6 +23,6 @@ struct qworker_t {
 
 qworker_t*  qworker_new(qid_t tid);
 void        qworker_destroy(qworker_t *thread);
-void        qworker_send(qid_t tid, qmsg_t *msg);
+void        qworker_send(qmsg_t *msg);
 
 #endif  /* __qworker_H__ */

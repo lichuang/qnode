@@ -74,11 +74,11 @@ qworker_destroy(qworker_t *worker) {
 }
 
 void
-qworker_send(qid_t tid, qmsg_t *msg) {
+qworker_send(qmsg_t *msg) {
   qworker_t  *worker;
   qmailbox_t *box;
 
-  worker = g_server->workers[tid];
+  worker = g_server->workers[msg->recver];
   box    = &(worker->box);
   qmailbox_add(box, msg);
 }

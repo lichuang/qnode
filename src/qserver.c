@@ -101,7 +101,7 @@ server_start(qserver_t *server) {
   if (msg == NULL) {
     return;
   }
-  qworker_send(tid, msg);
+  qworker_send(msg);
 }
 
 static void
