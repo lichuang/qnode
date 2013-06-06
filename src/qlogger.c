@@ -10,6 +10,7 @@
 #include "qdefines.h"
 #include "qengine.h"
 #include "qlist.h"
+#include "qlmsg.h"
 #include "qlog.h"
 #include "qlogger.h"
 #include "qmailbox.h"
@@ -18,20 +19,14 @@
 #include "qsignal.h"
 #include "qthread_log.h"
 
+extern qmsg_func_t* g_logger_msg_handlers[];
+
 pthread_key_t g_thread_log_key = PTHREAD_ONCE_INIT;
 qlogger_t *g_logger = NULL;
 
 static int
 logger_msg_handler(qmsg_t *msg, void *reader) {
-  qlog_t        *log;
-  qlogger_t *thread;
-  
-  thread = (qlogger_t*)reader;
-  log = msg->args.log.log;
-  printf("%s\n", log->buff);
-  qfree(log);
-
-  return 1;
+  return (*g_logger_msg_handlers[msg->type])(msg, reader);
 }
 
 static void*
@@ -114,11 +109,10 @@ void
 qlogger_add(qlog_t *log) {
   qmsg_t *msg;
 
-  msg = qmsg_new(log->idx, 0);
+  msg = qlmsg_log_new(log, log->idx);
   if (msg == NULL) {
     qfree(log);
     return;
   }
-  qmsg_init_log(msg, log);
   qmailbox_add(&(g_logger->box), msg);
 }

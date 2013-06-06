@@ -11,39 +11,47 @@
 #include "qlog.h"
 #include "qluautil.h"
 #include "qmsg.h"
+#include "qmmsg.h"
 #include "qserver.h"
 #include "qworker.h"
+#include "qwmsg.h"
 
-static int
-server_handle_wrong_msg(qmsg_t *msg, void *reader) {
-  UNUSED(reader);
-  UNUSED(msg);
-  qerror("handle server type %d msg error", msg->type);
-  return 0;
-}
+static int server_handle_spawn_msg(qmsg_t *msg, void *reader);
+static int server_handle_signal_msg(qmsg_t *msg, void *reader);
+
+qmsg_func_t* g_server_msg_handlers[] = {
+  &server_handle_spawn_msg,   /* spawn */
+  &server_handle_signal_msg,  /* signal */
+};
 
 static int
 server_handle_spawn_msg(qmsg_t *msg, void *reader) {
-  qserver_t  *server;
-  qmsg_t     *new_msg;
-  qid_t       aid;
-  lua_State  *state;
-  qactor_t   *actor;
+  qid_t           parent;
+  qserver_t      *server;
+  qmsg_t         *new_msg;
+  qmmsg_spawn_t  *spawn;
+  qid_t           aid;
+  lua_State      *state;
+  qactor_t       *actor;
 
   qinfo("handle spawn msg");
 
   server  = (qserver_t*)reader;
+  spawn   = (qmmsg_spawn_t*)msg;
   new_msg = qmsg_clone(msg);
-  aid = msg->args.spawn.aid;
-  state = msg->args.spawn.state;
-  actor = qactor_new(aid);
+  aid     = spawn->aid;
+  state   = spawn->state;
+  actor   = qactor_new(aid);
+  parent  = spawn->parent;
 
   qactor_attach(actor, state);
-  actor->parent = msg->args.spawn.parent;
-  new_msg->args.spawn.actor = actor;
-  new_msg->sender_id = QMAIN_THREAD_TID;
-  new_msg->receiver_id = qserver_worker();
-  qworker_send(new_msg->receiver_id, new_msg);
+  spawn   = (qmmsg_spawn_t*)new_msg;
+  actor->parent = parent;
+  spawn->actor = actor;
+  spawn->sender = QMAIN_THREAD_TID;
+  spawn->recver = qserver_worker();
+  spawn->type   = W_SPAWN;
+  qworker_send(spawn->recver, new_msg);
   server->actors[aid] = actor;
 
   return 0;
@@ -51,19 +59,13 @@ server_handle_spawn_msg(qmsg_t *msg, void *reader) {
 
 static int
 server_handle_signal_msg(qmsg_t *msg, void *reader) {
-  int signo;
+  int             signo;
+  qmmsg_signal_t *signal;
   
   UNUSED(reader);
-  signo = msg->args.signal.signo;
+  signal = (qmmsg_signal_t*)msg;
+  signo = signal->signo;
 
   return 0;
 }
 
-qmsg_func_t* g_server_msg_handlers[] = {
-  &server_handle_wrong_msg,   /* wrong */
-  &server_handle_wrong_msg,   /* start, wrong */
-  &server_handle_spawn_msg,   /* spawn */
-  &server_handle_wrong_msg,   /* send, wrong */
-  &server_handle_signal_msg,  /* signal */
-  &server_handle_wrong_msg,   /* log, wrong */
-};

@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include "qactor.h"
+#include "qamsg.h"
 #include "qassert.h"
 #include "qdefines.h"
 #include "qdescriptor.h"
@@ -85,15 +86,12 @@ static int qnode_send(lua_State *state) {
     return 2;
   }
 
-  /* copy args table */
-  qactor_msg_t *actor_msg = qactor_msg_new();
-  actor_msg->arg_dict = qdict_new(5);
-  qlua_copy_table(state, 2, actor_msg->arg_dict);
-  actor_msg->src = src_actor->aid;
-  actor_msg->dst = dst_actor->aid;
-
-  msg = qmsg_new(src_actor->tid, dst_actor->tid);
-  qmsg_init_send(msg, actor_msg);
+  msg = qamsg_send_new(state, src_actor->aid, dst_actor->aid);
+  if (msg == NULL) {
+    lua_pushnil(state);
+    lua_pushfstring(state, "create msg error");
+    return 2;
+  }
   qactor_send(dst_actor->aid, msg);
   lua_pushnumber(state, 0);
 

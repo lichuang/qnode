@@ -14,11 +14,13 @@
 #include "qlogger.h"
 #include "qmailbox.h"
 #include "qmsg.h"
+#include "qmmsg.h"
 #include "qnet.h"
 #include "qserver.h"
 #include "qsignal.h"
 #include "qworker.h"
 #include "qthread_log.h"
+#include "qwmsg.h"
 
 extern qmsg_func_t* g_server_msg_handlers[];
 
@@ -95,11 +97,10 @@ server_start(qserver_t *server) {
   aid = qactor_new_id();
   qassert(aid != QINVALID_ID);
   tid = qserver_worker();
-  msg = qmsg_new(QMAIN_THREAD_TID, tid);
+  msg = qwmsg_start_new(aid, QMAIN_THREAD_TID, tid);
   if (msg == NULL) {
     return;
   }
-  qmsg_init_start(msg, aid);
   qworker_send(tid, msg);
 }
 
@@ -159,16 +160,15 @@ error:
 }
 
 static void
-signal_handler(int sig) {
+signal_handler(int signo) {
   qmsg_t     *msg;
   qmailbox_t *box;
 
-  msg = qmsg_new(0, 0);
+  msg = qmmsg_signal_new(signo, 0, 0);
   if (msg == NULL) {
     return;
   }
 
-  qmsg_init_signal(msg, sig);
   box = &(g_server->box);
   qmailbox_add(box, msg);
 }

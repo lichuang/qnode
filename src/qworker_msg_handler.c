@@ -12,20 +12,31 @@
 #include "qmailbox.h"
 #include "qmsg.h"
 #include "qserver.h"
+#include "qwmsg.h"
 #include "qworker.h"
+
+static int worker_handle_start_msg(qmsg_t *msg, void *reader);
+static int worker_handle_spawn_msg(qmsg_t *msg, void *reader);
+
+qmsg_func_t* g_worker_msg_handlers[] = {
+  &worker_handle_start_msg,     /* start */
+  &worker_handle_spawn_msg,     /* spawn */
+};
 
 static int
 worker_handle_start_msg(qmsg_t *msg, void *reader) {
-  qworker_t  *worker;
-  int         ret;
-  qid_t       aid;
-  qactor_t   *actor;
-  lua_State  *state;
+  qwmsg_start_t  *start;
+  qworker_t      *worker;
+  int             ret;
+  qid_t           aid;
+  qactor_t       *actor;
+  lua_State      *state;
 
   qinfo("handle start msg");
 
   worker = (qworker_t*)reader;
-  aid = msg->args.start.aid;
+  start  = (qwmsg_start_t*)msg;
+  aid = start->aid;
   actor = qactor_new(aid);
   if (actor == NULL) {
     qerror("new actor: %d error", aid);
@@ -62,15 +73,17 @@ worker_handle_start_msg(qmsg_t *msg, void *reader) {
 
 static int
 worker_handle_spawn_msg(qmsg_t *msg, void *reader) {
-  int        ret;
-  qactor_t  *actor;
-  qworker_t *worker;
+  int             ret;
+  qactor_t       *actor;
+  qworker_t      *worker;
+  qwmsg_spawn_t  *spawn;
 
   qinfo("handle spawn msg");
 
+  spawn  = (qwmsg_spawn_t*)msg;
   worker = (qworker_t*)reader;
-  actor = msg->args.spawn.actor;
-  actor->state = msg->args.spawn.state;
+  actor = spawn->actor;
+  actor->state = spawn->state;
   actor->tid = worker->tid;
   lua_State *state = actor->state;
   if (qlua_call(state, 1, 0) == 0) {
@@ -83,6 +96,7 @@ worker_handle_spawn_msg(qmsg_t *msg, void *reader) {
   return ret;
 }
 
+#if 0
 static int
 worker_handle_send_msg(qmsg_t *msg, void *reader) {
   qactor_t      *actor;
@@ -111,17 +125,5 @@ worker_handle_send_msg(qmsg_t *msg, void *reader) {
 
   return 0;
 }
+#endif
 
-static int worker_handle_wrong_msg(qmsg_t *msg, void *reader) {
-  UNUSED(reader);
-  UNUSED(msg);
-  qerror("handle worker type %d msg error", msg->type);
-  return 0;
-}
-
-qmsg_func_t* g_worker_msg_handlers[] = {
-  &worker_handle_wrong_msg,     /* WRONG */
-  &worker_handle_start_msg,     /* start */
-  &worker_handle_spawn_msg,     /* spawn */
-  &worker_handle_send_msg,      /* send */
-};

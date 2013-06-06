@@ -15,6 +15,7 @@
 #include "qidmap.h"
 #include "qmailbox.h"
 #include "qmsg.h"
+#include "qmmsg.h"
 #include "qnet.h"
 #include "qserver.h"
 #include "qworker.h"
@@ -57,8 +58,6 @@ qactor_destroy(qactor_t *actor) {
   qlist_t *pos, *next;
   qmsg_t  *msg;
 
-  qassert(actor);
-
   lua_close(actor->state);
   qmutex_lock(&g_server->id_map_mutex);
   qid_free(&(g_server->id_map), actor->aid);
@@ -93,33 +92,30 @@ qactor_attach(qactor_t *actor, lua_State *state) {
 
 qid_t
 qactor_spawn(qactor_t *actor, lua_State *state) {
-  qid_t    receiver_id;
-  qid_t     aid;
-  qid_t     parent;
-  qmsg_t   *msg;
-  qactor_t *new_actor;
+  qid_t            receiver_id;
+  qid_t            aid;
+  qid_t            parent;
+  qmsg_t          *msg;
+  qactor_t        *new_actor;
 
   receiver_id = qserver_worker();
-  msg = qmsg_new(actor->tid, receiver_id);
-  if (msg == NULL) {
-    return QINVALID_ID;
-  }
-
   aid = qactor_new_id();
   if (aid == QINVALID_ID) {
-    qfree(msg);
     return -1;
   }
 
   parent = actor->aid;
-  qmsg_init_spawn(msg, aid, parent, state);
   new_actor = qactor_new(aid);
   if (new_actor == NULL) {
     return -1;
   }
-  qactor_attach(new_actor, state);
-  new_actor->parent = actor->aid;
-  msg->args.spawn.actor = new_actor;
+
+  msg = qmmsg_spawn_new(new_actor, actor, state,
+                        actor->tid, receiver_id);
+  if (msg == NULL) {
+    qactor_destroy(new_actor);
+    return QINVALID_ID;
+  }
   qworker_send(receiver_id, msg);
 
   return aid;
