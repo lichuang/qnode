@@ -11,7 +11,12 @@
 #include "qmutex.h"
 #include "qserver.h"
 
-static void init_tcp_descriptor(qdescriptor_t *desc) {
+static void init_tcp_descriptor(qdescriptor_t *desc);
+static void inet_descriptor_destroy(qinet_descriptor_t *inet);
+static void tcp_descriptor_destroy(qtcp_descriptor_t *tcp);
+
+static void
+init_tcp_descriptor(qdescriptor_t *desc) {
   qtcp_descriptor_t  *tcp;
   qinet_descriptor_t *inet;
 
@@ -23,8 +28,8 @@ static void init_tcp_descriptor(qdescriptor_t *desc) {
   }
 }
 
-qdescriptor_t* qdescriptor_new(int fd, unsigned short type,
-                               qactor_t *actor) {
+qdescriptor_t*
+qdescriptor_new(int fd, unsigned short type, qactor_t *actor) {
   qassert(fd < QID_MAX);
   qdescriptor_t *desc;
 
@@ -51,16 +56,19 @@ qdescriptor_t* qdescriptor_new(int fd, unsigned short type,
   return desc;
 }
 
-static void inet_descriptor_destroy(qinet_descriptor_t *inet) {
+static void
+inet_descriptor_destroy(qinet_descriptor_t *inet) {
   inet->state = QINET_STATE_CLOSED;
 }
 
-static void tcp_descriptor_destroy(qtcp_descriptor_t *tcp) {
+static void
+tcp_descriptor_destroy(qtcp_descriptor_t *tcp) {
   inet_descriptor_destroy(&(tcp->inet));
   qbuffer_free(&(tcp->buffer));
 }
 
-void qdescriptor_destroy(qdescriptor_t *desc) {
+void
+qdescriptor_destroy(qdescriptor_t *desc) {
   switch (desc->type) {
   case QDESCRIPTOR_TCP:
     tcp_descriptor_destroy(&(desc->data.tcp));
@@ -73,7 +81,8 @@ void qdescriptor_destroy(qdescriptor_t *desc) {
   close(desc->fd);
 }
 
-qactor_t* qdescriptor_get_actor(qdescriptor_t *desc) {
+qactor_t*
+qdescriptor_get_actor(qdescriptor_t *desc) {
   if (desc->aid == QINVALID_ID) {
     return NULL;
   }

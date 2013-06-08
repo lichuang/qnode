@@ -18,14 +18,16 @@ extern volatile int g_quit;
 
 extern const qdispatcher_t epoll_dispatcher;
 
-static void init_qevent(qevent_t *event) {
+static void
+init_qevent(qevent_t *event) {
   event->fd = QRETIRED_FD;
   event->flags = 0;
   event->read = event->write = NULL;
   event->data = NULL;
 }
 
-qengine_t* qengine_new() {
+qengine_t*
+qengine_new() {
   int         i;
   qengine_t  *engine;
   qevent_t   *event;
@@ -61,8 +63,9 @@ error:
   return NULL;
 }
 
-int qengine_add_event(qengine_t *engine, int fd, int flags,
-                      qevent_func_t *callback, void *data) {
+int
+qengine_add_event(qengine_t *engine, int fd, int flags,
+                  qevent_func_t *callback, void *data) {
   qevent_t *event;
 
   if (fd > QMAX_EVENTS) {
@@ -89,7 +92,8 @@ int qengine_add_event(qengine_t *engine, int fd, int flags,
   return 0;
 }
 
-int qengine_del_event(qengine_t* engine, int fd, int flags) {
+int
+qengine_del_event(qengine_t* engine, int fd, int flags) {
   int       i;
   qevent_t *event;
 
@@ -114,7 +118,8 @@ int qengine_del_event(qengine_t* engine, int fd, int flags) {
   return 0;
 }
 
-int qengine_loop(qengine_t* engine) {
+int
+qengine_loop(qengine_t* engine) {
   int       num, i;
   int       next;
   int       flags;
@@ -152,18 +157,21 @@ int qengine_loop(qengine_t* engine) {
   return 0;
 }
 
-void qengine_destroy(qengine_t *engine) {
+void
+qengine_destroy(qengine_t *engine) {
   engine->dispatcher->destroy(engine);
   qfree(engine->events);
   qfree(engine->active_events);
   qfree(engine);
 }
 
-qid_t qengine_add_timer(qengine_t* engine, uint32_t timeout_ms,
-                        qtimer_func_t *func, int type, void *data) {
+qid_t
+qengine_add_timer(qengine_t* engine, uint32_t timeout_ms,
+                  qtimer_func_t *func, int type, void *data) {
   return qtimer_add(&engine->timer_mng, timeout_ms, func, type, data);
 }
 
-int qengine_del_timer(qengine_t* engine, qid_t id) {
+int
+qengine_del_timer(qengine_t* engine, qid_t id) {
   return qtimer_del(&engine->timer_mng, id);
 }

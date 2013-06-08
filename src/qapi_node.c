@@ -20,7 +20,8 @@
 /*
  * spawn an actor, return the actor ID
  */
-static int qnode_spawn(lua_State *state) {
+static int
+qnode_spawn(lua_State *state) {
   int         id;
   const char *mod;
   const char *fun;
@@ -72,7 +73,8 @@ static int qnode_spawn(lua_State *state) {
   return 1;
 }
 
-static int qnode_send(lua_State *state) {
+static int
+qnode_send(lua_State *state) {
   qid_t     id;
   qactor_t *src_actor, *dst_actor;
   qmsg_t   *msg;
@@ -98,7 +100,8 @@ static int qnode_send(lua_State *state) {
   return 1;
 }
 
-static int qnode_recv(lua_State *state) {
+static int
+qnode_recv(lua_State *state) {
   qactor_t      *actor;
   qactor_msg_t  *msg;
 

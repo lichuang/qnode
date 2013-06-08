@@ -6,7 +6,8 @@
 #include "qamsg.h"
 #include "qluautil.h"
 
-qmsg_t* qamsg_send_new(lua_State *state, qid_t sender, qid_t recver) {
+qmsg_t*
+qamsg_send_new(lua_State *state, qid_t sender, qid_t recver) {
   qactor_msg_t *actor_msg;
   qmsg_t       *msg;
   qamsg_send_t *send;

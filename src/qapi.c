@@ -21,7 +21,8 @@ static api_array array[] = {
   NULL
 };
 
-void qapi_register(lua_State *state, struct qactor_t *actor) {
+void
+qapi_register(lua_State *state, struct qactor_t *actor) {
   int i, j;
 
   for (i = 0; array[i] != NULL; ++i) {

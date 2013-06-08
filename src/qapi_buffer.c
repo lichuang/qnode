@@ -7,7 +7,8 @@
 #include "qbuffer.h"
 #include "qluautil.h"
 
-static int qnode_buffer_find(lua_State *state) {
+static int
+qnode_buffer_find(lua_State *state) {
   int         pos;
   char       *ret;
   const char *str;
@@ -26,7 +27,8 @@ static int qnode_buffer_find(lua_State *state) {
   return 1;
 }
 
-static int qnode_buffer_set(lua_State *state) {
+static int
+qnode_buffer_set(lua_State *state) {
   int         pos, len;
   const char *str;
   qbuffer_t  *buffer;
@@ -49,7 +51,8 @@ static int qnode_buffer_set(lua_State *state) {
   return 0;
 }
 
-static int qnode_buffer_get(lua_State *state) {
+static int
+qnode_buffer_get(lua_State *state) {
   qbuffer_t  *buffer;
   int         pos, len;
 
@@ -64,7 +67,8 @@ static int qnode_buffer_get(lua_State *state) {
   return 1;
 }
 
-static int qnode_buffer_length(lua_State *state) {
+static int
+qnode_buffer_length(lua_State *state) {
   qbuffer_t  *buffer;
 
   buffer = (qbuffer_t*)lua_touserdata(state, 1);

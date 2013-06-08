@@ -10,7 +10,13 @@
 #include "qluautil.h"
 #include "qserver.h"
 
-static void config_init_log(qconfig_t *config, lua_State *L) {
+static void config_init_log(qconfig_t *config, lua_State *L);
+static void config_init_thread(qconfig_t *config, lua_State *L);
+static void config_init_script(qconfig_t *config, lua_State *L);
+static void config_set_default(qconfig_t *config);
+
+static void
+config_init_log(qconfig_t *config, lua_State *L) {
   qlua_get_table(L, -1, "log");
   qlua_get_table_string(L, "path", config->log_path);
   qlua_get_table_string(L, "level", config->log_level);
@@ -18,19 +24,22 @@ static void config_init_log(qconfig_t *config, lua_State *L) {
   lua_pop(L, 1);
 }
 
-static void config_init_thread(qconfig_t *config, lua_State *L) {
+static void
+config_init_thread(qconfig_t *config, lua_State *L) {
   qlua_get_table(L, -1, "thread");
   qlua_get_table_number(L, "num", &(config->thread_num));
   lua_pop(L, 1);
 }
 
-static void config_init_script(qconfig_t *config, lua_State *L) {
+static void
+config_init_script(qconfig_t *config, lua_State *L) {
   qlua_get_table(L, -1, "script");
   qlua_get_table_string(L, "path", config->script_path);
   lua_pop(L, 1);
 }
 
-static void config_set_default(qconfig_t *config) {
+static void
+config_set_default(qconfig_t *config) {
   config->thread_num  = 2;
   config->script_path = qstring_new("./script");
   config->log_path    = qstring_new("");
@@ -38,7 +47,8 @@ static void config_set_default(qconfig_t *config) {
   config->log_handler = qstring_new("");
 }
 
-int qconfig_init(qconfig_t *config, const char *filename) {
+int
+qconfig_init(qconfig_t *config, const char *filename) {
   lua_State   *L;
 
   config_set_default(config);
@@ -63,7 +73,8 @@ int qconfig_init(qconfig_t *config, const char *filename) {
   return 0;
 }
 
-void qconfig_free(qconfig_t *config) {
+void
+qconfig_free(qconfig_t *config) {
   qstring_destroy(config->script_path);
   qstring_destroy(config->log_path);
   qstring_destroy(config->log_level);

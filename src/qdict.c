@@ -7,7 +7,14 @@
 #include "qdict.h"
 #include "qlog.h"
 
-qdict_t* qdict_new(int hashsize) {
+static inline       int hashstring(const char *str);
+static              int mainposition(qdict_t *dict, const char *key);
+static qdict_node_t*    find(qdict_t *dict, const char *key, int *idx);
+static qvalue_t*        set(qdict_t *dict, const char *key,
+                            qvalue_t *value);
+
+qdict_t*
+qdict_new(int hashsize) {
   int       i;
   qdict_t  *dict;
 
@@ -24,7 +31,8 @@ qdict_t* qdict_new(int hashsize) {
   return dict;
 }
 
-void qdict_destroy(qdict_t *dict) {
+void
+qdict_destroy(qdict_t *dict) {
   int           i, hashsize;
   qlist_t      *list;
   qlist_t      *pos, *next;
@@ -48,7 +56,8 @@ void qdict_destroy(qdict_t *dict) {
   qfree(dict);
 }
 
-static inline int hashstring(const char *str) {
+static inline int
+hashstring(const char *str) {
   unsigned int hash = 5381;
   const char *s;
 
@@ -64,11 +73,13 @@ static inline int hashstring(const char *str) {
   return hash;
 }
 
-static int mainposition(qdict_t *dict, const char *key) {
+static int
+mainposition(qdict_t *dict, const char *key) {
   return hashstring(key) % dict->hashsize;
 }
 
-static qdict_node_t* find(qdict_t *dict, const char *key, int *idx) {
+static qdict_node_t*
+find(qdict_t *dict, const char *key, int *idx) {
   int             hash;
   qlist_t        *list, *pos;
   qdict_node_t   *node;
@@ -91,7 +102,8 @@ static qdict_node_t* find(qdict_t *dict, const char *key, int *idx) {
   return NULL;
 }
 
-static qvalue_t* set(qdict_t *dict, const char *key, qvalue_t *value) {
+static qvalue_t*
+set(qdict_t *dict, const char *key, qvalue_t *value) {
   int           idx;
   qdict_node_t *node;
 
@@ -123,19 +135,22 @@ static qvalue_t* set(qdict_t *dict, const char *key, qvalue_t *value) {
   return &(node->value);
 }
 
-qvalue_t* qdict_setnum(qdict_t *dict, const char *key, qnumber_t num) {
+qvalue_t*
+qdict_setnum(qdict_t *dict, const char *key, qnumber_t num) {
   qvalue_t value = qvalue_number(num);
 
   return set(dict, key, &value);
 }
 
-qvalue_t* qdict_setstr(qdict_t *dict, const char *key, const char* str) {
+qvalue_t*
+qdict_setstr(qdict_t *dict, const char *key, const char* str) {
   qvalue_t value = qvalue_string(str);
 
   return set(dict, key, &value);
 }
 
-qvalue_t* qdict_get(qdict_t *dict, const char *key) {
+qvalue_t*
+qdict_get(qdict_t *dict, const char *key) {
   qdict_node_t *node;
 
   node = find(dict, key, NULL);
@@ -146,13 +161,15 @@ qvalue_t* qdict_get(qdict_t *dict, const char *key) {
   return NULL;
 }
 
-void qdict_iterator_init(qdict_t *dict, qdict_iter_t *iter) {
+void
+qdict_iterator_init(qdict_t *dict, qdict_iter_t *iter) {
   iter->dict  = dict;
   iter->hash  = 0;
   iter->node  = NULL;
 }
 
-qdict_node_t* qdict_next(qdict_iter_t *iter) {
+qdict_node_t*
+qdict_next(qdict_iter_t *iter) {
   qdict_t       *dict;
   qlist_t       *list, *pos;
   qdict_node_t  *node;

@@ -26,11 +26,12 @@ const struct qdispatcher_t epoll_dispatcher = {
 };
 
 typedef struct epoll_t {
-  int fd;
+  int    fd;
   struct epoll_event events[QMAX_EVENTS];
 } epoll_t;
 
-static int epoll_init(struct qengine_t *engine) {
+static int
+epoll_init(qengine_t *engine) {
   epoll_t *epoll;
 
   epoll = qalloc(sizeof(epoll_t));
@@ -47,7 +48,8 @@ static int epoll_init(struct qengine_t *engine) {
   return 0;
 }
 
-static int epoll_add(struct qengine_t *engine, int fd, int flags) {
+static int
+epoll_add(qengine_t *engine, int fd, int flags) {
   int                 events, op;
   epoll_t            *epoll;
   struct epoll_event  event;
@@ -76,7 +78,8 @@ static int epoll_add(struct qengine_t *engine, int fd, int flags) {
   return 0;
 }
 
-static int epoll_del(struct qengine_t *engine, int fd, int delflags) {
+static int
+epoll_del(qengine_t *engine, int fd, int delflags) {
   epoll_t            *epoll;
   struct epoll_event  event;
   int                 flags, events;
@@ -101,7 +104,8 @@ static int epoll_del(struct qengine_t *engine, int fd, int delflags) {
   return 0;
 }
 
-static int epoll_poll (qengine_t *engine, int timeout_ms) {
+static int
+epoll_poll(qengine_t *engine, int timeout_ms) {
   int                 num;
   int                 flags;
   int                 i;
@@ -128,7 +132,8 @@ static int epoll_poll (qengine_t *engine, int timeout_ms) {
   return num;
 }
 
-static void epoll_destroy(qengine_t *engine) {
+static void
+epoll_destroy(qengine_t *engine) {
   epoll_t *epoll;
 
   epoll = (epoll_t*)engine->data;

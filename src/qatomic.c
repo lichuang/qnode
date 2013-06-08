@@ -4,11 +4,13 @@
 
 #include "qatomic.h"
 
-void  qatomic_ptr_set(void *ptr, void *val) {
+void
+qatomic_ptr_set(void *ptr, void *val) {
   ptr = val;
 }
 
-void* qatomic_ptr_xchg(void *ptr, void *val) {
+void*
+qatomic_ptr_xchg(void *ptr, void *val) {
   void *old;
   void **p;
 
@@ -20,7 +22,8 @@ void* qatomic_ptr_xchg(void *ptr, void *val) {
   return old;
 }
 
-void* qatomic_ptr_cas(void *ptr, void *cmp, void *val) {
+void*
+qatomic_ptr_cas(void *ptr, void *cmp, void *val) {
   void *old;
 
   __asm__ volatile (

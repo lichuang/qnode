@@ -9,7 +9,8 @@
 
 #ifdef DEBUG
 
-void qassert_error(char* expr, char* file, int line) {
+void
+qassert_error(char* expr, char* file, int line) {
   printf("[%s:%d] ASSERT %s error\n", file, line, expr);
   abort();
 }

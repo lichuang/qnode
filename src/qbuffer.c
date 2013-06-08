@@ -8,7 +8,8 @@
 
 #define QBUFFER_SIZE 1024
 
-int qbuffer_init(qbuffer_t *buffer) {
+int
+qbuffer_init(qbuffer_t *buffer) {
   buffer->data = qalloc(sizeof(char) * QBUFFER_SIZE);
   if (buffer->data == NULL) {
     return -1;
@@ -19,11 +20,13 @@ int qbuffer_init(qbuffer_t *buffer) {
   return 0;
 }
 
-void qbuffer_free(qbuffer_t *buffer) {
+void
+qbuffer_free(qbuffer_t *buffer) {
   qfree(buffer->data);
 }
 
-int qbuffer_extend(qbuffer_t *buffer, uint32_t size) {
+int
+qbuffer_extend(qbuffer_t *buffer, uint32_t size) {
   uint32_t      new_size;
   char         *data;
 
