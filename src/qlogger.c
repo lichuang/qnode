@@ -24,6 +24,11 @@ extern qmsg_func_t* g_logger_msg_handlers[];
 pthread_key_t g_thread_log_key = PTHREAD_ONCE_INIT;
 qlogger_t *g_logger = NULL;
 
+static int    logger_msg_handler(qmsg_t *msg, void *reader);
+static void*  log_thread_main_loop(void *arg);
+static void   log_key_destroy(void *value);
+static void   log_time_handler(void *data);
+
 static int
 logger_msg_handler(qmsg_t *msg, void *reader) {
   return (*g_logger_msg_handlers[msg->type])(msg, reader);

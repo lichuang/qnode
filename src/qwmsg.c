@@ -4,7 +4,8 @@
 
 #include "qwmsg.h"
 
-qmsg_t* qwmsg_start_new(qid_t aid, qid_t sender, qid_t recver) {
+qmsg_t*
+qwmsg_start_new(qid_t aid, qid_t sender, qid_t recver) {
   qmsg_t        *msg;
   qwmsg_start_t *start;
 
@@ -19,8 +20,9 @@ qmsg_t* qwmsg_start_new(qid_t aid, qid_t sender, qid_t recver) {
   return msg;
 }
 
-qmsg_t* qwmsg_spawn_new(qactor_t *actor, qactor_t *parent,
-                        lua_State *state, qid_t sender, qid_t recver) {
+qmsg_t*
+qwmsg_spawn_new(qactor_t *actor, qactor_t *parent,
+                lua_State *state, qid_t sender, qid_t recver) {
   qmsg_t        *msg;
   qwmsg_spawn_t *spawn;
 
@@ -40,4 +42,3 @@ qmsg_t* qwmsg_spawn_new(qactor_t *actor, qactor_t *parent,
 
   return msg;
 }
-

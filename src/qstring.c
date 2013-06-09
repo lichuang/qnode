@@ -16,7 +16,10 @@ typedef struct qstr_header_t {
   char        data[];
 } qstr_header_t;
 
-qstring_t qstring_new(const char *data) {
+static qstr_header_t* reserve(qstr_header_t *header, size_t len);
+
+qstring_t
+qstring_new(const char *data) {
   size_t          len;
   qstr_header_t  *header;
 
@@ -36,14 +39,16 @@ qstring_t qstring_new(const char *data) {
   return header->data;
 }
 
-void qstring_destroy(qstring_t str) {
+void
+qstring_destroy(qstring_t str) {
   qstr_header_t *header;
 
   header = str_to_header(str);
   qfree(header);
 }
 
-static qstr_header_t* reserve(qstr_header_t *header, size_t len) {
+static qstr_header_t*
+reserve(qstr_header_t *header, size_t len) {
   size_t          new_len;
   qstr_header_t  *new_header;
 
@@ -61,7 +66,8 @@ static qstr_header_t* reserve(qstr_header_t *header, size_t len) {
   return new_header;
 }
 
-qstring_t qstring_assign(qstring_t str, const char *data) {
+qstring_t
+qstring_assign(qstring_t str, const char *data) {
   size_t         len;
   qstr_header_t *header;
 
@@ -84,7 +90,8 @@ qstring_t qstring_assign(qstring_t str, const char *data) {
   return str;
 }
 
-qstring_t qstring_append(qstring_t str, const char *data) {
+qstring_t
+qstring_append(qstring_t str, const char *data) {
   size_t         len;
   qstr_header_t *header;
 
@@ -103,7 +110,8 @@ qstring_t qstring_append(qstring_t str, const char *data) {
   return str;
 }
 
-int qstring_compare(qstring_t str1, qstring_t str2) {
+int
+qstring_compare(qstring_t str1, qstring_t str2) {
   qstr_header_t *header1, *header2;
 
   header1 = str_to_header(str1);
@@ -116,7 +124,8 @@ int qstring_compare(qstring_t str1, qstring_t str2) {
   return (strcmp(str1, str2));
 }
 
-int qstring_compare_raw(qstring_t str1, const char* str2) {
+int
+qstring_compare_raw(qstring_t str1, const char* str2) {
   size_t         len;
   qstr_header_t *header;
 

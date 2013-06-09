@@ -17,6 +17,9 @@
 #include "qlog.h"
 #include "qnet.h"
 
+static int create_listen_socket();
+static int set_nonblocking(int fd);
+
 static int
 create_listen_socket() {
   int fd, on;

@@ -14,7 +14,13 @@
 #define BITS_PER_PAGE        (PAGE_SIZE * BITS_PER_BYTE)
 #define BITS_PER_PAGE_MASK    (BITS_PER_PAGE - 1)
 
-static int test_and_set_bit(int offset, void *addr) {
+static int  test_and_set_bit(int offset, void *addr);
+static void clear_bit(int offset, void *addr);
+static int  find_next_zero_bit(void *addr, int size, int offset);
+static int  alloc_qid(qidmap_t *idmap);
+
+static int
+test_and_set_bit(int offset, void *addr) {
   unsigned long   mask, old;
   unsigned long  *p;
 
@@ -26,7 +32,8 @@ static int test_and_set_bit(int offset, void *addr) {
   return (old & mask) != 0;
 }
 
-static void clear_bit(int offset, void *addr) {
+static void
+clear_bit(int offset, void *addr) {
   unsigned long   mask, old;
   unsigned long  *p;
 
@@ -37,7 +44,8 @@ static void clear_bit(int offset, void *addr) {
   *p = old & ~mask;    
 }
 
-static int find_next_zero_bit(void *addr, int size, int offset) {
+static int
+find_next_zero_bit(void *addr, int size, int offset) {
   unsigned long  *p;
   unsigned long   mask;
 
@@ -55,7 +63,8 @@ static int find_next_zero_bit(void *addr, int size, int offset) {
   return offset;
 }
 
-static int alloc_qid(qidmap_t *idmap) {
+static int
+alloc_qid(qidmap_t *idmap) {
   int qid;
   int offset;
 
@@ -75,7 +84,8 @@ static int alloc_qid(qidmap_t *idmap) {
   return QINVALID_ID;
 }
 
-void qid_free(qidmap_t *idmap, qid_t id) {
+void
+qid_free(qidmap_t *idmap, qid_t id) {
   int offset;
 
   offset = id & BITS_PER_PAGE_MASK;
@@ -84,7 +94,8 @@ void qid_free(qidmap_t *idmap, qid_t id) {
   idmap->data[id] = NULL;
 }
 
-void qidmap_init(qidmap_t *idmap) {
+void
+qidmap_init(qidmap_t *idmap) {
   int i;
 
   idmap->nr_free = QID_MAX;
@@ -95,11 +106,13 @@ void qidmap_init(qidmap_t *idmap) {
   idmap->last_qid = QINVALID_ID;
 }
 
-qid_t qid_new(qidmap_t *idmap) {
+qid_t
+qid_new(qidmap_t *idmap) {
   return alloc_qid(idmap);
 }
 
-void qid_attach(qidmap_t *idmap, qid_t id, void *data) {
+void
+qid_attach(qidmap_t *idmap, qid_t id, void *data) {
   qassert(idmap->data[id] == NULL);
 
   idmap->data[id] = data;

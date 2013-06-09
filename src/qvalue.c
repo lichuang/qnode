@@ -6,13 +6,15 @@
 #include "qstring.h"
 #include "qvalue.h"
 
-void qvalue_destroy(qvalue_t *value) {
+void
+qvalue_destroy(qvalue_t *value) {
   if (value->type == QSTRING_TYPE) {
     qstring_destroy(value->data.str);
   }
 }
 
-void qvalue_clone(qvalue_t *value1, qvalue_t *value2) {
+void
+qvalue_clone(qvalue_t *value1, qvalue_t *value2) {
   if (qvalue_isstring(value2)) {
     if (!qvalue_isstring(value1)) {
       value1->data.str = qstring_new(value2->data.str);

@@ -5,7 +5,8 @@
 #include "qactor.h"
 #include "qmmsg.h"
 
-qmsg_t* qmmsg_signal_new(int signo, qid_t sender, qid_t recver) {
+qmsg_t*
+qmmsg_signal_new(int signo, qid_t sender, qid_t recver) {
   qmsg_t         *msg;
   qmmsg_signal_t *signal;
 

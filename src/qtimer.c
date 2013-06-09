@@ -8,14 +8,21 @@
 #include "qengine.h"
 #include "qtimer.h"
 
-static inline void set_timer_heap_index(void *data, int index) {
+static inline void set_timer_heap_index(void *data, int index);
+static inline int  get_timer_heap_index(void *data);
+static inline int  compare_timer(void *data1, void *data2); 
+static        void update_now_time(qtimer_manager_t *mng);
+
+static inline void
+set_timer_heap_index(void *data, int index) {
   qtimer_t *timer;
 
   timer = (qtimer_t*)data;
   timer->heap_index = index;
 }
 
-static inline int get_timer_heap_index(void *data) {
+static inline int
+get_timer_heap_index(void *data) {
   qtimer_t *timer;
 
   timer = (qtimer_t*)data;
@@ -23,7 +30,8 @@ static inline int get_timer_heap_index(void *data) {
   return timer->heap_index;
 }
 
-static inline int compare_timer(void *data1, void *data2) {
+static inline int
+compare_timer(void *data1, void *data2) {
   qtimer_t *timer1, *timer2;
 
   timer1 = (qtimer_t*)data1;
@@ -32,7 +40,8 @@ static inline int compare_timer(void *data1, void *data2) {
   return (timer1->timeout > timer2->timeout);
 }
 
-static void update_now_time(qtimer_manager_t *mng) {
+static void
+update_now_time(qtimer_manager_t *mng) {
   time_t now;
 
   now         = time(NULL);
@@ -40,7 +49,8 @@ static void update_now_time(qtimer_manager_t *mng) {
   mng->now_ms = now * 1000; 
 }
 
-void qtimer_manager_init(qtimer_manager_t *mng, qengine_t *engine) {
+void
+qtimer_manager_init(qtimer_manager_t *mng, qengine_t *engine) {
   update_now_time(mng);
   mng->engine = engine;
   qidmap_init(&(mng->id_map));
@@ -49,12 +59,14 @@ void qtimer_manager_init(qtimer_manager_t *mng, qengine_t *engine) {
                 set_timer_heap_index, get_timer_heap_index);
 }
 
-void qtimer_manager_free(qtimer_manager_t *mng) {
+void
+qtimer_manager_free(qtimer_manager_t *mng) {
   qminheap_destroy(&(mng->min_heap));
 }
 
-qid_t qtimer_add(qtimer_manager_t *mng, uint32_t timeout,
-                 qtimer_func_t *func, uint32_t cycle, void *arg) {
+qid_t
+qtimer_add(qtimer_manager_t *mng, uint32_t timeout,
+           qtimer_func_t *func, uint32_t cycle, void *arg) {
   qtimer_t *timer;
   qlist_t  *pos;
 
@@ -79,7 +91,8 @@ qid_t qtimer_add(qtimer_manager_t *mng, uint32_t timeout,
   return timer->id;
 }
 
-int qtimer_next(qtimer_manager_t *mng) {
+int
+qtimer_next(qtimer_manager_t *mng) {
   qtimer_t *timer;
 
   timer = (qtimer_t*)qminheap_top(&(mng->min_heap));
@@ -93,7 +106,8 @@ int qtimer_next(qtimer_manager_t *mng) {
   return (timer->timeout - mng->now_ms);
 }
 
-void qtimer_process(qtimer_manager_t *mng) {
+void
+qtimer_process(qtimer_manager_t *mng) {
   uint64_t  now;
   qtimer_t *timer;
 
@@ -118,7 +132,8 @@ void qtimer_process(qtimer_manager_t *mng) {
   }
 }
 
-int qtimer_del(qtimer_manager_t *mng, qid_t id) {
+int
+qtimer_del(qtimer_manager_t *mng, qid_t id) {
   qtimer_t *timer;
 
   timer = (qtimer_t*)mng->id_map.data[id];

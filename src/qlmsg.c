@@ -4,7 +4,8 @@
 
 #include "qlmsg.h"
 
-qmsg_t* qlmsg_log_new(qlog_t *log, int sender) {
+qmsg_t*
+qlmsg_log_new(qlog_t *log, int sender) {
   qmsg_t      *msg;
   qlmsg_log_t *lmsg;
 

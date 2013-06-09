@@ -16,7 +16,8 @@
 
 extern pthread_key_t g_thread_log_key;
 
-qthread_log_t* qthread_log_init(int idx) {
+qthread_log_t*
+qthread_log_init(int idx) {
   qthread_log_t *thread_log;
 
   thread_log = qcalloc(sizeof(qthread_log_t));
@@ -37,7 +38,8 @@ qthread_log_t* qthread_log_init(int idx) {
   return thread_log;
 }
 
-qlog_t* qthread_log_get() {
+qlog_t*
+qthread_log_get() {
   qlog_t        *log;
   qthread_log_t *thread_log;
 
@@ -60,7 +62,8 @@ qlog_t* qthread_log_get() {
   return log;
 }
 
-void qthread_log_fetch(qthread_log_t *log, qlist_t **list) {
+void
+qthread_log_fetch(qthread_log_t *log, qlist_t **list) {
   qlist_t *read;
 
   *list = NULL;

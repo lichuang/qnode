@@ -24,6 +24,9 @@ static const char* log_levels[] = {
 
 int g_log_level = QLOG_DEBUG;
 
+static void log_init(qlog_t *log, int level, const char* file,
+                     long line, const char *format, va_list args);
+
 const char *
 level_str(int level) {
   return log_levels[level];
