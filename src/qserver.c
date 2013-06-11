@@ -25,7 +25,6 @@
 extern qmsg_func_t* g_server_msg_handlers[];
 
 qserver_t    *g_server;
-volatile int  g_quit = 0;
 
 /* thread init condition */
 static int          init_thread_count;
@@ -97,7 +96,7 @@ server_start(qserver_t *server) {
   aid = qactor_new_id();
   qassert(aid != QINVALID_ID);
   tid = qserver_worker();
-  msg = qwmsg_start_new(aid, QMAIN_THREAD_TID, tid);
+  msg = qwmsg_start_new(aid, QMAINTHREAD_TID, tid);
   if (msg == NULL) {
     return;
   }
@@ -164,7 +163,7 @@ signal_handler(int signo) {
   qmsg_t     *msg;
   qmailbox_t *box;
 
-  msg = qmmsg_signal_new(signo, 0, 0);
+  msg = qmmsg_signal_new(signo);
   if (msg == NULL) {
     return;
   }

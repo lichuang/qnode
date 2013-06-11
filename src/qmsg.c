@@ -18,6 +18,7 @@ qmsg_new(qid_t sender, qid_t recver, int size, int type) {
 
   msg = (qmsg_t*)qcalloc(size);
   if (msg == NULL) {
+    qerror("alloc type %d msg error", type);
     return NULL;
   }
   qlist_entry_init(&(msg->entry));

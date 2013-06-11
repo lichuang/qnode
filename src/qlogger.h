@@ -20,6 +20,7 @@ typedef struct qlogger_t {
 int  qlogger_new(int thread_num);
 void qlogger_destroy();
 void qlogger_add(qlog_t *log);
+void qlogger_send(qmsg_t *msg);
 
 extern qlogger_t     *g_logger;
 extern pthread_key_t  g_thread_log_key;

@@ -41,6 +41,7 @@ typedef struct qdispatcher_t {
 } qdispatcher_t;
 
 struct qengine_t {
+  unsigned int          quit:1;
   qevent_t             *events;
   qevent_t             *active_events;
   const qdispatcher_t  *dispatcher;

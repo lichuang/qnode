@@ -71,7 +71,7 @@ alloc_qid(qidmap_t *idmap) {
   qid = idmap->last_qid + 1;
   offset = qid & BITS_PER_PAGE_MASK;
   if (!idmap->nr_free) {
-    return QINVALID_ID;
+    return (int)QINVALID_ID;
   }
 
   offset = find_next_zero_bit(&idmap->page, BITS_PER_PAGE, offset);
@@ -81,7 +81,7 @@ alloc_qid(qidmap_t *idmap) {
     return offset;
   }
 
-  return QINVALID_ID;
+  return (int)QINVALID_ID;
 }
 
 void

@@ -20,6 +20,6 @@ typedef struct qmmsg_signal_t {
   int         signo;
 } qmmsg_signal_t;
 
-qmsg_t* qmmsg_signal_new(int signo, qid_t sender, qid_t recver);
+qmsg_t* qmmsg_signal_new(int signo);
 
 #endif  /* __QMMSG_H__ */

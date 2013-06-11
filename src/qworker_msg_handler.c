@@ -2,6 +2,7 @@
  * See Copyright Notice in qnode.h
  */
 
+#include <signal.h>
 #include <stdio.h>
 #include "qassert.h"
 #include "qactor.h"
@@ -15,16 +16,18 @@
 #include "qwmsg.h"
 #include "qworker.h"
 
-static int worker_handle_start_msg(qmsg_t *msg, void *reader);
-static int worker_handle_spawn_msg(qmsg_t *msg, void *reader);
+static int worker_start_handler(qmsg_t *msg, void *reader);
+static int worker_spawn_handler(qmsg_t *msg, void *reader);
+static int worker_signal_handler(qmsg_t *msg, void *reader);
 
 qmsg_func_t* g_worker_msg_handlers[] = {
-  &worker_handle_start_msg,     /* start */
-  &worker_handle_spawn_msg,     /* spawn */
+  &worker_start_handler,
+  &worker_spawn_handler,
+  &worker_signal_handler,
 };
 
 static int
-worker_handle_start_msg(qmsg_t *msg, void *reader) {
+worker_start_handler(qmsg_t *msg, void *reader) {
   qwmsg_start_t  *start;
   qworker_t      *worker;
   int             ret;
@@ -72,7 +75,7 @@ worker_handle_start_msg(qmsg_t *msg, void *reader) {
 }
 
 static int
-worker_handle_spawn_msg(qmsg_t *msg, void *reader) {
+worker_spawn_handler(qmsg_t *msg, void *reader) {
   int             ret;
   qactor_t       *actor;
   qworker_t      *worker;
@@ -94,6 +97,26 @@ worker_handle_spawn_msg(qmsg_t *msg, void *reader) {
   }
 
   return ret;
+}
+
+static int
+worker_signal_handler(qmsg_t *msg, void *reader) {
+  qwmsg_signal_t *signal;
+  qworker_t      *worker;
+
+  signal = (qwmsg_signal_t*)msg;
+  worker = (qworker_t*)reader;
+  
+  switch (signal->signo) {
+    case SIGTERM:
+    case SIGQUIT:
+      worker->engine->quit = 1;
+      break;
+    default:
+      break;
+  }
+
+  return 0;
 }
 
 #if 0

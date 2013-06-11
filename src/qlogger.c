@@ -121,3 +121,7 @@ qlogger_add(qlog_t *log) {
   }
   qmailbox_add(&(g_logger->box), msg);
 }
+
+void qlogger_send(qmsg_t *msg) {
+  qmailbox_add(&(g_logger->box), msg);
+}

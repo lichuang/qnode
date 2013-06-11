@@ -56,6 +56,7 @@ qengine_new() {
     init_qevent(event);
   }
   qtimer_manager_init(&engine->timer_mng, engine);
+  engine->quit = 0;
 
   return engine;
 
@@ -128,7 +129,7 @@ qengine_loop(qengine_t* engine) {
   qevent_t *event;
 
   while (1) {
-    if (g_quit) {
+    if (engine->quit) {
       break;
     }
     next = qtimer_next(&engine->timer_mng);

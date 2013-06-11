@@ -21,6 +21,13 @@ typedef struct qlmsg_log_t {
   qlog_t  *log;
 } qlmsg_log_t;
 
+typedef struct qlmsg_signal_t {
+  qmsg_header_fields;
+
+  int   signo;
+} qlmsg_signal_t;
+
 qmsg_t* qlmsg_log_new(qlog_t *log, int sender);
+qmsg_t* qlmsg_signal_new(int signo);
 
 #endif  /* __QLMSG_H__ */

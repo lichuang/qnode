@@ -9,4 +9,6 @@
 #define UNUSED(x) ((void)(x))
 #endif
 
+#define QMAINTHREAD_TID 0
+
 #endif  /* __QDEFINES_H__ */
