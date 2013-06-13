@@ -8,7 +8,6 @@ qnode_config = {
   log = {
     path = "./log",
     level = "debug",
-    handler = "file",
   },
 
   -- script config

@@ -20,7 +20,6 @@ config_init_log(qconfig_t *config, lua_State *L) {
   qlua_get_table(L, -1, "log");
   qlua_get_table_string(L, "path", config->log_path);
   qlua_get_table_string(L, "level", config->log_level);
-  qlua_get_table_string(L, "handler", config->log_handler);
   lua_pop(L, 1);
 }
 
@@ -42,9 +41,8 @@ static void
 config_set_default(qconfig_t *config) {
   config->thread_num  = 2;
   config->script_path = qstring_new("./script");
-  config->log_path    = qstring_new("");
-  config->log_level   = qstring_new("");
-  config->log_handler = qstring_new("");
+  config->log_path    = qstring_new("./log");
+  config->log_level   = qstring_new("debug");
 }
 
 int
@@ -78,5 +76,4 @@ qconfig_free(qconfig_t *config) {
   qstring_destroy(config->script_path);
   qstring_destroy(config->log_path);
   qstring_destroy(config->log_level);
-  qstring_destroy(config->log_handler);
 }

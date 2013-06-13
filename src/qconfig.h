@@ -13,7 +13,6 @@ struct qconfig_t {
   qstring_t   script_path;
   qstring_t   log_path;
   qstring_t   log_level;
-  qstring_t   log_handler;
 };
 
 int  qconfig_init(qconfig_t *config, const char *filename);
