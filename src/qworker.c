@@ -17,10 +17,10 @@
 #include "qworker.h"
 #include "qthread_log.h"
 
-static int worker_msg_handler(qmsg_t *msg, void *reader);
+static int   worker_msg_handler(qmsg_t *msg, void *reader);
 static void* worker_main_loop(void *arg);
 
-extern qmsg_func_t* g_worker_msg_handlers[];
+extern qmsg_func_t* worker_msg_handlers[];
 
 static int
 worker_msg_handler(qmsg_t *msg, void *reader) {
@@ -28,7 +28,7 @@ worker_msg_handler(qmsg_t *msg, void *reader) {
 
   worker = (qworker_t*)reader;
   qinfo("worker %d handle %d msg", worker->tid, msg->type);
-  return (*g_worker_msg_handlers[msg->type])(msg, reader);
+  return (*worker_msg_handlers[msg->type])(msg, reader);
 }
 
 static void*
@@ -37,7 +37,7 @@ worker_main_loop(void *arg) {
 
   worker = (qworker_t*)arg;
   /* init the worker thread log structure */
-  g_server->thread_log[worker->tid] = qthread_log_init(worker->tid);
+  server->thread_log[worker->tid] = qthread_log_init(worker->tid);
   qserver_worker_started();
   qengine_loop(worker->engine);
   return NULL;
@@ -82,7 +82,7 @@ qworker_send(qmsg_t *msg) {
   qworker_t  *worker;
   qmailbox_t *box;
 
-  worker = g_server->workers[msg->recver];
+  worker = server->workers[msg->recver];
   box    = &(worker->box);
   qmailbox_add(box, msg);
 }

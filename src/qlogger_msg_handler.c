@@ -11,7 +11,7 @@
 static int logger_log_handler(qmsg_t *msg, void *reader);
 static int logger_signal_handler(qmsg_t *msg, void *reader);
 
-qmsg_func_t* g_logger_msg_handlers[] = {
+qmsg_func_t* logger_msg_handlers[] = {
   &logger_log_handler,
   &logger_signal_handler,
 };
@@ -20,7 +20,7 @@ static int
 logger_log_handler(qmsg_t *msg, void *reader) {
   qlmsg_log_t   *lmsg;
   qlog_t        *log;
-  qlogger_t *thread;
+  qlogger_t     *thread;
   
   thread = (qlogger_t*)reader;
   lmsg = (qlmsg_log_t*)msg;
@@ -41,6 +41,7 @@ logger_signal_handler(qmsg_t *msg, void *reader) {
   switch (signal->signo) {
     case SIGTERM:
     case SIGQUIT:
+    case SIGINT:
       logger->engine->quit = 1;
       break;
     default:

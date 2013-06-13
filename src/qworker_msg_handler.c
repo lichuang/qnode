@@ -20,7 +20,7 @@ static int worker_start_handler(qmsg_t *msg, void *reader);
 static int worker_spawn_handler(qmsg_t *msg, void *reader);
 static int worker_signal_handler(qmsg_t *msg, void *reader);
 
-qmsg_func_t* g_worker_msg_handlers[] = {
+qmsg_func_t* worker_msg_handlers[] = {
   &worker_start_handler,
   &worker_spawn_handler,
   &worker_signal_handler,
@@ -110,6 +110,7 @@ worker_signal_handler(qmsg_t *msg, void *reader) {
   switch (signal->signo) {
     case SIGTERM:
     case SIGQUIT:
+    case SIGINT:
       worker->engine->quit = 1;
       break;
     default:

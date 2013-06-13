@@ -25,9 +25,9 @@ qid_t
 qactor_new_id() {
   qid_t id;
 
-  qmutex_lock(&g_server->id_map_mutex);
-  id = qid_new(&g_server->id_map);
-  qmutex_unlock(&g_server->id_map_mutex);
+  qmutex_lock(&server->id_map_mutex);
+  id = qid_new(&server->id_map);
+  qmutex_unlock(&server->id_map_mutex);
   return id;
 }
 
@@ -60,9 +60,9 @@ qactor_destroy(qactor_t *actor) {
   qmsg_t  *msg;
 
   lua_close(actor->state);
-  qmutex_lock(&g_server->id_map_mutex);
-  qid_free(&(g_server->id_map), actor->aid);
-  qmutex_unlock(&g_server->id_map_mutex);
+  qmutex_lock(&server->id_map_mutex);
+  qid_free(&(server->id_map), actor->aid);
+  qmutex_unlock(&server->id_map_mutex);
   qspinlock_lock(&(actor->desc_list_lock));
   for (pos = actor->desc_list.next; pos != &(actor->desc_list); ) {
     qdescriptor_t *desc = qlist_entry(pos, qdescriptor_t, entry);
@@ -126,13 +126,13 @@ qengine_t*
 qactor_get_engine(qactor_t *actor) {
   qassert(actor);
   qassert(actor->tid > 0);
-  return g_server->workers[actor->tid]->engine;
+  return server->workers[actor->tid]->engine;
 }
 
 qworker_t*
 qactor_get_worker(qactor_t *actor) {
   qassert(actor);
-  return g_server->workers[actor->tid];
+  return server->workers[actor->tid];
 }
 
 void
@@ -140,7 +140,7 @@ qactor_send(qmsg_t *msg) {
   qactor_t   *actor;
   qmailbox_t *box;
 
-  actor = g_server->actors[msg->recver];
+  actor = server->actors[msg->recver];
   box   = &(actor->box);
 
   qmailbox_add(box, msg);

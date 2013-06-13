@@ -36,6 +36,6 @@ qid_t qserver_worker();
 qactor_t* qserver_get_actor(qid_t id);
 
 /* the GLOBAL server in the system */
-extern qserver_t *g_server;
+extern qserver_t *server;
 
 #endif  /* __QSERVER_H__ */

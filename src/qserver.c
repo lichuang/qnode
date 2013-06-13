@@ -22,9 +22,9 @@
 #include "qthread_log.h"
 #include "qwmsg.h"
 
-extern qmsg_func_t* g_server_msg_handlers[];
+extern qmsg_func_t* server_msg_handlers[];
 
-qserver_t    *g_server;
+qserver_t    *server;
 
 /* thread init condition */
 static int          init_thread_count;
@@ -70,20 +70,20 @@ init_server_event(qserver_t *server) {
 static int
 server_msg_handler(qmsg_t *msg, void *reader) {
   qinfo("main handle %d msg", msg->type);
-  return (*g_server_msg_handlers[msg->type])(msg, reader);
+  return (*server_msg_handlers[msg->type])(msg, reader);
 }
 
 qid_t
 qserver_worker() {
   static qid_t i = 1;
 
-  i = (i + 1) % (g_server->config->thread_num + 1);
+  i = ((i + 1) % server->config->thread_num) + 1;
   return i;
 }
 
 qactor_t*
 qserver_get_actor(qid_t id) {
-  return g_server->actors[id];
+  return server->actors[id];
 }
 
 static void
@@ -168,7 +168,7 @@ signal_handler(int signo) {
     return;
   }
 
-  box = &(g_server->box);
+  box = &(server->box);
   qmailbox_add(box, msg);
 }
 
@@ -187,11 +187,9 @@ setup_signal() {
 
 static int
 server_init(qconfig_t *config) {
-  qserver_t   *server;
-
   qassert(config);
   qassert(config->thread_num > 0);
-  qassert(g_server == NULL);
+  qassert(server == NULL);
 
   server = qcalloc(sizeof(qserver_t));
 
@@ -201,7 +199,6 @@ server_init(qconfig_t *config) {
   if (server == NULL) {
     goto error;
   }
-  g_server = server;
 
   init_thread_count = 0;
   if (qlogger_new(config->thread_num + 1) < 0) {
@@ -248,8 +245,8 @@ destroy_threads() {
   int         i;
   qworker_t  *worker;
 
-  for (i = 1; i <= g_server->config->thread_num; ++i) {
-    worker = g_server->workers[i];
+  for (i = 1; i <= server->config->thread_num; ++i) {
+    worker = server->workers[i];
     qworker_destroy(worker);
   }
   qlogger_destroy();
@@ -265,16 +262,16 @@ qserver_run(qconfig_t *config) {
   if (server_init(config) != 0) {
     return -1;
   }
-  qengine_loop(g_server->engine);
+  qengine_loop(server->engine);
   destroy_server();
   return 0;
 }
 
 void
 qserver_new_actor(qactor_t *actor) {
-  qassert(g_server->actors[actor->aid] == NULL);
-  g_server->actors[actor->aid] = actor;
-  g_server->num_actor++;
+  qassert(server->actors[actor->aid] == NULL);
+  server->actors[actor->aid] = actor;
+  server->num_actor++;
 }
 
 void

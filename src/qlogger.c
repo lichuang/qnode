@@ -19,7 +19,7 @@
 #include "qsignal.h"
 #include "qthread_log.h"
 
-extern qmsg_func_t* g_logger_msg_handlers[];
+extern qmsg_func_t* logger_msg_handlers[];
 
 pthread_key_t g_thread_log_key = PTHREAD_ONCE_INIT;
 qlogger_t *g_logger = NULL;
@@ -31,8 +31,7 @@ static void   log_time_handler(void *data);
 
 static int
 logger_msg_handler(qmsg_t *msg, void *reader) {
-  printf("logger handle %d msg\n", msg->type);
-  return (*g_logger_msg_handlers[msg->type])(msg, reader);
+  return (*logger_msg_handlers[msg->type])(msg, reader);
 }
 
 static void*

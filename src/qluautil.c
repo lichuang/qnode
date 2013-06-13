@@ -224,7 +224,7 @@ void qlua_dump_dict(lua_State *state, qdict_t *dict) {
 static qstring_t lua_init_filename(const char *filename) {
   qstring_t full_name;
 
-  full_name = qstring_new(g_server->config->script_path);
+  full_name = qstring_new(server->config->script_path);
   if (!full_name) {
     return NULL;
   }
@@ -275,14 +275,12 @@ int qlua_init_path(struct qactor_t *actor) {
   const char *cur_path;
   qstring_t   full_path;
   lua_State  *state;
-  qserver_t  *server;
 
   full_path = qstring_new("");
   if (full_path == NULL) {
     return -1;
   }
   state = actor->state;
-  server = g_server;
   path = server->config->script_path;
 
   lua_getglobal(state, "package" );

@@ -33,7 +33,7 @@ qdescriptor_new(int fd, unsigned short type, qactor_t *actor) {
   qassert(fd < QID_MAX);
   qdescriptor_t *desc;
 
-  desc = g_server->descriptors[fd];
+  desc = server->descriptors[fd];
   if (desc) {
     qassert(desc->aid == QINVALID_ID);
     qassert(desc->fd == fd);
@@ -41,7 +41,7 @@ qdescriptor_new(int fd, unsigned short type, qactor_t *actor) {
     desc = qcalloc(sizeof(qdescriptor_t));
     desc->aid = QINVALID_ID;
     desc->fd = fd;
-    g_server->descriptors[fd] = desc;
+    server->descriptors[fd] = desc;
     qlist_entry_init(&desc->entry);
   }
   desc->aid  = actor->aid;
@@ -86,5 +86,5 @@ qdescriptor_get_actor(qdescriptor_t *desc) {
   if (desc->aid == QINVALID_ID) {
     return NULL;
   }
-  return g_server->actors[desc->aid];
+  return server->actors[desc->aid];
 }

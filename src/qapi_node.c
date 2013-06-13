@@ -33,7 +33,7 @@ qnode_spawn(lua_State *state) {
   actor = qlua_get_actor(state);
   mod = lua_tostring(state, 1);
   fun = lua_tostring(state, 2);
-  worker = g_server->workers[actor->tid];
+  worker = server->workers[actor->tid];
   new_state = qlua_new_thread(worker);
 
   string = qstring_new(mod);
