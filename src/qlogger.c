@@ -31,6 +31,7 @@ static void   log_time_handler(void *data);
 
 static int
 logger_msg_handler(qmsg_t *msg, void *reader) {
+  printf("logger handle %d msg\n", msg->type);
   return (*g_logger_msg_handlers[msg->type])(msg, reader);
 }
 

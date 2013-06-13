@@ -24,6 +24,10 @@ extern qmsg_func_t* g_worker_msg_handlers[];
 
 static int
 worker_msg_handler(qmsg_t *msg, void *reader) {
+  qworker_t *worker;
+
+  worker = (qworker_t*)reader;
+  qinfo("worker %d handle %d msg", worker->tid, msg->type);
   return (*g_worker_msg_handlers[msg->type])(msg, reader);
 }
 

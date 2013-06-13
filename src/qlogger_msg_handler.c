@@ -2,19 +2,22 @@
  * See Copyright Notice in qnode.h
  */
 
+#include <signal.h>
 #include "qalloc.h"
 #include "qlmsg.h"
 #include "qlog.h"
 #include "qlogger.h"
 
-static int logger_handle_log_msg(qmsg_t *msg, void *reader);
+static int logger_log_handler(qmsg_t *msg, void *reader);
+static int logger_signal_handler(qmsg_t *msg, void *reader);
 
 qmsg_func_t* g_logger_msg_handlers[] = {
-  &logger_handle_log_msg,     /* log */
+  &logger_log_handler,
+  &logger_signal_handler,
 };
 
 static int
-logger_handle_log_msg(qmsg_t *msg, void *reader) {
+logger_log_handler(qmsg_t *msg, void *reader) {
   qlmsg_log_t   *lmsg;
   qlog_t        *log;
   qlogger_t *thread;
@@ -25,5 +28,23 @@ logger_handle_log_msg(qmsg_t *msg, void *reader) {
   printf("%s\n", log->buff);
   qfree(log);
 
+  return 0;
+}
+static int
+logger_signal_handler(qmsg_t *msg, void *reader) {
+  qlmsg_signal_t *signal;
+  qlogger_t      *logger;
+
+  signal = (qlmsg_signal_t*)msg;
+  logger = (qlogger_t*)reader;
+  
+  switch (signal->signo) {
+    case SIGTERM:
+    case SIGQUIT:
+      logger->engine->quit = 1;
+      break;
+    default:
+      break;
+  }
   return 0;
 }

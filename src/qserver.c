@@ -69,15 +69,15 @@ init_server_event(qserver_t *server) {
 
 static int
 server_msg_handler(qmsg_t *msg, void *reader) {
+  qinfo("main handle %d msg", msg->type);
   return (*g_server_msg_handlers[msg->type])(msg, reader);
 }
 
 qid_t
 qserver_worker() {
-  static qid_t i;
+  static qid_t i = 1;
 
-  i = 1;
-  i = (i + 1) % g_server->config->thread_num + 1;
+  i = (i + 1) % (g_server->config->thread_num + 1);
   return i;
 }
 

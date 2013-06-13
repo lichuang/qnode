@@ -36,10 +36,10 @@ qmailbox_add(qmailbox_t *box, qmsg_t *msg) {
   qmutex_lock(&(box->mutex));
   p = box->write;
   qlist_add_tail(&(msg->entry), p);
+  qmutex_unlock(&(box->mutex));
   if (qsignal_active(&(box->signal), 1) == 0) {
     qsignal_send(&(box->signal));
   }
-  qmutex_unlock(&(box->mutex));
 }
 
 void

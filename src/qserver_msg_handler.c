@@ -77,6 +77,7 @@ server_handle_signal_msg(qmsg_t *msg, void *reader) {
   switch (signo) {
     case SIGTERM:
     case SIGQUIT:
+    case SIGINT:
       server->engine->quit = 1;
       send_signal(signo);
       break;
