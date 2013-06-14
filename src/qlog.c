@@ -48,7 +48,7 @@ void
 qlog(int level, const char* file, long line, const char *format, ...) {
   va_list args;
 
-  if (g_logger == NULL) {
+  if (logger == NULL) {
     return;
   }
   if (g_log_level < level) {
@@ -63,11 +63,12 @@ qlog(int level, const char* file, long line, const char *format, ...) {
   log_init(log, level, file, line, format, args);
   va_end(args);
 
-  log->n = sprintf(log->buff, "%s %d", g_logger->time_buff, log->idx);
+  log->n = sprintf(log->buff, "%s %d", logger->time_buff, log->idx);
   log->n += sprintf(log->buff + log->n, " %s:%d] ", log->file, log->line);
-  vsprintf(log->buff + log->n, log->format, args);
+  log->n += vsprintf(log->buff + log->n, log->format, args);
+  log->buff[log->n++] = '\n';
 
-#if 0  
+#if 1  
   qlogger_add(log);
 #else
   printf("%s\n", log->buff);

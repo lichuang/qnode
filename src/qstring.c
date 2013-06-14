@@ -137,3 +137,35 @@ qstring_compare_raw(qstring_t str1, const char* str2) {
 
   return (strcmp(str1, str2));
 }
+
+// TODO: need to optimize
+qstring_t
+qstring_catvprintf(qstring_t string, const char *fmt, ...) {
+  va_list ap;
+  va_list cpy;
+  char   *buf, *t;
+  size_t  buflen;
+
+  buflen = 16;
+  va_start(ap,fmt);
+  while(1) {
+    buf = qalloc(buflen);
+    if (buf == NULL) {
+      return NULL;
+    }
+    buf[buflen - 2] = '\0';
+    va_copy(cpy, ap);
+    vsnprintf(buf, buflen, fmt, cpy);
+    if (buf[buflen - 2] != '\0') {
+      qfree(buf);
+      buflen *= 2;
+      continue;
+    }
+    break;
+  }
+  t = qstring_append(string, buf);
+  qfree(buf);
+  va_end(ap);
+
+  return t;
+}

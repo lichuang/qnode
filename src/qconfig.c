@@ -39,10 +39,12 @@ config_init_script(qconfig_t *config, lua_State *L) {
 
 static void
 config_set_default(qconfig_t *config) {
-  config->thread_num  = 2;
+  config->thread_num  = 5;
+  config->daemon      = 1;
   config->script_path = qstring_new("./script");
   config->log_path    = qstring_new("./log");
   config->log_level   = qstring_new("debug");
+  config->log_size    = 1024000000;
 }
 
 int

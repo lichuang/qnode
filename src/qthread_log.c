@@ -14,7 +14,7 @@
 #include "qlog.h"
 #include "qthread_log.h"
 
-extern pthread_key_t g_thread_log_key;
+extern pthread_key_t thread_log_key;
 
 qthread_log_t*
 qthread_log_init(int idx) {
@@ -28,11 +28,11 @@ qthread_log_init(int idx) {
   qlist_entry_init(&thread_log->lists[1]);
   thread_log->write = &thread_log->lists[0];
   thread_log->read  = &thread_log->lists[0];
-  if (pthread_setspecific(g_thread_log_key, thread_log) < 0) {
+  if (pthread_setspecific(thread_log_key, thread_log) < 0) {
     qfree(thread_log);
     return NULL;
   }
-  qassert(pthread_getspecific(g_thread_log_key) != NULL);
+  qassert(pthread_getspecific(thread_log_key) != NULL);
   thread_log->idx = idx;
 
   return thread_log;
@@ -43,7 +43,7 @@ qthread_log_get() {
   qlog_t        *log;
   qthread_log_t *thread_log;
 
-  thread_log = (qthread_log_t*)pthread_getspecific(g_thread_log_key);
+  thread_log = (qthread_log_t*)pthread_getspecific(thread_log_key);
   if (thread_log == NULL) {
     return NULL;
   }

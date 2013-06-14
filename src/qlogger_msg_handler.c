@@ -2,11 +2,13 @@
  * See Copyright Notice in qnode.h
  */
 
+#include <unistd.h>
 #include <signal.h>
 #include "qalloc.h"
 #include "qlmsg.h"
 #include "qlog.h"
 #include "qlogger.h"
+#include "qserver.h"
 
 static int logger_log_handler(qmsg_t *msg, void *reader);
 static int logger_signal_handler(qmsg_t *msg, void *reader);
@@ -20,12 +22,20 @@ static int
 logger_log_handler(qmsg_t *msg, void *reader) {
   qlmsg_log_t   *lmsg;
   qlog_t        *log;
-  qlogger_t     *thread;
+  qlogger_t     *logger;
   
-  thread = (qlogger_t*)reader;
+  logger = (qlogger_t*)reader;
   lmsg = (qlmsg_log_t*)msg;
   log = lmsg->log;
-  printf("%s\n", log->buff);
+
+  write(logger->fd, log->buff, log->n);
+  logger->log_size += log->n;
+  if (logger->log_size > server->config->log_size) {
+    qlogger_open_file();
+  }
+  if (!server->config->daemon) {
+    printf("%s", log->buff);
+  }
   qfree(log);
 
   return 0;

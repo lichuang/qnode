@@ -4,6 +4,10 @@
 
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "qalloc.h"
 #include "qactor.h"
 #include "qassert.h"
@@ -42,6 +46,7 @@ static void setup_signal();
 static int  server_init(qconfig_t *config);
 static void destroy_threads();
 static void destroy_server();
+static void make_daemon();
 
 static void
 server_accept(int fd, int flags, void *data) {
@@ -185,6 +190,36 @@ setup_signal() {
   sigaction(SIGABRT, &act, NULL);
 }
 
+static void
+make_daemon() {
+  pid_t pid, sid;
+
+  pid = fork();
+  if (pid < 0) {
+    printf("fork process error\n");
+    exit(-1);
+  }   
+  if (pid > 0) {
+    printf("\n"
+      "*****************************************************\n"
+      "* qserver will be running as a daemon. PID %-8d *\n"
+      "*****************************************************\n\n",
+      pid);
+    signal(SIGCHLD, SIG_IGN);
+    exit(0);
+  }   
+
+  umask(0);
+  sid = setsid();
+  if (sid < 0) {
+    exit(-1);
+  }   
+
+  close(STDIN_FILENO);
+  close(STDOUT_FILENO);
+  close(STDERR_FILENO);
+}
+
 static int
 server_init(qconfig_t *config) {
   qassert(config);
@@ -200,6 +235,10 @@ server_init(qconfig_t *config) {
     goto error;
   }
 
+  server->config = config;
+  if (config->daemon) {
+    make_daemon();
+  }
   init_thread_count = 0;
   if (qlogger_new(config->thread_num + 1) < 0) {
     goto error;
@@ -207,7 +246,6 @@ server_init(qconfig_t *config) {
   /* wait for the log thread start */
   wait_threads(1);
 
-  server->config = config;
   server->engine = qengine_new();
   if (init_server_event(server) < 0) {
     goto error;
