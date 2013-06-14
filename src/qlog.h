@@ -38,7 +38,6 @@ struct qlog_t {
   va_list args;
 };
 
-extern int g_log_level;
 void qlog(int level, const char* file, long line, const char *format, ...);
 
 #define qerror(args...) qlog(QLOG_ERR,   __FILE__, __LINE__, args)

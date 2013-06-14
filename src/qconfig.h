@@ -10,7 +10,7 @@
 
 struct qconfig_t {
   int           thread_num;
-  unsigned int  daemon:1;
+  int           daemon;
   qstring_t     script_path;
   qstring_t     log_path;
   qstring_t     log_level;

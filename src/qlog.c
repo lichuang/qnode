@@ -22,7 +22,7 @@ static const char* log_levels[] = {
   "debug"
 };
 
-int g_log_level = QLOG_DEBUG;
+static int log_level = QLOG_DEBUG;
 
 static void log_init(qlog_t *log, int level, const char* file,
                      long line, const char *format, va_list args);
@@ -51,7 +51,7 @@ qlog(int level, const char* file, long line, const char *format, ...) {
   if (logger == NULL) {
     return;
   }
-  if (g_log_level < level) {
+  if (log_level < level) {
     return;
   }
   qlog_t *log = qthread_log_get();

@@ -17,5 +17,6 @@ qnode_config = {
 
   -- server config
   server = {
+    daemon = 0,
   }
 }

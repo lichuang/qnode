@@ -8,7 +8,7 @@
 #include "qluautil.h"
 
 static int
-qnode_buffer_find(lua_State *state) {
+qbuffer_find(lua_State *state) {
   int         pos;
   char       *ret;
   const char *str;
@@ -28,7 +28,7 @@ qnode_buffer_find(lua_State *state) {
 }
 
 static int
-qnode_buffer_set(lua_State *state) {
+qbuffer_set(lua_State *state) {
   int         pos, len;
   const char *str;
   qbuffer_t  *buffer;
@@ -52,7 +52,7 @@ qnode_buffer_set(lua_State *state) {
 }
 
 static int
-qnode_buffer_get(lua_State *state) {
+qbuffer_get(lua_State *state) {
   qbuffer_t  *buffer;
   int         pos, len;
 
@@ -68,7 +68,7 @@ qnode_buffer_get(lua_State *state) {
 }
 
 static int
-qnode_buffer_length(lua_State *state) {
+qbuffer_length(lua_State *state) {
   qbuffer_t  *buffer;
 
   buffer = (qbuffer_t*)lua_touserdata(state, 1);
@@ -78,9 +78,9 @@ qnode_buffer_length(lua_State *state) {
 }
 
 luaL_Reg buffer_apis[] = {
-  {"qnode_buffer_find",    qnode_buffer_find},
-  {"qnode_buffer_set",     qnode_buffer_set},
-  {"qnode_buffer_get",     qnode_buffer_get},
-  {"qnode_buffer_length",  qnode_buffer_length},
+  {"qbuffer_find",    qbuffer_find},
+  {"qbuffer_set",     qbuffer_set},
+  {"qbuffer_get",     qbuffer_get},
+  {"qbuffer_length",  qbuffer_length},
   {NULL, NULL},
 };
