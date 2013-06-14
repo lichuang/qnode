@@ -111,25 +111,9 @@ qstring_append(qstring_t str, const char *data) {
 }
 
 int
-qstring_compare(qstring_t str1, qstring_t str2) {
-  qstr_header_t *header1, *header2;
-
-  header1 = str_to_header(str1);
-  header2 = str_to_header(str2);
-
-  if (header1->len != header2->len) {
-    return (header1->len - header2->len);
-  }
-
-  return (strcmp(str1, str2));
-}
-
-int
-qstring_compare_raw(qstring_t str1, const char* str2) {
-  size_t         len;
+qstring_compare(qstring_t str1, const char* str2, size_t len) {
   qstr_header_t *header;
 
-  len    = strlen(str2);
   header = str_to_header(str1);
   if (len != header->len) {
     return (header->len - len);

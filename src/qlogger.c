@@ -63,6 +63,7 @@ qlogger_open_file() {
 
   logger->fd = open(file, O_CREAT | O_TRUNC | O_RDWR,
                     S_IWUSR | S_IRUSR | S_IWOTH | S_IROTH | S_IRGRP | S_IWGRP);
+  qstring_destroy(file);
 }
 
 static void*
@@ -118,6 +119,8 @@ qlogger_new(int thread_num) {
     return -1;
   }
 
+  logger->fd = 0;
+  logger->log_size = 0;
   qlogger_open_file();
   logger->engine = qengine_new();
   if (logger->engine == NULL) {
