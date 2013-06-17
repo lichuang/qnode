@@ -133,6 +133,12 @@ qtcp_accept(lua_State *state) {
   timeout = (int)lua_tonumber(state, 2);
   UNUSED(timeout);
 
+  if (desc == NULL) {
+    lua_pushnil(state);
+    lua_pushfstring(state, "socket descriptor nil");
+    return 2;
+  }
+
   if (tcp->inet.state != QINET_STATE_LISTENING &&
     tcp->inet.state != QINET_STATE_ACCEPTING) {
     lua_pushnil(state);

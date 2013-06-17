@@ -17,12 +17,14 @@
 #include "qstring.h"
 #include "qworker.h"
 
-static int panic(lua_State *state) {
+static int
+panic(lua_State *state) {
   qerror("PANIC: unprotected error in call to Lua API (%s)\n", lua_tostring(state, -1));
   return 0;
 }
 
-lua_State* qlua_new_state() {
+lua_State*
+qlua_new_state() {
   lua_State *state;
 
   state = lua_open();
@@ -31,11 +33,13 @@ lua_State* qlua_new_state() {
   return state;
 }
 
-lua_State* qlua_new_thread(qworker_t *worker) {
+lua_State*
+qlua_new_thread(qworker_t *worker) {
   return lua_newthread(worker->state);
 }
 
-static int err_func(lua_State * state) {
+static int
+err_func(lua_State * state) {
   lua_getfield(state, LUA_GLOBALSINDEX, "debug");
   if (!lua_istable(state, -1)) {
     lua_pop(state, 1); 
@@ -54,7 +58,8 @@ static int err_func(lua_State * state) {
   return 1;
 }
 
-int qlua_call(lua_State *state, int args, int results) {
+int
+qlua_call(lua_State *state, int args, int results) {
   int base, ret;
 
   base = lua_gettop(state) - args;
@@ -67,7 +72,8 @@ int qlua_call(lua_State *state, int args, int results) {
   return ret;
 }
 
-int qlua_get_table(lua_State *state, int idx, const char *key) {
+int
+qlua_get_table(lua_State *state, int idx, const char *key) {
   lua_pushvalue(state, idx);
   lua_pushstring(state, key);
   lua_gettable(state, -2);
@@ -82,7 +88,8 @@ int qlua_get_table(lua_State *state, int idx, const char *key) {
   }
 }
 
-int qlua_get_table_string(lua_State *state, const char *key, qstring_t string) {
+int
+qlua_get_table_string(lua_State *state, const char *key, qstring_t string) {
   lua_pushvalue(state, -1);
   lua_pushstring(state, key);
   lua_gettable(state, -2);
@@ -93,7 +100,8 @@ int qlua_get_table_string(lua_State *state, const char *key, qstring_t string) {
   return 0;
 }
 
-int qlua_get_table_number(lua_State *state, const char *key, int *number) {
+int
+qlua_get_table_number(lua_State *state, const char *key, int *number) {
   lua_pushvalue(state, -1);
   lua_pushstring(state, key);
   lua_gettable(state, -2);
@@ -106,7 +114,8 @@ int qlua_get_table_number(lua_State *state, const char *key, int *number) {
   return 0;
 } 
 
-void qlua_copy_state_table(lua_State *src, lua_State *dst, int table_idx) {
+void
+qlua_copy_state_table(lua_State *src, lua_State *dst, int table_idx) {
   int         type;
   int         val_idx;
   int         key_idx;
@@ -156,7 +165,8 @@ void qlua_copy_state_table(lua_State *src, lua_State *dst, int table_idx) {
   }
 }
 
-int qlua_copy_table(lua_State *state, int table_idx, qdict_t *dict) {
+int
+qlua_copy_table(lua_State *state, int table_idx, qdict_t *dict) {
   int         type;
   int         val_idx;
   int         key_idx;
@@ -201,7 +211,8 @@ int qlua_copy_table(lua_State *state, int table_idx, qdict_t *dict) {
   return 0;
 }
 
-void qlua_dump_dict(lua_State *state, qdict_t *dict) {
+void
+qlua_dump_dict(lua_State *state, qdict_t *dict) {
   qdict_iter_t  iter = qdict_iter(dict);
   qstring_t     key;
   qvalue_t     *val;
@@ -221,7 +232,8 @@ void qlua_dump_dict(lua_State *state, qdict_t *dict) {
   }
 }
 
-static qstring_t lua_init_filename(const char *filename) {
+static qstring_t
+lua_init_filename(const char *filename) {
   qstring_t full_name;
 
   full_name = qstring_new(server->config->script_path);
@@ -237,7 +249,9 @@ static qstring_t lua_init_filename(const char *filename) {
   return full_name;
 }
 
-int qlua_threadloadfile(qactor_t *actor, lua_State *state, const char *filename) {
+int
+qlua_threadloadfile(qactor_t *actor, lua_State *state,
+                    const char *filename) {
   int       ret;
   qstring_t full_name;
 
@@ -256,7 +270,8 @@ int qlua_threadloadfile(qactor_t *actor, lua_State *state, const char *filename)
   return ret;
 }
 
-int qlua_dofile(lua_State *state, const char *filename) {
+int
+qlua_dofile(lua_State *state, const char *filename) {
   int       ret;
   qstring_t full_name;
 
@@ -270,7 +285,8 @@ int qlua_dofile(lua_State *state, const char *filename) {
   return ret;
 }
 
-int qlua_init_path(struct qactor_t *actor) {
+int
+qlua_init_path(struct qactor_t *actor) {
   const char *path;
   const char *cur_path;
   qstring_t   full_path;
@@ -299,7 +315,8 @@ int qlua_init_path(struct qactor_t *actor) {
   return 0;
 }
 
-struct qactor_t* qlua_get_actor(lua_State *state) {
+struct qactor_t*
+qlua_get_actor(lua_State *state) {
   //lua_getglobal(state, "qnode");
   lua_pushlightuserdata(state, state);
   lua_gettable(state, LUA_REGISTRYINDEX);
@@ -307,7 +324,8 @@ struct qactor_t* qlua_get_actor(lua_State *state) {
   return (qactor_t*)lua_touserdata(state, -1);
 }
 
-void qlua_fail(lua_State *state, char *file, int line) {                                           \
+void
+qlua_fail(lua_State *state, char *file, int line) {                                           \
   char tmp_buff[8000+1]={0,};                                              
   snprintf(tmp_buff, 8000, "%s:%d lua_call failed\n\t%s",
            file, line, lua_tostring(state, -1 )); 
