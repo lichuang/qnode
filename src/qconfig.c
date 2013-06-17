@@ -48,7 +48,7 @@ config_init_server(qconfig_t *config, lua_State *state) {
 static void
 config_set_default(qconfig_t *config) {
   config->thread_num  = 5;
-  config->daemon      = 1;
+  config->daemon      = 0;
   config->script_path = qstring_new("./script");
   config->log_path    = qstring_new("./log");
   config->log_level   = qstring_new("debug");

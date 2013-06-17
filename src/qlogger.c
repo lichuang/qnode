@@ -16,7 +16,6 @@
 #include "qlmsg.h"
 #include "qlog.h"
 #include "qlogger.h"
-#include "qmailbox.h"
 #include "qmsg.h"
 #include "qserver.h"
 #include "qsignal.h"
@@ -31,6 +30,7 @@ static int    logger_msg_handler(qmsg_t *msg, void *reader);
 static void*  log_thread_main_loop(void *arg);
 static void   log_key_destroy(void *value);
 static void   log_time_handler(void *data);
+static void   logger_handle_msglist_done(void *reader);
 
 static int
 logger_msg_handler(qmsg_t *msg, void *reader) {
@@ -74,16 +74,8 @@ log_thread_main_loop(void *arg) {
   qserver_worker_started();
   qengine_loop(thread->engine);
 
-#if 0
-  /* now the server terminate, do the clean work */
-  for (i = 0; i < logger->thread_num; ++i) {
-    signal = logger->signals[i];
-    fd = qsignal_get_fd(signal);
-    qengine_del_event(logger->engine, fd, QEVENT_READ);
-    log_thread_box(0, -1, signal);
-  }
-#endif
   qengine_destroy(logger->engine);
+  //qlog_destroy_free_list();
 
   return NULL;
 }
@@ -108,8 +100,17 @@ log_time_handler(void *data) {
            "[%m-%d %T", &tm);
 }
 
+static void
+logger_handle_msglist_done(void *reader) {
+  qlogger_t *logger;
+
+  logger = (qlogger_t*)reader;
+  qlog_free(&(logger->free_list));
+}
+
 int
 qlogger_new(int thread_num) {
+  qlog_init_free_list();
   logger = qcalloc(sizeof(qlogger_t));
   if (logger == NULL) {
     return -1;
@@ -127,9 +128,11 @@ qlogger_new(int thread_num) {
     return -1;
   }
   qmailbox_init(&(logger->box), logger_msg_handler,
-                logger->engine,  logger);
+                logger->engine, logger);
+  logger->box.done = logger_handle_msglist_done;
 
   logger->thread_num = thread_num;
+  qlist_entry_init(&(logger->free_list));
   log_time_handler(NULL);
   qengine_add_timer(logger->engine, 1000, log_time_handler,
                     1000, NULL);

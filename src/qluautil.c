@@ -258,12 +258,13 @@ qlua_threadloadfile(qactor_t *actor, lua_State *state,
   UNUSED(actor);
 
   /* TODO: check the state is a lua thread */
-  full_name = lua_init_filename(filename);
+  //full_name = lua_init_filename(filename);
+  full_name = (qstring_t)filename;
   if (full_name == NULL) {
     return -1;
   }
   ret = luaL_loadfile(state, full_name);
-  qstring_destroy(full_name);
+  //qstring_destroy(full_name);
   /* start the coroutine */
   lua_resume(state, 0);
 

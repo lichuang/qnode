@@ -7,6 +7,7 @@
 
 #include <pthread.h>
 #include "qcore.h"
+#include "qlist.h"
 #include "qmailbox.h"
 
 typedef struct qlogger_t {
@@ -17,6 +18,7 @@ typedef struct qlogger_t {
   char          time_buff[20];
   int           fd;
   int           log_size;
+  qlist_t       free_list;
 } qlogger_t;
 
 int  qlogger_new(int thread_num);

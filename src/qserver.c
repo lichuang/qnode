@@ -2,6 +2,7 @@
  * See Copyright Notice in qnode.h
  */
 
+#include <errno.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -270,6 +271,10 @@ server_init(qconfig_t *config) {
   setup_signal();
 
   server->thread_log[0] = qthread_log_init(0);
+  if (chdir(config->script_path) != 0) {
+    printf("chdir %s error: %s\n", config->script_path, strerror(errno));
+    goto error;
+  }
   server_start(server);
 
   return 0;

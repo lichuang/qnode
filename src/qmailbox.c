@@ -26,6 +26,7 @@ qmailbox_init(qmailbox_t *box, qmsg_func_t *func,
   box->read     = &(box->lists[1]);
   box->reader   = reader;
   box->handler  = func;
+  box->done     = NULL;
   qsignal_init(&(box->signal), box, engine);
 }
 
@@ -64,5 +65,9 @@ qmailbox_handle(qmailbox_t *box) {
     }
 
     pos = next;
+  }
+
+  if (box->done) {
+    box->done(box->reader);
   }
 }

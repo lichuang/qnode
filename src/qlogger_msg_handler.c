@@ -36,7 +36,7 @@ logger_log_handler(qmsg_t *msg, void *reader) {
   if (!server->config->daemon) {
     printf("%s", log->buff);
   }
-  qfree(log);
+  qlist_add_tail(&(log->entry), &(logger->free_list));
 
   return 0;
 }

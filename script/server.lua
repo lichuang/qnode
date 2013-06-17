@@ -2,6 +2,8 @@ local server = {}
 
 local cache = {}
 
+require("util")
+
 server.storage = function (_args)
   arg = qnode_recv()
   for k, v in pairs(arg) do
@@ -26,10 +28,6 @@ function accept(_listen, _storage_id)
   -- spawn a child to handle the request
   local aid = qnode_spawn("child", "child", {sock = socket, storage_id = _storage_id});
   accept(_listen, _storage_id)
-end
-
-function qlog(...)
-  qllog(string.format(...))
 end
 
 server.start = function()

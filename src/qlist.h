@@ -12,45 +12,54 @@ struct qlist_t {
   qlist_t *prev;
 };
 
-static inline void qlist_entry_init(qlist_t *entry) {
+static inline void
+qlist_entry_init(qlist_t *entry) {
   entry->next = entry;
   entry->prev = entry;
 }
 
-static inline void __list_add(qlist_t *entry, qlist_t *prev, qlist_t *next) {
+static inline void
+__list_add(qlist_t *entry, qlist_t *prev, qlist_t *next) {
   next->prev  = entry;
   entry->next = next;
   entry->prev = prev;
   prev->next  = entry;
 }
 
-static inline void qlist_add(qlist_t *entry, qlist_t *head) {
+static inline void
+qlist_add(qlist_t *entry, qlist_t *head) {
   __list_add(entry, head, head->next);
 }
 
-static inline void qlist_add_tail(qlist_t *entry, qlist_t *head) {
+static inline void
+qlist_add_tail(qlist_t *entry, qlist_t *head) {
   __list_add(entry, head->prev, head);
 }
 
-static inline void __list_del(qlist_t *prev, qlist_t *next) {
+static inline void
+__list_del(qlist_t *prev, qlist_t *next) {
   next->prev = prev;
   prev->next = next;
 }
 
-static inline void qlist_del(struct qlist_t *entry) {
+static inline void
+qlist_del(struct qlist_t *entry) {
   __list_del(entry->prev, entry->next);
 }
 
-static inline void qlist_del_init(struct qlist_t *entry) {
+static inline void
+qlist_del_init(struct qlist_t *entry) {
   __list_del(entry->prev, entry->next);
   qlist_entry_init(entry); 
 }
 
-static inline int qlist_empty(struct qlist_t *head) {
+static inline int
+qlist_empty(struct qlist_t *head) {
   return (head->next == head);
 }
 
-static inline void qlist_assign(qlist_t *dst, qlist_t* src) {
+static inline void
+qlist_assign(qlist_t *dst, qlist_t* src) {
   *dst = *src;
   if(qlist_empty(src)) {
     qlist_entry_init(dst);
@@ -60,7 +69,8 @@ static inline void qlist_assign(qlist_t *dst, qlist_t* src) {
   } 
 }
 
-static inline void qlist_splice(qlist_t *list, qlist_t *head) {
+static inline void
+qlist_splice(qlist_t *list, qlist_t *head) {
   qlist_t *first = list->next;
 
   if (first != list) {
@@ -75,7 +85,8 @@ static inline void qlist_splice(qlist_t *list, qlist_t *head) {
   }
 }
 
-static inline void qlist_splice_tail(qlist_t *list, qlist_t *head) {
+static inline void
+qlist_splice_tail(qlist_t *list, qlist_t *head) {
   if(!qlist_empty(list)) {
     qlist_t *first = list->next;
     qlist_t *last = list->prev;
