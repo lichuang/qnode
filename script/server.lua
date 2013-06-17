@@ -2,7 +2,9 @@ local server = {}
 
 local cache = {}
 
+print "before"
 require("util")
+print "after"
 
 server.storage = function (_args)
   arg = qnode_recv()
