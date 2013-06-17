@@ -1,0 +1,10 @@
+[06-17 14:36:49 0 src/qworker.c:30] worker 3 handle 0 msg
+[06-17 14:36:49 0 src/qworker_msg_handler.c:38] handle start msg
+[06-17 14:36:49 0 src/qapi_log.c:15] server start
+[06-17 14:36:49 0 src/qapi_log.c:15] in accept
+[06-17 14:36:49 0 src/qworker.c:30] worker 5 handle 1 msg
+[06-17 14:36:49 0 src/qworker_msg_handler.c:84] handle spawn msg
+[06-17 14:36:52 0 src/qserver.c:78] main handle 0 msg
+[06-17 14:36:52 0 src/qserver_msg_handler.c:40] caugth signal 2
+[06-17 14:36:52 0 src/qworker.c:30] worker 1 handle 2 msg
+[06-17 14:36:52 0 src/qworker.c:30] worker 2 handle 2 msg
