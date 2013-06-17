@@ -19,7 +19,20 @@
 
 static int
 panic(lua_State *state) {
+  /*
   qerror("PANIC: unprotected error in call to Lua API (%s)\n", lua_tostring(state, -1));
+  return 0;
+  */
+  int       i;
+  lua_Debug ldb;
+  for(i = 0; lua_getstack(state, i, &ldb ) == 1; i++ ) { 
+    lua_getinfo(state, ">Slnu", &ldb );
+    const char *name = ldb.name ? ldb.name : ""; 
+    const char *filename = ldb.source ? ldb.source : ""; 
+    qerror("%s '%s' @ file '%s', line %d", ldb.what,
+           name, filename, ldb.currentline);
+  } 
+
   return 0;
 }
 
