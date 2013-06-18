@@ -1,8 +1,0 @@
-[06-14 10:36:44 3 src/qworker.c:30] worker 3 handle 0 msg
-[06-14 10:36:44 3 src/qworker_msg_handler.c:38] handle start msg
-[06-14 10:36:44 5 src/qworker.c:30] worker 5 handle 1 msg
-[06-14 10:36:44 5 src/qworker_msg_handler.c:84] handle spawn msg
-[06-14 10:36:45 0 src/qserver.c:72] main handle 0 msg
-[06-14 10:36:45 0 src/qserver_msg_handler.c:40] caugth signal 2
-[06-14 10:36:45 1 src/qworker.c:30] worker 1 handle 2 msg
-[06-14 10:36:45 2 src/qworker.c:30] worker 2 handle 2 msg

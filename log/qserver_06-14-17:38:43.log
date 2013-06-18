@@ -1,5 +1,0 @@
-[06-14 17:38:43 3 src/qworker.c:30] worker 3 handle 0 msg
-[06-14 17:38:43 3 src/qworker_msg_handler.c:38] handle start msg
-[06-14 17:38:43 3 src/qapi_log.c:15] server start
-[06-14 17:38:43 5 src/qworker.c:30] worker 5 handle 1 msg
-[06-14 17:38:43 5 src/qworker_msg_handler.c:84] handle spawn msg

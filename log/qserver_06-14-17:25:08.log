@@ -1,8 +1,0 @@
-[06-14 17:25:08 3 src/qworker.c:30] worker 3 handle 0 msg
-[06-14 17:25:08 3 src/qworker_msg_handler.c:38] handle start msg
-[06-14 17:25:08 3 src/qluautil.c:314] src/qworker_msg_handler.c:71 lua_call failed
-	./script/server.lua:32: attempt to call global 'qlog' (a nil value)
-stack traceback:
-	./script/server.lua:32: in function <./script/server.lua:31>
-	[C]: in function 'require'
-	./script/server.lua:44: in main chunk
