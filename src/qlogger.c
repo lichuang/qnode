@@ -74,8 +74,9 @@ log_thread_main_loop(void *arg) {
   qserver_worker_started();
   qengine_loop(thread->engine);
 
+  qmailbox_free(&logger->box);
   qengine_destroy(logger->engine);
-  //qlog_destroy_free_list();
+  qlog_destroy_free_list();
 
   return NULL;
 }
@@ -105,7 +106,10 @@ logger_handle_msglist_done(void *reader) {
   qlogger_t *logger;
 
   logger = (qlogger_t*)reader;
-  qlog_free(&(logger->free_list));
+  if (logger->free_list.next != &(logger->free_list)) {
+    qlog_free(logger->free_list.next);
+    qlist_entry_init(&(logger->free_list));
+  }
 }
 
 int

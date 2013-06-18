@@ -19,6 +19,7 @@ struct qsignal_t {
   (signal)->rfd
 
 void  qsignal_init(qsignal_t *, qmailbox_t *, qengine_t *);
+void  qsignal_free(qsignal_t *);
 void  qsignal_send(qsignal_t *channel);
 void  qsignal_recv(qsignal_t *channel);
 int   qsignal_active(qsignal_t *channel, int active);

@@ -31,6 +31,27 @@ qmailbox_init(qmailbox_t *box, qmsg_func_t *func,
 }
 
 void
+qmailbox_free(qmailbox_t *box) {
+  int      i;
+  qlist_t *list;
+  qmsg_t  *msg;
+  qlist_t *pos, *next;
+
+  qmutex_lock(&(box->mutex));
+  for (i = 0, list = &(box->lists[i]); i < 2; ++i) {
+    for (pos = list->next; pos != list; ) {
+      next = pos->next;
+      msg = qlist_entry(pos, qmsg_t, entry);
+      qfree(msg);
+      pos = next;
+    }
+  }
+  qmutex_unlock(&(box->mutex));
+  qmutex_destroy(&(box->mutex));
+  qsignal_free(&(box->signal));
+}
+
+void
 qmailbox_add(qmailbox_t *box, qmsg_t *msg) {
   qlist_t *p;
 

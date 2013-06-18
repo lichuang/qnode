@@ -27,6 +27,7 @@ struct qmailbox_t {
 
 void  qmailbox_init(qmailbox_t *box, qmsg_func_t *func,
                     qengine_t *engine, void *reader);
+void  qmailbox_free(qmailbox_t *box);
 void  qmailbox_add(qmailbox_t *box, qmsg_t *msg);
 void  qmailbox_handle(qmailbox_t *box);
 

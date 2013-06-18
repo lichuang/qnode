@@ -45,6 +45,7 @@ qlog_init_free_list() {
 
   qmutex_init(&free_log_list_lock);
   qlist_entry_init(&free_log_list);
+  qassert(free_log_list.next == &free_log_list);
 
   for (i = 0; i < FREE_LOG_LIST_INIT_NUM; ++i) {
     log = qcalloc(sizeof(qlog_t));
@@ -63,8 +64,8 @@ qlog_destroy_free_list() {
   qmutex_destroy(&free_log_list_lock);
   for (pos = free_log_list.next; pos != &free_log_list; ) {
     log = qlist_entry(pos, qlog_t, entry);
-    qlist_del_init(&(log->entry));
     pos = pos->next;
+    qlist_del(&(log->entry));
     qfree(log);
   }
 }
@@ -74,7 +75,6 @@ qlog_free(qlist_t *free_list) {
   qmutex_lock(&free_log_list_lock);
   qlist_add_tail(free_list, &free_log_list);
   qmutex_unlock(&free_log_list_lock);
-  qlist_entry_init(free_list);
 }
 
 static qlog_t*
@@ -129,9 +129,5 @@ qlog(int level, const char* file, long line, const char *format, ...) {
   log->n += vsprintf(log->buff + log->n, log->format, args);
   log->buff[log->n++] = '\n';
 
-#if 1  
   qlogger_add(log);
-#else
-  printf("%s\n", log->buff);
-#endif
 }

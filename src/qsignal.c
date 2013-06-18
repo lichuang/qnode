@@ -43,6 +43,12 @@ qsignal_init(qsignal_t *signal, qmailbox_t *box, qengine_t *engine) {
                     QEVENT_READ, signal_handle, signal);
 }
 
+void
+qsignal_free(qsignal_t *signal) {
+  close(signal->wfd);
+  close(signal->rfd);
+}
+
 int
 qsignal_active(qsignal_t *signal, int active) {
   qatomic_t cmp = !active;
