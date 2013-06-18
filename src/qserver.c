@@ -292,12 +292,14 @@ destroy_threads() {
     worker = server->workers[i];
     qworker_destroy(worker);
   }
+  //qfree(server->workers);
   qlogger_destroy();
 }
 
 static void
 destroy_server() {
   destroy_threads();
+  qconfig_free(server->config);
 }
 
 int

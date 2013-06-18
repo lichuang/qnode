@@ -40,6 +40,8 @@ worker_main_loop(void *arg) {
   server->thread_log[worker->tid] = qthread_log_init(worker->tid);
   qserver_worker_started();
   qengine_loop(worker->engine);
+  qengine_destroy(worker->engine);
+  qthread_log_free();
   return NULL;
 }
 
@@ -75,6 +77,7 @@ void
 qworker_destroy(qworker_t *worker) {
   /* wait for the thread stop */
   pthread_join(worker->id, NULL);
+  //qfree(worker);
 }
 
 void

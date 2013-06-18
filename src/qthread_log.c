@@ -63,14 +63,12 @@ qthread_log_get() {
 }
 
 void
-qthread_log_fetch(qthread_log_t *log, qlist_t **list) {
-  qlist_t *read;
+qthread_log_free() {
+  qthread_log_t *thread_log;
 
-  *list = NULL;
-  /* first save the read ptr */
-  read = log->read;
-  /* second change the read ptr to the write ptr */
-  qatomic_ptr_xchg(&(log->read), log->write);
-  /* last change the write ptr to the read ptr saved before and return to list */
-  *list = qatomic_ptr_xchg(&(log->write), read);
+  thread_log = (qthread_log_t*)pthread_getspecific(thread_log_key);
+  if (thread_log == NULL) {
+    return;
+  }
+  qfree(thread_log);
 }

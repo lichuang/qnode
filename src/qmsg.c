@@ -36,6 +36,7 @@ qmsg_destroy(qmsg_t *msg) {
   if (msg->destroy) {
     (*msg->destroy)(msg);
   }
+  qfree(msg);
 }
 
 qmsg_t*

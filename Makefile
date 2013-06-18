@@ -14,7 +14,8 @@ INCLUDE= -I$(INCLUDE_DIR)
 		
 CC=gcc
 CFLAGS=-Wall -W -Werror -g 
-LDFLAGS= -lpthread -rdynamic -llua -ldl -lm -ltcmalloc
+#LDFLAGS= -lpthread -rdynamic -llua -ldl -lm -ltcmalloc
+LDFLAGS= -lpthread -rdynamic -llua -ldl -lm
 
 all:$(OBJS) 
 	$(CC) -o $(PROGRAM) $(OBJS) $(LDFLAGS) 

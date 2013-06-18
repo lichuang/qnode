@@ -160,5 +160,14 @@ qminheap_push(qminheap_t *heap, void *data) {
 
 void
 qminheap_destroy(qminheap_t *heap) {
+  void *p;
+  int   i;
+
+  for (i = 0; i < (int)heap->num; ++i) {
+    p = heap->data[i];
+    if (p) {
+      qfree(p);
+    }
+  }
   qfree(heap->data);
 }

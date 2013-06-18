@@ -146,6 +146,7 @@ void
 qlogger_destroy() {
   /* wait for the thread */
   pthread_join(logger->id, NULL);
+  qfree(logger);
 }
 
 void

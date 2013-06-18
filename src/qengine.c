@@ -160,6 +160,7 @@ qengine_loop(qengine_t* engine) {
 
 void
 qengine_destroy(qengine_t *engine) {
+  qtimer_manager_free(&(engine->timer_mng));
   engine->dispatcher->destroy(engine);
   qfree(engine->events);
   qfree(engine->active_events);
