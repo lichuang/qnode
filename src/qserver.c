@@ -125,7 +125,7 @@ init_worker_threads(qserver_t *server) {
   qconfig_t    *config;
   
   config = server->config;
-  thread_num = config->thread_num;
+  thread_num = config->thread_num + 1;
 
   server->workers = qalloc(thread_num * sizeof(qworker_t*));
   if (server->workers == NULL) {
@@ -141,7 +141,7 @@ init_worker_threads(qserver_t *server) {
   init_thread_count = 0;
 
   /* create worker threads */
-  for (i = 1; i <= thread_num; ++i) {
+  for (i = 1; i < thread_num; ++i) {
     server->workers[i] = qworker_new(i); 
     if (server->workers[i] == NULL) {
       goto error;
@@ -149,7 +149,7 @@ init_worker_threads(qserver_t *server) {
   }
     
   /* wait for the worker threads start */
-  wait_threads(thread_num);
+  wait_threads(thread_num - 1);
 
   qmutex_destroy(&init_thread_lock);
   qcond_destroy(&init_thread_cond);
@@ -292,7 +292,7 @@ destroy_threads() {
     worker = server->workers[i];
     qworker_destroy(worker);
   }
-  //qfree(server->workers);
+  qfree(server->workers);
   qlogger_destroy();
 }
 

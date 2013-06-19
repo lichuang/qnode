@@ -78,6 +78,7 @@ void
 qworker_destroy(qworker_t *worker) {
   /* wait for the thread stop */
   pthread_join(worker->id, NULL);
+  qfree(worker);
 }
 
 void
