@@ -23,7 +23,7 @@ static const char* log_levels[] = {
   "debug"
 };
 
-static int FREE_LOG_LIST_INIT_NUM = 100;
+static int FREE_LOG_LIST_INIT_NUM = 10;
 
 static int log_level = QLOG_DEBUG;
 
@@ -61,19 +61,21 @@ qlog_destroy_free_list() {
   qlog_t  *log;
   qlist_t *pos;
 
-  qmutex_destroy(&free_log_list_lock);
+  qmutex_lock(&free_log_list_lock);
   for (pos = free_log_list.next; pos != &free_log_list; ) {
     log = qlist_entry(pos, qlog_t, entry);
     pos = pos->next;
     qlist_del(&(log->entry));
     qfree(log);
   }
+  qmutex_unlock(&free_log_list_lock);
+  qmutex_destroy(&free_log_list_lock);
 }
 
 void
 qlog_free(qlist_t *free_list) {
   qmutex_lock(&free_log_list_lock);
-  qlist_add_tail(free_list, &free_log_list);
+  qlist_splice_tail(free_list, &free_log_list);
   qmutex_unlock(&free_log_list_lock);
 }
 
@@ -130,4 +132,15 @@ qlog(int level, const char* file, long line, const char *format, ...) {
   log->buff[log->n++] = '\n';
 
   qlogger_add(log);
+}
+
+void qlog_freelist_print() {
+  qlog_t  *log;
+  qlist_t *pos;
+
+  for (pos = free_log_list.next; pos != &free_log_list; ) {
+    log = qlist_entry(pos, qlog_t, entry);
+    pos = pos->next;
+    printf("free log: %p\n", log);
+  }
 }

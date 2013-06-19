@@ -42,7 +42,7 @@ qmailbox_free(qmailbox_t *box) {
     for (pos = list->next; pos != list; ) {
       next = pos->next;
       msg = qlist_entry(pos, qmsg_t, entry);
-      qfree(msg);
+      qmsg_destroy(msg);
       pos = next;
     }
   }

@@ -106,8 +106,9 @@ logger_handle_msglist_done(void *reader) {
   qlogger_t *logger;
 
   logger = (qlogger_t*)reader;
+
   if (logger->free_list.next != &(logger->free_list)) {
-    qlog_free(logger->free_list.next);
+    qlog_free(&(logger->free_list));
     qlist_entry_init(&(logger->free_list));
   }
 }

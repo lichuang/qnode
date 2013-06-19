@@ -40,6 +40,7 @@ worker_main_loop(void *arg) {
   server->thread_log[worker->tid] = qthread_log_init(worker->tid);
   qserver_worker_started();
   qengine_loop(worker->engine);
+  qmailbox_free(&(worker->box));
   qengine_destroy(worker->engine);
   qthread_log_free();
   return NULL;
@@ -51,12 +52,12 @@ qworker_new(qid_t tid) {
 
   worker = qcalloc(sizeof(qworker_t));
   if (worker == NULL) {
-    qerror("create worker error");
+    printf("create worker error\n");
     return NULL;
   }
   worker->engine = qengine_new();
   if (worker->engine == NULL) {
-    qerror("create worker engine error");
+    printf("create worker engine error");
     return NULL;
   }
   qmailbox_init(&(worker->box), worker_msg_handler,
@@ -77,7 +78,6 @@ void
 qworker_destroy(qworker_t *worker) {
   /* wait for the thread stop */
   pthread_join(worker->id, NULL);
-  //qfree(worker);
 }
 
 void

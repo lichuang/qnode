@@ -10,8 +10,9 @@
 #include "qlogger.h"
 #include "qserver.h"
 
-static int logger_log_handler(qmsg_t *msg, void *reader);
-static int logger_signal_handler(qmsg_t *msg, void *reader);
+static int  logger_log_handler(qmsg_t *msg, void *reader);
+static int  logger_signal_handler(qmsg_t *msg, void *reader);
+static void destroy_log_msg(qmsg_t *msg);
 
 qmsg_func_t* logger_msg_handlers[] = {
   &logger_log_handler,
@@ -26,6 +27,7 @@ logger_log_handler(qmsg_t *msg, void *reader) {
   
   logger = (qlogger_t*)reader;
   lmsg = (qlmsg_log_t*)msg;
+  lmsg->destroy = destroy_log_msg;
   log = lmsg->log;
 
   write(logger->fd, log->buff, log->n);
@@ -36,10 +38,10 @@ logger_log_handler(qmsg_t *msg, void *reader) {
   if (!server->config->daemon) {
     printf("%s", log->buff);
   }
-  qlist_add_tail(&(log->entry), &(logger->free_list));
 
   return 0;
 }
+
 static int
 logger_signal_handler(qmsg_t *msg, void *reader) {
   qlmsg_signal_t *signal;
@@ -58,4 +60,15 @@ logger_signal_handler(qmsg_t *msg, void *reader) {
       break;
   }
   return 0;
+}
+
+static void
+destroy_log_msg(qmsg_t *msg) {
+  qlmsg_log_t   *lmsg;
+  qlog_t        *log;
+  
+  lmsg = (qlmsg_log_t*)msg;
+  log = lmsg->log;
+
+  qlist_add_tail(&(log->entry), &(logger->free_list));
 }

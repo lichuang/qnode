@@ -43,6 +43,7 @@ void qlog(int level, const char* file, long line, const char *format, ...);
 void qlog_init_free_list();
 void qlog_destroy_free_list();
 void qlog_free(qlist_t *free_list);
+void qlog_freelist_print();
 
 #define qerror(args...) qlog(QLOG_ERR,   __FILE__, __LINE__, args)
 #define qinfo(args...)  qlog(QLOG_INFO,  __FILE__, __LINE__, args)
