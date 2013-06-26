@@ -7,18 +7,20 @@
 
 #include <lua.h>
 #include <pthread.h>
-#include "qmailbox.h"
+#include "qhandler.h"
 #include "qlist.h"
+#include "qmailbox.h"
 #include "qmsg.h"
 #include "qtype.h"
 
 struct qworker_t {
-  qmailbox_t    box;
-  pthread_t     id;
-  qid_t        tid;
-  qengine_t    *engine;
-  qlist_t       actor_list;
-  lua_State    *state;
+  qmailbox_t            box;
+  qhandler_manager_t    manager;
+  pthread_t             id;
+  qid_t                 tid;
+  qengine_t            *engine;
+  qlist_t               actor_list;
+  lua_State            *state;
 };
 
 qworker_t*  qworker_new(qid_t tid);
