@@ -13,7 +13,6 @@
 #include "qluautil.h"
 #include "qlog.h"
 #include "qidmap.h"
-#include "qmailbox.h"
 #include "qmsg.h"
 #include "qmmsg.h"
 #include "qnet.h"
@@ -133,15 +132,4 @@ qworker_t*
 qactor_get_worker(qactor_t *actor) {
   qassert(actor);
   return server->workers[actor->tid];
-}
-
-void
-qactor_send(qmsg_t *msg) {
-  qactor_t   *actor;
-  qmailbox_t *box;
-
-  actor = server->actors[msg->recver];
-  box   = &(actor->box);
-
-  qmailbox_add(box, msg);
 }

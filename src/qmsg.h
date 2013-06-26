@@ -20,15 +20,16 @@ typedef void (*qmsg_destroy_t)(qmsg_t *);
   int             type;       \
   int             size;       \
   qid_t           sender;     \
-  qid_t           recver;     \
+  qid_t           handler;    \
   qmsg_destroy_t  destroy
 
 struct qmsg_t {
   qmsg_header_fields;
 };
 
-qmsg_t*       qmsg_new(qid_t sender, qid_t recver, int size, int type);
-void          qmsg_destroy(qmsg_t *msg);
-qmsg_t*       qmsg_clone(qmsg_t *msg);
+qmsg_t* qmsg_new(qid_t sender, qid_t handler, int size, int type);
+void    qmsg_destroy(qmsg_t *msg);
+qmsg_t* qmsg_clone(qmsg_t *msg);
+void    qmsg_send(qmsg_t *msg);
 
 #endif  /* __QMSG_H__ */

@@ -6,8 +6,17 @@
 #define __QTYPE_H__
 
 typedef char*         qptr_t;
-typedef unsigned long qid_t;
+typedef unsigned int  qid_t;
 
-#define QINVALID_ID (qid_t)-1
+/*
+ * id lowest represent thread id
+ * */
+static const int   kMaxThreadBit = 10;
+
+static const qid_t kMaxThreadId = 1 << kMaxThreadBit;
+
+static const qid_t kMaxId = 0x7fffffff & (~kMaxThreadId)
+
+#define QINVALID_ID 0
 
 #endif  /* __QTYPE_H__ */

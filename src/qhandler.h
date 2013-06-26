@@ -8,7 +8,7 @@
 #include "qcore.h"
 
 typedef struct qhandler_t {
-  qmsg_func_t   handler;
+  qmsg_func_t  *handler;
   void         *reader;
 } qhandler_t;
 

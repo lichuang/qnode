@@ -13,7 +13,7 @@
 #include "qworker.h"
 
 qmsg_t*
-qmsg_new(qid_t sender, qid_t recver, int size, int type) {
+qmsg_new(qid_t sender, qid_t handler, int size, int type) {
   qmsg_t *msg;
 
   msg = (qmsg_t*)qcalloc(size);
@@ -22,11 +22,11 @@ qmsg_new(qid_t sender, qid_t recver, int size, int type) {
     return NULL;
   }
   qlist_entry_init(&(msg->entry));
-  msg->sender  = sender;
-  msg->recver  = recver;
-  msg->type    = type;
-  msg->size    = size;
-  msg->destroy = NULL;
+  msg->sender   = sender;
+  msg->handler  = handler;
+  msg->type     = type;
+  msg->size     = size;
+  msg->destroy  = NULL;
 
   return msg;
 }
@@ -43,8 +43,12 @@ qmsg_t*
 qmsg_clone(qmsg_t *msg) {
   qmsg_t *new_msg;
 
-  new_msg = qmsg_new(msg->sender, msg->recver, msg->size, msg->type);
+  new_msg = qmsg_new(msg->sender, msg->handler, msg->size, msg->type);
   memcpy(new_msg, msg, msg->size);
 
   return new_msg;
+}
+
+void
+qmsg_send(qmsg_t *msg) {
 }

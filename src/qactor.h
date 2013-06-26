@@ -16,7 +16,6 @@
 #include "qmutex.h"
 
 struct qactor_t {
-  qmailbox_t     box; 
   lua_State     *state;
   /*
    * lua thread YIELD reason
@@ -30,7 +29,7 @@ struct qactor_t {
   qlist_t         desc_list;        /* descriptor list */
   qspinlock_t     desc_list_lock;   /* descriptor list lock */
   qlist_t         msg_list;         /* message list */
-  qdict_t *listen_params;
+  qdict_t        *listen_params;
 };
 
 qid_t       qactor_new_id();
@@ -40,7 +39,6 @@ void        qactor_destroy(qactor_t *actor);
 
 /* spawn an actor as child, return the actor ID */
 qid_t       qactor_spawn(qactor_t *actor, lua_State *state);
-void        qactor_send(qmsg_t *msg);
 
 qengine_t*  qactor_get_engine(qactor_t *actor);
 qworker_t*  qactor_get_worker(qactor_t *actor);
