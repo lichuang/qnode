@@ -27,9 +27,14 @@
 /* creates a mask with `n' 0 bits at position `p' */
 #define MASK0(n,p)  (~MASK1(n,p))
 
-#define make_id(id, pid) (((id) << ID_BIT) | (pid))
-#define get_id(id)       (((id) & MASK1(ID_BIT, POS_ID)) >> ID_BIT)
-#define get_pid(id)      ((id) & MASK1(PID_BIT, 0))
+#define encode_handler_id(id, pid) \
+  (((id) << ID_BIT) | (pid))
+
+#define decode_id(handler_id) \
+  (((handler_id) & MASK1(ID_BIT, POS_ID)) >> ID_BIT)
+
+#define decode_pid(handler_id) \
+  ((handler_id) & MASK1(PID_BIT, 0))
 
 struct qworker_t {
   qmailbox_t            box;
