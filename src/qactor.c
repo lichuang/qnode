@@ -20,16 +20,6 @@
 #include "qwmsg.h"
 #include "qworker.h"
 
-qid_t
-qactor_new_id() {
-  qid_t id;
-
-  qmutex_lock(&server->id_map_mutex);
-  id = qid_new(&server->id_map);
-  qmutex_unlock(&server->id_map_mutex);
-  return id;
-}
-
 qactor_t*
 qactor_new(qid_t aid) {
   qactor_t *actor;
@@ -48,7 +38,6 @@ qactor_new(qid_t aid) {
   actor->waiting_netio = 0;
   actor->waiting_msg   = 0;
   qspinlock_init(&(actor->desc_list_lock));
-  qserver_new_actor(actor);
 
   return actor;
 }
@@ -59,9 +48,6 @@ qactor_destroy(qactor_t *actor) {
   qmsg_t  *msg;
 
   lua_close(actor->state);
-  qmutex_lock(&server->id_map_mutex);
-  qid_free(&(server->id_map), actor->aid);
-  qmutex_unlock(&server->id_map_mutex);
   qspinlock_lock(&(actor->desc_list_lock));
   for (pos = actor->desc_list.next; pos != &(actor->desc_list); ) {
     qdescriptor_t *desc = qlist_entry(pos, qdescriptor_t, entry);
@@ -92,17 +78,16 @@ qactor_attach(qactor_t *actor, lua_State *state) {
 
 qid_t
 qactor_spawn(qactor_t *actor, lua_State *state) {
-  qid_t            receiver_id;
+  qid_t            worker_id;
   qid_t            aid;
   qid_t            parent;
   qmsg_t          *msg;
   qactor_t        *new_actor;
+  qworker_t       *worker;
 
-  receiver_id = qserver_worker();
-  aid = qactor_new_id();
-  if (aid == QINVALID_ID) {
-    return -1;
-  }
+  worker_id = qserver_worker();
+  worker    = server->workers[worker_id];
+  aid       = qworker_new_aid(worker);
 
   parent = actor->aid;
   new_actor = qactor_new(aid);
@@ -111,7 +96,7 @@ qactor_spawn(qactor_t *actor, lua_State *state) {
   }
 
   msg = qwmsg_spawn_new(new_actor, actor, state,
-                        actor->tid, receiver_id);
+                        actor->tid, worker_id);
   if (msg == NULL) {
     qactor_destroy(new_actor);
     return QINVALID_ID;
@@ -122,14 +107,11 @@ qactor_spawn(qactor_t *actor, lua_State *state) {
 }
 
 qengine_t*
-qactor_get_engine(qactor_t *actor) {
-  qassert(actor);
-  qassert(actor->tid > 0);
-  return server->workers[actor->tid]->engine;
+qactor_get_engine(qid_t id) {
+  return server->workers[decode_pid(id)]->engine;
 }
 
 qworker_t*
-qactor_get_worker(qactor_t *actor) {
-  qassert(actor);
-  return server->workers[actor->tid];
+qactor_get_worker(qid_t aid) {
+  return server->workers[decode_pid(aid)];
 }

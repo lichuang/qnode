@@ -87,22 +87,14 @@ qserver_worker() {
   return i;
 }
 
-qactor_t*
-qserver_get_actor(qid_t id) {
-  return server->actors[id];
-}
-
 static void
 server_start(qserver_t *server) {
-  qid_t   aid;
   qid_t  tid;
   qmsg_t *msg;
 
   UNUSED(server);
-  aid = qactor_new_id();
-  qassert(aid != QINVALID_ID);
   tid = qserver_worker();
-  msg = qwmsg_start_new(aid, QMAINTHREAD_TID, tid);
+  msg = qwmsg_start_new(QMAINTHREAD_TID, tid);
   if (msg == NULL) {
     return;
   }
@@ -127,6 +119,10 @@ init_worker_threads(qserver_t *server) {
   config = server->config;
   thread_num = config->thread_num + 1;
 
+  if (thread_num > MAX_PID) {
+    printf("worker num bigger than %d\n", MAX_PID);
+    goto error;
+  }
   server->workers = qalloc(thread_num * sizeof(qworker_t*));
   if (server->workers == NULL) {
     goto error;
@@ -253,11 +249,6 @@ server_init(qconfig_t *config) {
   }
   qmailbox_init(&(server->box), server_msg_handler,
                 server->engine, server);
-  server->actors = qalloc(QID_MAX * sizeof(qactor_t*));
-  if (server->actors == NULL) {
-    goto error;
-  }
-
   server->descriptors = qcalloc(QID_MAX * sizeof(qdescriptor_t*));
   if (server->descriptors == NULL) {
     goto error;
@@ -310,13 +301,6 @@ qserver_run(qconfig_t *config) {
   qengine_loop(server->engine);
   destroy_server();
   return 0;
-}
-
-void
-qserver_new_actor(qactor_t *actor) {
-  qassert(server->actors[actor->aid] == NULL);
-  server->actors[actor->aid] = actor;
-  server->num_actor++;
 }
 
 void

@@ -32,7 +32,6 @@ struct qactor_t {
   qdict_t        *listen_params;
 };
 
-qid_t       qactor_new_id();
 qactor_t*   qactor_new(qid_t aid);
 void        qactor_attach(qactor_t *actor, lua_State *state);
 void        qactor_destroy(qactor_t *actor);
@@ -40,7 +39,7 @@ void        qactor_destroy(qactor_t *actor);
 /* spawn an actor as child, return the actor ID */
 qid_t       qactor_spawn(qactor_t *actor, lua_State *state);
 
-qengine_t*  qactor_get_engine(qactor_t *actor);
-qworker_t*  qactor_get_worker(qactor_t *actor);
+qengine_t*  qactor_get_engine(qid_t aid);
+qworker_t*  qactor_get_worker(qid_t aid);
 
 #endif  /* __QACTOR_H__ */

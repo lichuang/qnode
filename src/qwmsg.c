@@ -4,20 +4,24 @@
 
 #include "qdefines.h"
 #include "qlog.h"
+#include "qserver.h"
 #include "qwmsg.h"
+#include "qworker.h"
 
 qmsg_t*
-qwmsg_start_new(qid_t aid, qid_t sender, qid_t recver) {
+qwmsg_start_new(qid_t sender, qid_t recver) {
   qmsg_t        *msg;
   qwmsg_start_t *start;
+  qworker_t     *worker;
 
   msg = qmsg_new(sender, recver, sizeof(qwmsg_start_t), W_START);
   if (msg == NULL) {
     return NULL;
   }
 
+  worker      = server->workers[recver];
   start       = (qwmsg_start_t*)msg;
-  start->aid  = aid;
+  start->aid  = qworker_new_aid(worker);
 
   return msg;
 }

@@ -57,17 +57,21 @@ qworker_new(qid_t tid) {
   }
   worker->engine = qengine_new();
   if (worker->engine == NULL) {
-    printf("create worker engine error");
+    printf("create worker engine error\n");
+    return NULL;
+  }
+  worker->actors = qcalloc(sizeof(qactor_t *) * MAX_ID);
+  if (worker->actors == NULL) {
+    printf("create worker actors error\n");
     return NULL;
   }
   qmailbox_init(&(worker->box), worker_msg_handler,
                 worker->engine, worker);
   worker->tid = tid;
-
+  worker->current = 0;
+  qmutex_init(&(worker->mutex));
   /* create the lua VM for the worker */
   worker->state = qlua_new_state();
-  /* init the actor list */
-  qlist_entry_init(&(worker->actor_list));
   pthread_create(&worker->id, NULL,
                  worker_main_loop, worker);
 
@@ -78,7 +82,23 @@ void
 qworker_destroy(qworker_t *worker) {
   /* wait for the thread stop */
   pthread_join(worker->id, NULL);
+  qmutex_destroy(&(worker->mutex));
   qfree(worker);
+}
+
+qid_t
+qworker_new_aid(qworker_t *worker) {
+  qid_t aid;
+
+  qmutex_lock(&(worker->mutex));
+  while (worker->actors[current]) {
+    ++current;
+  }
+  aid = encode_aid(current, worker->tid);
+  ++current;
+  qmutex_unlock(&(worker->mutex));
+
+  return aid;
 }
 
 void

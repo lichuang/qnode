@@ -75,6 +75,7 @@ qnode_spawn(lua_State *state) {
 
 static int
 qnode_send(lua_State *state) {
+#if 0
   qid_t     id;
   qactor_t *src_actor, *dst_actor;
   qmsg_t   *msg;
@@ -97,6 +98,8 @@ qnode_send(lua_State *state) {
   qactor_send(msg);
   lua_pushnumber(state, 0);
 
+#endif
+  UNUSED(state);
   return 1;
 }
 
