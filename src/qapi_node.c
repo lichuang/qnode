@@ -17,9 +17,7 @@
 #include "qstring.h"
 #include "qworker.h"
 
-/*
- * spawn an actor, return the actor ID
- */
+/* spawn an actor, return the actor ID */
 static int
 qnode_spawn(lua_State *state) {
   int         id;
@@ -75,31 +73,21 @@ qnode_spawn(lua_State *state) {
 
 static int
 qnode_send(lua_State *state) {
-#if 0
   qid_t     id;
-  qactor_t *src_actor, *dst_actor;
+  qactor_t *actor;
   qmsg_t   *msg;
 
-  src_actor = qlua_get_actor(state);
+  actor = qlua_get_actor(state);
   id = (qid_t)lua_tonumber(state, 1);
-  dst_actor = qserver_get_actor(id);
-  if (dst_actor == NULL) {
-    lua_pushnil(state);
-    lua_pushfstring(state, "dst actor %d not found", id);
-    return 2;
-  }
-
-  msg = qamsg_send_new(state, src_actor->aid, dst_actor->aid);
+  msg = qamsg_send_new(state, actor->aid, id);
   if (msg == NULL) {
     lua_pushnil(state);
     lua_pushfstring(state, "create msg error");
     return 2;
   }
-  qactor_send(msg);
+  qworker_send(msg);
   lua_pushnumber(state, 0);
 
-#endif
-  UNUSED(state);
   return 1;
 }
 

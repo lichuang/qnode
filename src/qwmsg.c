@@ -65,3 +65,20 @@ qwmsg_signal_new(qid_t recver, int signo) {
 
   return msg;
 }
+
+qmsg_t*
+qwmsg_actor_new(qid_t sender, qid_t recver, void *data) {
+  qmsg_t         *msg;
+  qwmsg_actor_t  *actor;
+
+  msg = qmsg_new(sender, recver,
+                 sizeof(qwmsg_actor_t), W_ACTOR);
+  if (msg == NULL) {
+    return NULL;
+  }
+
+  actor        = (qwmsg_actor_t*)msg;
+  actor->data  = data;
+
+  return msg;
+}

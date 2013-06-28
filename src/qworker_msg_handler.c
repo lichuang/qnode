@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "qassert.h"
 #include "qactor.h"
+#include "qamsg.h"
 #include "qdefines.h"
 #include "qlist.h"
 #include "qlog.h"
@@ -19,11 +20,13 @@
 static int worker_start_handler(qmsg_t *msg, void *reader);
 static int worker_spawn_handler(qmsg_t *msg, void *reader);
 static int worker_signal_handler(qmsg_t *msg, void *reader);
+static int worker_actor_handler(qmsg_t *msg, void *reader);
 
 qmsg_func_t* worker_msg_handlers[] = {
   &worker_start_handler,
   &worker_spawn_handler,
   &worker_signal_handler,
+  &worker_actor_handler,
 };
 
 static int
@@ -120,33 +123,22 @@ worker_signal_handler(qmsg_t *msg, void *reader) {
   return 0;
 }
 
-#if 0
 static int
-worker_handle_send_msg(qmsg_t *msg, void *reader) {
-  qactor_t      *actor;
-  qactor_msg_t  *actor_msg;
-  lua_State     *state;
+worker_actor_handler(qmsg_t *msg, void *reader) {
+  qwmsg_actor_t   *amsg;
+  qworker_t       *worker;
+  qamsg_header_t  *header;
+  qactor_t        *actor;
 
-  UNUSED(reader);
-  qinfo("handle send msg");
-
-  actor_msg = msg->args.send.actor_msg;
-  actor = qserver_get_actor(actor_msg->dst);
-  state = actor->state;
-
-  /*
-   * if the state yield waiting for msg, push the msg
-   * into stack and resume
-   */
-  if (lua_status(state) == LUA_YIELD && actor->waiting_msg) {
-    actor->waiting_msg = 0;
-    lua_newtable(state);
-    qlua_dump_dict(state, actor_msg->arg_dict);
-    return lua_resume(state, 1);
+  printf("worker_actor_handler\n");
+  amsg   = (qwmsg_actor_t*)msg;
+  worker = (qworker_t*)reader;
+  header = amsg->data;
+  actor  = qworket_get_actor(worker, decode_id(header->dst));
+  if (actor == NULL) {
+    qerror("actor %d not exist", header->dst);
+    return 0;
   }
-  /* else add the msg to the actor msg list */
-  qlist_add_tail(&actor_msg->entry, &(actor->msg_list));
 
-  return 0;
+  return (*actor_msg_handlers[header->type])(header, actor);
 }
-#endif

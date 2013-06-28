@@ -19,12 +19,24 @@ typedef struct qactor_msg_t {
   qlist_t  entry;
 } qactor_msg_t;
 
+#define qamsg_header_fields    \
+  int             type;        \
+  qid_t           src;         \
+  qid_t           dst 
+
+typedef struct qamsg_header_t {
+  qamsg_header_fields;
+} qamsg_header_t;
+
 typedef struct qamsg_send_t {
-  qmsg_header_fields;
+  qamsg_header_fields;
 
   qactor_msg_t actor_msg;
 } qamsg_send_t;
 
-qmsg_t* qamsg_send_new(lua_State *state, qid_t sender, qid_t recver); 
+typedef int (qamsg_func_t)(qamsg_header_t *msg, qactor_t *actor);
+extern qamsg_func_t* actor_msg_handlers[];
+
+qmsg_t* qamsg_send_new(lua_State *state, qid_t src, qid_t dst); 
 
 #endif  /* __QAMSG_H__ */

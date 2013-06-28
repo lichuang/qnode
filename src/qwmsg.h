@@ -13,6 +13,7 @@ enum {
   W_START   = 0,
   W_SPAWN   = 1,
   W_SIGNAL  = 2,
+  W_ACTOR   = 3,
   QWMSG_NUM
 };
 
@@ -35,12 +36,19 @@ typedef struct qwmsg_signal_t {
   int         signo;
 } qwmsg_signal_t;
 
+typedef struct qwmsg_actor_t {
+  qmsg_header_fields;
+  void *data;
+} qwmsg_actor_t;
+
 qmsg_t* qwmsg_start_new(qid_t sender, qid_t recver);
 
 qmsg_t* qwmsg_spawn_new(qactor_t *actor, qactor_t *parent,
                         lua_State *state, qid_t sender, qid_t recver);
 
 qmsg_t* qwmsg_signal_new(qid_t recver, int signo);
+
+qmsg_t* qwmsg_actor_new(qid_t sender, qid_t recver, void *data);
 
 #endif  /* __QWMSG_H__ */
 
