@@ -123,7 +123,7 @@ qnet_tcp_recv(struct qdescriptor_t *desc, uint32_t size) {
 
   tcp = &(desc->data.tcp);
   fd = desc->fd;
-  buffer = &(tcp->buffer);
+  buffer = &(tcp->inbuf);
 
   qbuffer_reserve(buffer, size);
   if (buffer->data == NULL) {
@@ -170,14 +170,14 @@ qnet_tcp_recv(struct qdescriptor_t *desc, uint32_t size) {
 }
 
 int
-qnet_tcp_send(struct qdescriptor_t *desc) {
+qnet_tcp_send(qdescriptor_t *desc) {
   int                 fd, nbytes;
   qbuffer_t          *buffer;
   qtcp_descriptor_t  *tcp;
 
   tcp = &(desc->data.tcp);
   fd = desc->fd;
-  buffer = &(tcp->buffer);
+  buffer = &(tcp->outbuf);
 
   nbytes = send(fd, buffer->data + buffer->pos,
                 buffer->len - buffer->pos, 0);

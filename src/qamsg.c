@@ -30,6 +30,7 @@ qamsg_send_new(lua_State *state, qid_t src, qid_t dst) {
 
   actor_msg->arg_dict = qdict_new(5);
   qlua_copy_table(state, 2, actor_msg->arg_dict);
+  qdict_setnum(actor_msg->arg_dict, "src", src);
 
   msg = qwmsg_actor_new(decode_pid(src), decode_pid(dst), send);
 

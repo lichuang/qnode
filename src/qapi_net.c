@@ -197,8 +197,8 @@ socket_recv(int fd, int flags, void *data) {
   }
   engine = qactor_get_engine(actor->aid);
   qengine_del_event(engine, desc->fd, QEVENT_READ);
-  desc->data.tcp.buffer.pos = 0;
-  lua_pushlightuserdata(state, &(desc->data.tcp.buffer));
+  desc->data.tcp.inbuf.pos = 0;
+  lua_pushlightuserdata(state, &(desc->data.tcp.inbuf));
   lua_resume(state, 1);
 }
 
@@ -230,8 +230,8 @@ qtcp_recv(lua_State *state) {
     qengine_add_event(engine, desc->fd, QEVENT_READ, socket_recv, desc);
     return lua_yield(state, 0); 
   }
-  desc->data.tcp.buffer.pos = 0;
-  lua_pushlightuserdata(state, &(desc->data.tcp.buffer));
+  desc->data.tcp.inbuf.pos = 0;
+  lua_pushlightuserdata(state, &(desc->data.tcp.inbuf));
   return 1;
 }
 
@@ -268,7 +268,7 @@ socket_send(int fd, int flags, void *data) {
 
   engine = qactor_get_engine(actor->aid);
   qengine_del_event(engine, desc->fd, QEVENT_WRITE);
-  desc->data.tcp.buffer.pos = 0;
+  desc->data.tcp.inbuf.pos = 0;
   lua_resume(state, 1);
 }
 
@@ -306,7 +306,7 @@ qtcp_send(lua_State *state) {
 }
 
 static int
-qtcp_buffer(lua_State *state) {
+qtcp_inbuf(lua_State *state) {
   qdescriptor_t     *desc;
   qtcp_descriptor_t *tcp;
 
@@ -318,9 +318,27 @@ qtcp_buffer(lua_State *state) {
     return 2;
   }
 
-  printf("recv buffer: %s", tcp->buffer.data);
+  lua_pushlightuserdata(state, &(tcp->inbuf));
+  return 1;
+}
 
-  lua_pushlightuserdata(state, &(tcp->buffer));
+static int
+qtcp_outbuf(lua_State *state) {
+  qdescriptor_t     *desc;
+  qtcp_descriptor_t *tcp;
+
+  desc = (qdescriptor_t*)lua_touserdata(state, 1);
+  if (desc == NULL) {
+    return 0;
+  }
+  tcp = &(desc->data.tcp);
+  if (tcp->inet.state != QINET_STATE_CONNECTED) {
+    lua_pushnil(state);
+    lua_pushliteral(state, "socket closed");
+    return 2;
+  }
+
+  lua_pushlightuserdata(state, &(tcp->outbuf));
   return 1;
 }
 
@@ -329,6 +347,7 @@ luaL_Reg net_apis[] = {
   {"qtcp_accept",    qtcp_accept},
   {"qtcp_recv",      qtcp_recv},
   {"qtcp_send",      qtcp_send},
-  {"qtcp_buffer",    qtcp_buffer},
+  {"qtcp_inbuf",     qtcp_inbuf},
+  {"qtcp_outbuf",    qtcp_outbuf},
   {NULL, NULL},
 };

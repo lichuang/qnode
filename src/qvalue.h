@@ -6,11 +6,12 @@
 #define __QVALUE_H__
 
 #include "qcore.h"
+#include "qtype.h"
 
 #define QSTRING_TYPE 1
 #define QNUMBER_TYPE 2
 
-typedef int qnumber_t;
+typedef qid_t qnumber_t;
 
 struct qvalue_t {
   unsigned short  type;

@@ -38,7 +38,8 @@ typedef struct qinet_descriptor_t {
 
 typedef struct qtcp_descriptor_t {
   qinet_descriptor_t  inet;
-  qbuffer_t           buffer;
+  qbuffer_t           inbuf;
+  qbuffer_t           outbuf;
   struct sockaddr     remote;
   char                addr[50];
   int                 port;

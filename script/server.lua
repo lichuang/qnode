@@ -19,6 +19,17 @@ server.storage = function (_args)
   if cmd == "set" then
     cache[key] = arg
     print("set " .. key .. ":" .. arg.value)
+    local data = {}
+    data.response = "STORED\r\n"
+    qnode_send(arg.src, data)
+    return
+  end
+  if cmd == "get" then
+    local data = {}
+    --data.val = cache[key]
+    data.val = "aaabbb"
+    print("get " .. key)
+    qnode_send(arg.src, data)
   end
 end
 

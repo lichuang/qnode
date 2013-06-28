@@ -97,9 +97,7 @@ qnode_recv(lua_State *state) {
   qactor_msg_t  *msg;
 
   actor = qlua_get_actor(state);
-  /* 
-   * if msg list is empty, YIELD the Lua coroutine
-   */
+  /* if msg list is empty, YIELD the Lua coroutine */
   if (qlist_empty(&(actor->msg_list))) {
     actor->waiting_msg = 1;
     return lua_yield(state, 0); 
@@ -111,7 +109,8 @@ qnode_recv(lua_State *state) {
   return 1;
 }
 
-static int qnode_attach(lua_State *state) {
+static int
+qnode_attach(lua_State *state) {
   qdescriptor_t *desc;
   qactor_t      *old_actor, *actor;
 
@@ -126,16 +125,12 @@ static int qnode_attach(lua_State *state) {
     return 0;
   }
 
-  /*
-   * detach from old actor
-   */
+  /* detach from old actor */
   qspinlock_lock(&(old_actor->desc_list_lock));
   qlist_del_init(&(desc->entry));
   qspinlock_unlock(&(old_actor->desc_list_lock));
 
-  /*
-   * attach to new actor
-   */
+  /* attach to new actor */
   qspinlock_lock(&(actor->desc_list_lock));
   desc->aid = actor->aid;
   qlist_add_tail(&desc->entry, &actor->desc_list);
@@ -144,10 +139,21 @@ static int qnode_attach(lua_State *state) {
   return 0;
 }
 
+static int
+qnode_self(lua_State *state) {
+  qactor_t *actor;
+
+  actor = qlua_get_actor(state);
+  lua_pushnumber(state, actor->aid);
+
+  return 1;
+}
+
 luaL_Reg node_apis[] = {
   {"qnode_spawn",       qnode_spawn},
   {"qnode_send",        qnode_send},
   {"qnode_recv",        qnode_recv},
   {"qnode_attach",      qnode_attach},
+  {"qnode_self",        qnode_self},
   {NULL, NULL},
 };
