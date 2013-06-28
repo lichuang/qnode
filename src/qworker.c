@@ -19,6 +19,7 @@
 
 static int   worker_msg_handler(qmsg_t *msg, void *reader);
 static void* worker_main_loop(void *arg);
+static void  free_actors(qworker_t *worker);
 
 extern qmsg_func_t* worker_msg_handlers[];
 
@@ -40,9 +41,15 @@ worker_main_loop(void *arg) {
   server->thread_log[worker->tid] = qthread_log_init(worker->tid);
   qserver_worker_started();
   qengine_loop(worker->engine);
+
   qmailbox_free(&(worker->box));
   qengine_destroy(worker->engine);
   qthread_log_free();
+  free_actors(worker);
+  return NULL;
+  lua_close(worker->state);
+  qengine_destroy(worker->engine);
+
   return NULL;
 }
 
@@ -130,6 +137,18 @@ qworker_add(qid_t aid, qactor_t *actor) {
 }
 
 void
+qworker_delete(qid_t aid) {
+  qworker_t *worker;
+  qid_t id;
+
+  worker = server->workers[decode_pid(aid)];
+  id = decode_id(aid);
+  qmutex_lock(&(worker->mutex));
+  worker->actors[id] = NULL;
+  qmutex_unlock(&(worker->mutex));
+}
+
+void
 qworker_send(qmsg_t *msg) {
   qworker_t  *worker;
   qmailbox_t *box;
@@ -137,4 +156,22 @@ qworker_send(qmsg_t *msg) {
   worker = server->workers[msg->recver];
   box    = &(worker->box);
   qmailbox_add(box, msg);
+}
+
+static void
+free_actors(qworker_t *worker) {
+  int       i;
+  qactor_t *actor;
+  
+  qmutex_lock(&(worker->mutex));
+  for (i = 0; i < MAX_ID; ++i) {
+    actor = worker->actors[i];
+    if (!actor) {
+      continue;
+    }
+    qactor_destroy(actor);
+  }
+  qfree(worker->actors);
+  qmutex_unlock(&(worker->mutex));
+  qmutex_destroy(&(worker->mutex));
 }

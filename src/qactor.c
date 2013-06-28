@@ -30,6 +30,7 @@ qactor_new(qid_t aid) {
   }
 
   actor->state = NULL;
+  actor->listen_params = NULL;
   qlist_entry_init(&(actor->entry));
   qlist_entry_init(&(actor->desc_list));
   qlist_entry_init(&(actor->msg_list));
@@ -48,7 +49,7 @@ qactor_destroy(qactor_t *actor) {
   qlist_t *pos, *next;
   qmsg_t  *msg;
 
-  lua_close(actor->state);
+  //lua_close(actor->state);
   qspinlock_lock(&(actor->desc_list_lock));
   for (pos = actor->desc_list.next; pos != &(actor->desc_list); ) {
     qdescriptor_t *desc = qlist_entry(pos, qdescriptor_t, entry);
@@ -67,6 +68,7 @@ qactor_destroy(qactor_t *actor) {
   if (actor->listen_params != NULL) {
     qdict_destroy(actor->listen_params);
   }
+  qworker_delete(actor->aid);
   qfree(actor);
 }
 
