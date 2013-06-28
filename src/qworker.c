@@ -97,7 +97,9 @@ qworker_new_aid(qworker_t *worker) {
     ++current;
   }
   aid = encode_aid(current, worker->tid);
-  ++(worker->current);
+  qassert(decode_pid(aid) == worker->tid);
+  qassert(decode_id(aid)  == current);
+  worker->current = ++current;
   qmutex_unlock(&(worker->mutex));
 
   return aid;
@@ -112,6 +114,19 @@ qworket_get_actor(qworker_t *worker, qid_t id) {
   qmutex_unlock(&(worker->mutex));
 
   return actor;
+}
+
+void
+qworker_add(qid_t aid, qactor_t *actor) {
+  qworker_t *worker;
+  qid_t id;
+
+  worker = server->workers[decode_pid(aid)];
+  id = decode_id(aid);
+  qmutex_lock(&(worker->mutex));
+  qassert(worker->actors[id] == NULL);
+  worker->actors[id] = actor;
+  qmutex_unlock(&(worker->mutex));
 }
 
 void

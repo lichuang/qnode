@@ -39,8 +39,8 @@ worker_start_handler(qmsg_t *msg, void *reader) {
 
   worker = (qworker_t*)reader;
   start  = (qwmsg_start_t*)msg;
-  aid = start->aid;
-  actor = qactor_new(aid);
+  aid    = start->aid;
+  actor  = qactor_new(aid);
   if (actor == NULL) {
     qerror("new actor: %d error", aid);
     return -1;

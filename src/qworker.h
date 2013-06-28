@@ -56,6 +56,7 @@ qworker_t*  qworker_new(qid_t tid);
 void        qworker_destroy(qworker_t *thread);
 void        qworker_send(qmsg_t *msg);
 qid_t       qworker_new_aid(qworker_t *worker);
+void        qworker_add(qid_t aid, qactor_t *actor);
 qactor_t*   qworket_get_actor(qworker_t *worker, qid_t id);
 
 #endif  /* __qworker_H__ */

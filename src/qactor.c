@@ -22,7 +22,7 @@
 
 qactor_t*
 qactor_new(qid_t aid) {
-  qactor_t *actor;
+  qactor_t  *actor;
 
   actor = qalloc(sizeof(qactor_t));
   if (actor == NULL) {
@@ -38,6 +38,7 @@ qactor_new(qid_t aid) {
   actor->waiting_netio = 0;
   actor->waiting_msg   = 0;
   qspinlock_init(&(actor->desc_list_lock));
+  qworker_add(aid, actor);
 
   return actor;
 }
