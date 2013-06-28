@@ -106,12 +106,34 @@ qactor_spawn(qactor_t *actor, lua_State *state) {
   return aid;
 }
 
+qactor_t*
+qactor_get(qid_t aid) {
+  qworker_t *worker;
+
+  worker = server->workers[decode_pid(aid)];
+  return qworket_get_actor(worker, decode_id(aid));
+}
+
 qengine_t*
-qactor_get_engine(qid_t id) {
-  return server->workers[decode_pid(id)]->engine;
+qactor_get_engine(qid_t aid) {
+  qactor_t *actor;
+
+  actor = qactor_get(aid);
+  if (actor) {
+    return server->workers[actor->tid]->engine;
+  }
+
+  return NULL;
 }
 
 qworker_t*
 qactor_get_worker(qid_t aid) {
-  return server->workers[decode_pid(aid)];
+  qactor_t *actor;
+
+  actor = qactor_get(aid);
+  if (actor) {
+    return server->workers[actor->tid];
+  }
+
+  return NULL;
 }

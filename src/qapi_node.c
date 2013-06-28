@@ -128,7 +128,10 @@ static int qnode_attach(lua_State *state) {
   qactor_t      *old_actor, *actor;
 
   desc = (qdescriptor_t*)lua_touserdata(state, 1);
-  old_actor = qdescriptor_get_actor(desc);
+  old_actor = qactor_get(desc->aid);
+  if (old_actor == NULL) {
+    return 0;
+  }
   actor = qlua_get_actor(state);
 
   if (old_actor->aid == actor->aid) {

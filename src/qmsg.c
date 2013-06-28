@@ -51,4 +51,5 @@ qmsg_clone(qmsg_t *msg) {
 
 void
 qmsg_send(qmsg_t *msg) {
+  UNUSED(msg);
 }

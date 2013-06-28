@@ -35,7 +35,7 @@ typedef struct qwmsg_signal_t {
   int         signo;
 } qwmsg_signal_t;
 
-qmsg_t* qwmsg_start_new(qid_t aid, qid_t sender, qid_t recver);
+qmsg_t* qwmsg_start_new(qid_t sender, qid_t recver);
 
 qmsg_t* qwmsg_spawn_new(qactor_t *actor, qactor_t *parent,
                         lua_State *state, qid_t sender, qid_t recver);

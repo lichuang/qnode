@@ -89,16 +89,29 @@ qworker_destroy(qworker_t *worker) {
 qid_t
 qworker_new_aid(qworker_t *worker) {
   qid_t aid;
+  qid_t current;
 
   qmutex_lock(&(worker->mutex));
+  current = worker->current;
   while (worker->actors[current]) {
     ++current;
   }
   aid = encode_aid(current, worker->tid);
-  ++current;
+  ++(worker->current);
   qmutex_unlock(&(worker->mutex));
 
   return aid;
+}
+
+qactor_t*
+qworket_get_actor(qworker_t *worker, qid_t id) {
+  qactor_t *actor;
+
+  qmutex_lock(&(worker->mutex));
+  actor = worker->actors[id];
+  qmutex_unlock(&(worker->mutex));
+
+  return actor;
 }
 
 void

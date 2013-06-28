@@ -80,11 +80,3 @@ qdescriptor_destroy(qdescriptor_t *desc) {
   }
   close(desc->fd);
 }
-
-qactor_t*
-qdescriptor_get_actor(qdescriptor_t *desc) {
-  if (desc->aid == QINVALID_ID) {
-    return NULL;
-  }
-  return server->actors[desc->aid];
-}

@@ -257,8 +257,6 @@ server_init(qconfig_t *config) {
   if (init_worker_threads(server) < 0) {
     goto error;
   }
-  qidmap_init(&server->id_map);
-  qmutex_init(&server->id_map_mutex);
   setup_signal();
 
   server->thread_log[0] = qthread_log_init(0);

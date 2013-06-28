@@ -39,6 +39,7 @@ void        qactor_destroy(qactor_t *actor);
 /* spawn an actor as child, return the actor ID */
 qid_t       qactor_spawn(qactor_t *actor, lua_State *state);
 
+qactor_t*   qactor_get(qid_t aid);
 qengine_t*  qactor_get_engine(qid_t aid);
 qworker_t*  qactor_get_worker(qid_t aid);
 

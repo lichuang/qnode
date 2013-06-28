@@ -13,7 +13,7 @@
 #include "qtype.h"
 
 /* max bit for actor id */
-#define MAX_BIT sizeof(qid_t)
+#define MAX_BIT sizeof(qid_t) * 8
 
 /* qid_t highest ID_BIT for id */
 #define ID_BIT  16
@@ -40,7 +40,6 @@
 
 /* decode pid from aid */
 #define decode_pid(aid) ((aid) & MASK1(PID_BIT, 0))
-//#define decode_pid(aid) ((aid) & 0xFFFF)
 
 struct qworker_t {
   qmailbox_t            box;      /* worker msg box */
@@ -57,5 +56,6 @@ qworker_t*  qworker_new(qid_t tid);
 void        qworker_destroy(qworker_t *thread);
 void        qworker_send(qmsg_t *msg);
 qid_t       qworker_new_aid(qworker_t *worker);
+qactor_t*   qworket_get_actor(qworker_t *worker, qid_t id);
 
 #endif  /* __qworker_H__ */
