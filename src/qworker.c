@@ -163,7 +163,6 @@ free_actors(qworker_t *worker) {
   int       i;
   qactor_t *actor;
   
-  qmutex_lock(&(worker->mutex));
   for (i = 0; i < MAX_ID; ++i) {
     actor = worker->actors[i];
     if (!actor) {
@@ -172,6 +171,5 @@ free_actors(qworker_t *worker) {
     qactor_destroy(actor);
   }
   qfree(worker->actors);
-  qmutex_unlock(&(worker->mutex));
   qmutex_destroy(&(worker->mutex));
 }
