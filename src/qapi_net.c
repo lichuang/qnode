@@ -26,7 +26,7 @@ init_tcp_listen_params(qactor_t *actor) {
 }
 
 static int
-qtcp_listen(lua_State *state) {
+tcp_listen(lua_State *state) {
   const char  *addr;
   qactor_t    *actor;
   int          port, fd;
@@ -120,7 +120,7 @@ socket_accept(int fd, int flags, void *data) {
 }
 
 static int
-qtcp_accept(lua_State *state) {
+tcp_accept(lua_State *state) {
   int                 fd;
   int                 timeout;
   struct sockaddr_in  remote;
@@ -205,7 +205,7 @@ socket_recv(int fd, int flags, void *data) {
 }
 
 static int
-qtcp_recv(lua_State *state) {
+tcp_recv(lua_State *state) {
   int                 nret;
   qdescriptor_t      *desc;
   qbuffer_t          *buffer;
@@ -234,7 +234,6 @@ qtcp_recv(lua_State *state) {
     return lua_yield(state, 0); 
   }
   buffer = &(desc->data.tcp.inbuf);
-  buffer->end = 0;
   lua_pushlightuserdata(state, buffer);
   return 1;
 }
@@ -277,7 +276,7 @@ socket_send(int fd, int flags, void *data) {
 }
 
 static int
-qtcp_send(lua_State *state) {
+tcp_send(lua_State *state) {
   int                 nret;
   qdescriptor_t      *desc;
   qtcp_descriptor_t  *tcp;
@@ -310,7 +309,7 @@ qtcp_send(lua_State *state) {
 }
 
 static int
-qtcp_inbuf(lua_State *state) {
+tcp_inbuf(lua_State *state) {
   qdescriptor_t     *desc;
   qtcp_descriptor_t *tcp;
 
@@ -327,7 +326,7 @@ qtcp_inbuf(lua_State *state) {
 }
 
 static int
-qtcp_outbuf(lua_State *state) {
+tcp_outbuf(lua_State *state) {
   qdescriptor_t     *desc;
   qtcp_descriptor_t *tcp;
 
@@ -347,11 +346,11 @@ qtcp_outbuf(lua_State *state) {
 }
 
 luaL_Reg net_apis[] = {
-  {"qtcp_listen",    qtcp_listen},
-  {"qtcp_accept",    qtcp_accept},
-  {"qtcp_recv",      qtcp_recv},
-  {"qtcp_send",      qtcp_send},
-  {"qtcp_inbuf",     qtcp_inbuf},
-  {"qtcp_outbuf",    qtcp_outbuf},
+  {"qtcp_listen",    tcp_listen},
+  {"qtcp_accept",    tcp_accept},
+  {"qtcp_recv",      tcp_recv},
+  {"qtcp_send",      tcp_send},
+  {"qtcp_inbuf",     tcp_inbuf},
+  {"qtcp_outbuf",    tcp_outbuf},
   {NULL, NULL},
 };

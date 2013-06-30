@@ -8,7 +8,7 @@
 #include "qactor.h"
 #include "qluautil.h"
 
-static int qstring_toul(lua_State *state) {
+static int string_toul(lua_State *state) {
   unsigned long long result;
   const char        *input;
   char              *endptr;
@@ -24,6 +24,6 @@ static int qstring_toul(lua_State *state) {
 }
 
 luaL_Reg string_apis[] = {
-  {"qstring_toul",  qstring_toul},
+  {"qstring_toul",  string_toul},
   {NULL, NULL},
 };

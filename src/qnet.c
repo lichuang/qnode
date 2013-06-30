@@ -26,12 +26,12 @@ create_listen_socket() {
 
   on = 1;
   if ((fd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
-    qerror("create socket error, %s", strerror(errno));
+    qerror("create socket error: %s", strerror(errno));
     return -1;
   }
 
   if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) == -1) {
-    qerror("setsockopt SO_REUSEADDR error %s", strerror(errno));
+    qerror("setsockopt SO_REUSEADDR error: %s", strerror(errno));
     return -1;
   }
 
@@ -43,11 +43,11 @@ set_nonblocking(int fd) {
   int flags;
 
   if ((flags = fcntl(fd, F_GETFL)) == -1) {
-    qerror("fcntl(F_GETFL): %s", strerror(errno));
+    qerror("fcntl(F_GETFL) error: %s", strerror(errno));
     return -1;
   }
   if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) {
-    qerror("fcntl(F_SETFL,O_NONBLOCK): %s", strerror(errno));
+    qerror("fcntl(F_SETFL,O_NONBLOCK) error: %s", strerror(errno));
     return -1;
   }
   return 0;
@@ -85,7 +85,7 @@ qnet_tcp_listen(int port, const char *bindaddr) {
   }
 
   if (listen(fd, 511) == -1) {
-    qerror("listen: %s", strerror(errno));
+    qerror("listen error: %s", strerror(errno));
     close(fd);
     return -1;
   }
@@ -94,8 +94,8 @@ qnet_tcp_listen(int port, const char *bindaddr) {
 }
 
 int
-qnet_tcp_accept(int listen_fd,
-                struct sockaddr *addr, socklen_t *addrlen) {
+qnet_tcp_accept(int listen_fd, struct sockaddr *addr,
+                socklen_t *addrlen) {
   int fd;
 
   while (1) {
@@ -107,6 +107,7 @@ qnet_tcp_accept(int listen_fd,
       if (errno == EINTR) {
         continue;
       }
+      qerror("accept error: %s", strerror(errno));
       return -1;
     }
     set_nonblocking(fd);
@@ -129,10 +130,10 @@ qnet_tcp_recv(struct qdescriptor_t *desc, int size) {
   if (buffer->data == NULL) {
     return -1;
   }
-  buffer->len = size;
   nbytes = recv(fd, buffer->data + buffer->end,
                 buffer->size - buffer->end, 0);
 
+  qstdout("recv: %s, nbytes: %d\n", buffer->data, nbytes);
   /*
    * Several errors are OK. When speculative read is being done we may not
    * be able to read a single byte to the socket. Also, SIGSTOP issued
@@ -154,6 +155,7 @@ qnet_tcp_recv(struct qdescriptor_t *desc, int size) {
       || errno == ETIMEDOUT
       || errno == EHOSTUNREACH
       || errno == ENOTCONN)) {
+    qerror("recv error: %s\n", strerror(errno));
     return -1;
   }
 
@@ -161,9 +163,6 @@ qnet_tcp_recv(struct qdescriptor_t *desc, int size) {
     return -1;
   }
   buffer->end += nbytes;
-  if (buffer->len == 0) {
-    buffer->len =  buffer->end;
-  }
   buffer->data[buffer->end] = '\0';
   return nbytes;
 }
@@ -178,8 +177,8 @@ qnet_tcp_send(qdescriptor_t *desc) {
   fd = desc->fd;
   buffer = &(tcp->outbuf);
 
-  nbytes = send(fd, buffer->data + buffer->end,
-                buffer->len - buffer->end, 0);
+  nbytes = send(fd, buffer->data + buffer->start,
+                buffer->end - buffer->start, 0);
 
   if (nbytes == -1 &&
       (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) {
@@ -190,6 +189,6 @@ qnet_tcp_send(qdescriptor_t *desc) {
     return -1;
   }
 
-  buffer->end += nbytes;
+  buffer->start += nbytes;
   return nbytes;
 }

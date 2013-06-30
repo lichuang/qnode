@@ -7,6 +7,7 @@
 
 #include <stdarg.h>
 #include <string.h>
+#include <stdio.h>
 #include "qcore.h"
 #include "qlist.h"
 
@@ -48,5 +49,6 @@ void qlog_freelist_print();
 #define qerror(args...) qlog(QLOG_ERR,   __FILE__, __LINE__, args)
 #define qinfo(args...)  qlog(QLOG_INFO,  __FILE__, __LINE__, args)
 #define qdebug(args...) qlog(QLOG_DEBUG, __FILE__, __LINE__, args)
+#define qstdout         printf
 
 #endif  /* __QLOG_H__ */

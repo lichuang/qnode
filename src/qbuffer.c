@@ -14,7 +14,7 @@ qbuffer_init(qbuffer_t *buffer) {
   if (buffer->data == NULL) {
     return -1;
   }
-  buffer->start  = buffer->end = buffer->len = 0;
+  buffer->start  = buffer->end = 0;
   buffer->size = QBUFFER_SIZE;
 
   return 0;
@@ -54,9 +54,14 @@ qbuffer_read(qbuffer_t *buffer, int size) {
   return p;
 }
 
-void
+int
 qbuffer_write(qbuffer_t *buffer, const char *data, int size) {
   qbuffer_reserve(buffer, size); 
+  if (buffer->data == NULL) {
+    return -1;
+  }
   memcpy(buffer->data + buffer->end, data, size);
   buffer->end += size;
+
+  return 0;
 }

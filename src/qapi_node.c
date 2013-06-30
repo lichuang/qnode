@@ -19,7 +19,7 @@
 
 /* spawn an actor, return the actor ID */
 static int
-qnode_spawn(lua_State *state) {
+node_spawn(lua_State *state) {
   int         id;
   const char *mod;
   const char *fun;
@@ -72,7 +72,7 @@ qnode_spawn(lua_State *state) {
 }
 
 static int
-qnode_send(lua_State *state) {
+node_send(lua_State *state) {
   qid_t     id;
   qactor_t *actor;
   qmsg_t   *msg;
@@ -92,7 +92,7 @@ qnode_send(lua_State *state) {
 }
 
 static int
-qnode_recv(lua_State *state) {
+node_recv(lua_State *state) {
   qactor_t      *actor;
   qactor_msg_t  *msg;
 
@@ -110,7 +110,7 @@ qnode_recv(lua_State *state) {
 }
 
 static int
-qnode_attach(lua_State *state) {
+node_attach(lua_State *state) {
   qdescriptor_t *desc;
   qactor_t      *old_actor, *actor;
 
@@ -140,7 +140,7 @@ qnode_attach(lua_State *state) {
 }
 
 static int
-qnode_self(lua_State *state) {
+node_self(lua_State *state) {
   qactor_t *actor;
 
   actor = qlua_get_actor(state);
@@ -150,7 +150,7 @@ qnode_self(lua_State *state) {
 }
 
 static int
-qnode_exit(lua_State *state) {
+node_exit(lua_State *state) {
   qactor_t *actor;
 
   actor = qlua_get_actor(state);
@@ -160,11 +160,11 @@ qnode_exit(lua_State *state) {
 }
 
 luaL_Reg node_apis[] = {
-  {"qnode_spawn",       qnode_spawn},
-  {"qnode_send",        qnode_send},
-  {"qnode_recv",        qnode_recv},
-  {"qnode_attach",      qnode_attach},
-  {"qnode_self",        qnode_self},
-  {"qnode_exit",        qnode_exit},
+  {"qnode_spawn",       node_spawn},
+  {"qnode_send",        node_send},
+  {"qnode_recv",        node_recv},
+  {"qnode_attach",      node_attach},
+  {"qnode_self",        node_self},
+  {"qnode_exit",        node_exit},
   {NULL, NULL},
 };

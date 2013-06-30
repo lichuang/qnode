@@ -13,7 +13,6 @@ typedef struct qbuffer_t {
   int   size;
   int   start;
   int   end;
-  int   len;
 } qbuffer_t;
 
 #define qbuffer_reserve(buffer, len)  \
@@ -21,10 +20,16 @@ typedef struct qbuffer_t {
     qbuffer_extend((buffer), (len));  \
   } 
 
+#define qbuffer_length(buffer)        \
+  (buffer)->end - (buffer)->start
+
+#define qbuffer_reset(buffer)         \
+  (buffer)->start = (buffer)->end = 0
+
 int     qbuffer_init(qbuffer_t *buffer);
 void    qbuffer_free(qbuffer_t *buffer);
 int     qbuffer_extend(qbuffer_t *buffer, uint32_t size);
 char*   qbuffer_read(qbuffer_t *buffer, int size);
-void    qbuffer_write(qbuffer_t *buffer, const char *data, int size);
+int     qbuffer_write(qbuffer_t *buffer, const char *data, int size);
 
 #endif  /* __QBUFFER_H__ */
