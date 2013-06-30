@@ -39,7 +39,7 @@ worker_main_loop(void *arg) {
   worker = (qworker_t*)arg;
   /* init the worker thread log structure */
   server->thread_log[worker->tid] = qthread_log_init(worker->tid);
-  qserver_worker_started();
+  worker->running = 1;
   qengine_loop(worker->engine);
 
   qmailbox_free(&(worker->box));
@@ -78,9 +78,13 @@ qworker_new(qid_t tid) {
   qmutex_init(&(worker->mutex));
   /* create the lua VM for the worker */
   worker->state = qlua_new_state();
+  worker->running = 0;
   pthread_create(&worker->id, NULL,
                  worker_main_loop, worker);
 
+  while (!worker->running) {
+    usleep(100);
+  }
   return worker;
 }
 

@@ -51,6 +51,7 @@ struct qworker_t {
   qactor_t            **actors;   /* worker actors array */
   qengine_t            *engine;   /* dispatcher engine */
   lua_State            *state;    /* lua VM */
+  volatile int          running:1;
 };
 
 qworker_t*  qworker_new(qid_t tid);

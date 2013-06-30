@@ -71,7 +71,7 @@ log_thread_main_loop(void *arg) {
   qlogger_t *thread;
 
   thread = (qlogger_t*)arg;
-  qserver_worker_started();
+  thread->running = 1;
   qengine_loop(thread->engine);
 
   qmailbox_free(&logger->box);
@@ -141,9 +141,12 @@ qlogger_new(int thread_num) {
   log_time_handler(NULL);
   qengine_add_timer(logger->engine, 1000, log_time_handler,
                     1000, NULL);
+  logger->running = 0;
   pthread_create(&logger->id, NULL,
                  log_thread_main_loop, logger);
-
+  while (!logger->running) {
+    usleep(100);
+  }
   return 0;
 }
 

@@ -31,16 +31,10 @@ extern qmsg_func_t* server_msg_handlers[];
 
 qserver_t    *server;
 
-/* thread init condition */
-static int          init_thread_count;
-static qcond_t      init_thread_cond;
-static qmutex_t     init_thread_lock; 
-
 static void server_accept(int fd, int flags, void *data);
 static int  init_server_event(qserver_t *server);
 static int  server_msg_handler(qmsg_t *msg, void *reader);
 static void server_start(qserver_t *server);
-static void wait_threads(int thread_num);
 static int  init_worker_threads(qserver_t *server);
 static void signal_handler(int sig);
 static void setup_signal();
@@ -101,19 +95,10 @@ server_start(qserver_t *server) {
   qworker_send(msg);
 }
 
-static void
-wait_threads(int thread_num) {
-  qmutex_lock(&init_thread_lock);
-  while (init_thread_count < thread_num) {
-    qcond_wait(&init_thread_cond, &init_thread_lock);
-  }
-  qmutex_unlock(&init_thread_lock);
-}
-
 static int
 init_worker_threads(qserver_t *server) {
   int           i;
-  int  thread_num;
+  int           thread_num;
   qconfig_t    *config;
   
   config = server->config;
@@ -130,8 +115,6 @@ init_worker_threads(qserver_t *server) {
     goto error;
   }
 
-  init_thread_count = 0;
-
   /* create worker threads */
   for (i = 1; i < thread_num; ++i) {
     server->workers[i] = qworker_new(i); 
@@ -140,12 +123,6 @@ init_worker_threads(qserver_t *server) {
     }
   }
     
-  /* wait for the worker threads start */
-  wait_threads(thread_num - 1);
-
-  qmutex_destroy(&init_thread_lock);
-  qcond_destroy(&init_thread_cond);
-
   return 0;
 
 error:
@@ -220,10 +197,6 @@ server_init(qconfig_t *config) {
   qassert(server == NULL);
 
   server = qcalloc(sizeof(qserver_t));
-
-  qmutex_init(&init_thread_lock);
-  qcond_init(&init_thread_cond);
-
   if (server == NULL) {
     goto error;
   }
@@ -232,12 +205,9 @@ server_init(qconfig_t *config) {
   if (config->daemon) {
     make_daemon();
   }
-  init_thread_count = 0;
   if (qlogger_new(config->thread_num + 1) < 0) {
     goto error;
   }
-  /* wait for the log thread start */
-  wait_threads(1);
 
   server->engine = qengine_new();
   if (init_server_event(server) < 0) {
@@ -295,12 +265,4 @@ qserver_run(qconfig_t *config) {
   qengine_loop(server->engine);
   destroy_server();
   return 0;
-}
-
-void
-qserver_worker_started() {
-  qmutex_lock(&init_thread_lock);
-  init_thread_count++;
-  qcond_signal(&init_thread_cond);
-  qmutex_unlock(&init_thread_lock);
 }

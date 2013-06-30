@@ -19,6 +19,7 @@ typedef struct qlogger_t {
   int           fd;
   int           log_size;
   qlist_t       free_list;
+  volatile int  running:1;
 } qlogger_t;
 
 int  qlogger_new(int thread_num);
