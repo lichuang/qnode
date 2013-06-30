@@ -22,9 +22,11 @@ function tokenize_command(_buffer)
   local left = 0
 
   length = qbuffer_length(_buffer)
+  qlog("get length:" .. length)
 
   while pos < length do
     c = qbuffer_get(_buffer, pos, 1)
+    qlog("get c:" .. c)
 
     if c == " " then
       if start ~= pos then
@@ -58,7 +60,7 @@ function tokenize_command(_buffer)
     table.insert(tokens, data)
   end
 
-  print("left " .. left)
+  qlog("left " .. left)
   return tokens, left, pos + 2
 end
 
@@ -87,7 +89,7 @@ function process_update_command(_buffer, _tokens, _ntokens,
   data.vlen     = vlen
 
   if _left == vlen + 2 then
-    print("vlen: " .. vlen)
+    qlog("vlen: " .. vlen)
     length = qbuffer_length(_buffer)
 
     start = _pos
@@ -96,7 +98,7 @@ function process_update_command(_buffer, _tokens, _ntokens,
       if c == "\r" then
         qbuffer_set(_buffer, _pos, "\0")
         local str = qbuffer_get(_buffer, start, _pos - start)
-        print("value: " .. str)
+        qlog("value: " .. str)
         data.value = str
         return data
       end
@@ -108,7 +110,7 @@ end
 
 function process_get_command(_buffer, _tokens, _ntokens)
   for i, data in ipairs(_tokens) do
-    print(i .. " : ".. data.value .. ", len: " .. data.length)
+    qlog(i .. " : ".. data.value .. ", len: " .. data.length)
   end
   local i = 2
   local data = {}
@@ -117,7 +119,7 @@ function process_get_command(_buffer, _tokens, _ntokens)
     data.key = _tokens[i].value
     --qnode_send(storage_id, data)
     --local arg = qnode_recv()
-    print("data: " .. data.key)
+    qlog("data: " .. data.key)
     
     i = i + 1
   end
@@ -130,11 +132,11 @@ function process_command(_buffer, _tokens, _left, _pos)
 
   --[[
   for i, data in ipairs(_tokens) do
-    print(i .. " : ".. data.value .. ", len: " .. data.length)
+    qlog(i .. " : ".. data.value .. ", len: " .. data.length)
   end
   ]]
 
-  print("command: " .. _tokens[COMMAND_TOKEN].value)
+  qlog("command: " .. _tokens[COMMAND_TOKEN].value)
   local cmd = _tokens[COMMAND_TOKEN].value
   if cmd == "set" then
     return process_update_command(_buffer, _tokens, ntokens,
@@ -151,6 +153,8 @@ function main_loop(_args)
   local storage_id    = _args["storage_id"]
   -- recv data from the socket
   while true do
+    local aid = qnode_self();
+    qlog("child " .. tostring(aid))
     local buffer, ret = qtcp_recv(socket)
     if buffer == nil then
       qlog("reason: " .. ret)
@@ -159,30 +163,31 @@ function main_loop(_args)
     end
 
     local tmp = qbuffer_get(buffer, 0)
-    print("buffer: " .. tmp)
+    qlog("buffer: " .. tmp)
     local tokens, left, pos = tokenize_command(buffer)
     local data = process_command(buffer, tokens, left, pos)
 
-    print("out of process_command")
+    qlog("out of process_command")
     for k, v in pairs(data) do
-      print(k .. " : ".. v)
+      qlog(k .. " : ".. v)
     end
 
     if data ~= nil then
-      print("cmd: " .. data.cmd)
+      qlog("cmd: " .. data.cmd)
       qnode_send(storage_id, data)
       local arg = qnode_recv()
       for k, v in pairs(arg) do
-	print("response k: " .. k .. ", v: " .. v)
+	qlog("response k: " .. k .. ", v: " .. v)
       end
 
+      qbuffer_reset(buffer);
       local out = qtcp_outbuf(socket);
-      qbuffer_set(out, 0, arg.response);
+      qbuffer_write_string(out, arg.response);
       local nret, reason = qtcp_send(socket)
       if not nret then
-	print("qtcp_send error: " .. reason)
+	qlog("qtcp_send error: " .. reason)
       else
-	print("qtcp_send: " .. tostring(nret))
+	qlog("qtcp_send: " .. tostring(nret))
       end
     end
   end

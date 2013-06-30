@@ -6,7 +6,7 @@
 #define __QTYPE_H__
 
 typedef char*         qptr_t;
-typedef unsigned long qid_t;
+typedef unsigned int  qid_t;
 
 #define QINVALID_ID 0
 

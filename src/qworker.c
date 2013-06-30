@@ -46,9 +46,8 @@ worker_main_loop(void *arg) {
   qengine_destroy(worker->engine);
   qthread_log_free();
   free_actors(worker);
-  return NULL;
   lua_close(worker->state);
-  qengine_destroy(worker->engine);
+  //qengine_destroy(worker->engine);
 
   return NULL;
 }
@@ -106,7 +105,7 @@ qworker_new_aid(qworker_t *worker) {
   aid = encode_aid(current, worker->tid);
   qassert(decode_pid(aid) == worker->tid);
   qassert(decode_id(aid)  == current);
-  worker->current = ++current;
+  worker->current = ++current % MAX_ID;
   qmutex_unlock(&(worker->mutex));
 
   return aid;

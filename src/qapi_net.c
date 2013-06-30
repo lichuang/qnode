@@ -199,7 +199,6 @@ socket_recv(int fd, int flags, void *data) {
   engine = qactor_get_engine(actor->aid);
   qengine_del_event(engine, desc->fd, QEVENT_READ);
   buffer = &(desc->data.tcp.inbuf);
-  buffer->end = 0;
   lua_pushlightuserdata(state, buffer);
   lua_resume(state, 1);
 }

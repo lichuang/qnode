@@ -24,7 +24,8 @@ typedef struct qbuffer_t {
   (buffer)->end - (buffer)->start
 
 #define qbuffer_reset(buffer)         \
-  (buffer)->start = (buffer)->end = 0
+  (buffer)->start = (buffer)->end = 0;\
+  (buffer)->data[0] = '\0'
 
 int     qbuffer_init(qbuffer_t *buffer);
 void    qbuffer_free(qbuffer_t *buffer);
