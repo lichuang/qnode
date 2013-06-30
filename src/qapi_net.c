@@ -170,6 +170,7 @@ socket_recv(int fd, int flags, void *data) {
   int                nret;
   qdescriptor_t     *desc;
   qtcp_descriptor_t *tcp;
+  qbuffer_t         *buffer;
   qactor_t          *actor;
   lua_State         *state;
   qengine_t         *engine;
@@ -197,8 +198,9 @@ socket_recv(int fd, int flags, void *data) {
   }
   engine = qactor_get_engine(actor->aid);
   qengine_del_event(engine, desc->fd, QEVENT_READ);
-  desc->data.tcp.inbuf.pos = 0;
-  lua_pushlightuserdata(state, &(desc->data.tcp.inbuf));
+  buffer = &(desc->data.tcp.inbuf);
+  buffer->end = 0;
+  lua_pushlightuserdata(state, buffer);
   lua_resume(state, 1);
 }
 
@@ -206,6 +208,7 @@ static int
 qtcp_recv(lua_State *state) {
   int                 nret;
   qdescriptor_t      *desc;
+  qbuffer_t          *buffer;
   qtcp_descriptor_t  *tcp;
   qactor_t           *actor;
   qengine_t          *engine;
@@ -230,8 +233,9 @@ qtcp_recv(lua_State *state) {
     qengine_add_event(engine, desc->fd, QEVENT_READ, socket_recv, desc);
     return lua_yield(state, 0); 
   }
-  desc->data.tcp.inbuf.pos = 0;
-  lua_pushlightuserdata(state, &(desc->data.tcp.inbuf));
+  buffer = &(desc->data.tcp.inbuf);
+  buffer->end = 0;
+  lua_pushlightuserdata(state, buffer);
   return 1;
 }
 
@@ -268,7 +272,7 @@ socket_send(int fd, int flags, void *data) {
 
   engine = qactor_get_engine(actor->aid);
   qengine_del_event(engine, desc->fd, QEVENT_WRITE);
-  desc->data.tcp.inbuf.pos = 0;
+  desc->data.tcp.inbuf.end = 0;
   lua_resume(state, 1);
 }
 
@@ -301,7 +305,7 @@ qtcp_send(lua_State *state) {
     return lua_yield(state, 0); 
   }
 
-  lua_pushnumber(state, 0);
+  lua_pushnumber(state, nret);
   return 1;
 }
 

@@ -34,12 +34,16 @@ qbuffer_set(lua_State *state) {
   qbuffer_t  *buffer;
 
   buffer = (qbuffer_t*)lua_touserdata(state, 1);
+  if (buffer == NULL) {
+    lua_pushliteral(state, "buffer NIL");
+    return 1;
+  }
   pos = (int)lua_tonumber(state, 2);
   str = lua_tostring(state, 3);
   len = strlen(str);
   if (len > (int)(buffer->len - pos)) {
-    lua_pushliteral(state, "length to long");
-    return 1;
+    //lua_pushliteral(state, "length to long");
+    //return 1;
   }
   
   if (len > 0) {
@@ -48,7 +52,8 @@ qbuffer_set(lua_State *state) {
     buffer->data[pos] = '\0';
   }
 
-  return 0;
+  lua_pushliteral(state, "OK");
+  return 1; 
 }
 
 static int

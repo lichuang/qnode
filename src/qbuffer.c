@@ -14,7 +14,7 @@ qbuffer_init(qbuffer_t *buffer) {
   if (buffer->data == NULL) {
     return -1;
   }
-  buffer->pos  = buffer->len = 0;
+  buffer->start  = buffer->end = buffer->len = 0;
   buffer->size = QBUFFER_SIZE;
 
   return 0;
@@ -42,4 +42,21 @@ qbuffer_extend(qbuffer_t *buffer, uint32_t size) {
   buffer->size = new_size;
 
   return 0;
+}
+
+char*
+qbuffer_read(qbuffer_t *buffer, int size) {
+  char *p;
+
+  p = buffer->data + buffer->start;
+  buffer->start += size;
+
+  return p;
+}
+
+void
+qbuffer_write(qbuffer_t *buffer, const char *data, int size) {
+  qbuffer_reserve(buffer, size); 
+  memcpy(buffer->data + buffer->end, data, size);
+  buffer->end += size;
 }

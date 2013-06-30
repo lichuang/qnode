@@ -28,7 +28,7 @@ function tokenize_command(_buffer)
 
     if c == " " then
       if start ~= pos then
-        qbuffer_set(buffer, pos, "\0")
+        qbuffer_set(_buffer, pos, "\0")
         local str = qbuffer_get(_buffer, start, pos - start)
         local data = {}
         data.value  = str
@@ -146,41 +146,55 @@ function process_command(_buffer, _tokens, _left, _pos)
   end
 end
 
+function main_loop(_args)
+  local socket        = _args["sock"]
+  local storage_id    = _args["storage_id"]
+  -- recv data from the socket
+  while true do
+    local buffer, ret = qtcp_recv(socket)
+    if buffer == nil then
+      qlog("reason: " .. ret)
+      qnode_exit()
+      return
+    end
+
+    local tmp = qbuffer_get(buffer, 0)
+    print("buffer: " .. tmp)
+    local tokens, left, pos = tokenize_command(buffer)
+    local data = process_command(buffer, tokens, left, pos)
+
+    print("out of process_command")
+    for k, v in pairs(data) do
+      print(k .. " : ".. v)
+    end
+
+    if data ~= nil then
+      print("cmd: " .. data.cmd)
+      qnode_send(storage_id, data)
+      local arg = qnode_recv()
+      for k, v in pairs(arg) do
+	print("response k: " .. k .. ", v: " .. v)
+      end
+
+      local out = qtcp_outbuf(socket);
+      qbuffer_set(out, 0, arg.response);
+      local nret, reason = qtcp_send(socket)
+      if not nret then
+	print("qtcp_send error: " .. reason)
+      else
+	print("qtcp_send: " .. tostring(nret))
+      end
+    end
+  end
+end
+
 server.child = function (_args)
-  print("in child")
   local socket        = _args["sock"]
   local storage_id    = _args["storage_id"]
   -- attach the socket to the actor
   qnode_attach(socket)
-  -- recv data from the socket
-  qtcp_recv(socket)
-  print("after recv")
-  buffer = qtcp_inbuf(socket)
 
-  local tmp = qbuffer_get(buffer, 0)
-  print("buffer: " .. tmp)
-  local tokens, left, pos = tokenize_command(buffer)
-  local data = process_command(buffer, tokens, left, pos)
-
-  print("out of process_command")
-  for k, v in pairs(data) do
-    print(k .. " : ".. v)
-  end
-
-  if data ~= nil then
-    print("cmd: " .. data.cmd)
-    qnode_send(storage_id, data)
-    local arg = qnode_recv()
-    for k, v in pairs(arg) do
-      print("response k: " .. k .. ", v: " .. v)
-    end
-
-    local out = qtcp_outbuf(socket);
-    --qbuffer_set(out, 0, arg.response);
-    --qtcp_send(socket)
-  end
-
-  child()
+  main_loop(_args)
 end
 
 _G["child"] = server

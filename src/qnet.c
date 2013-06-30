@@ -116,7 +116,7 @@ qnet_tcp_accept(int listen_fd,
 }
 
 int
-qnet_tcp_recv(struct qdescriptor_t *desc, uint32_t size) {
+qnet_tcp_recv(struct qdescriptor_t *desc, int size) {
   int                 fd, nbytes;
   qbuffer_t          *buffer;
   qtcp_descriptor_t  *tcp;
@@ -130,8 +130,8 @@ qnet_tcp_recv(struct qdescriptor_t *desc, uint32_t size) {
     return -1;
   }
   buffer->len = size;
-  nbytes = recv(fd, buffer->data + buffer->pos,
-                buffer->size - buffer->pos, 0);
+  nbytes = recv(fd, buffer->data + buffer->end,
+                buffer->size - buffer->end, 0);
 
   /*
    * Several errors are OK. When speculative read is being done we may not
@@ -160,12 +160,11 @@ qnet_tcp_recv(struct qdescriptor_t *desc, uint32_t size) {
   if (nbytes == 0) {
     return -1;
   }
-  buffer->pos += nbytes;
+  buffer->end += nbytes;
   if (buffer->len == 0) {
-    buffer->len =  buffer->pos;
+    buffer->len =  buffer->end;
   }
-  buffer->data[buffer->pos] = '\0';
-  //qinfo("recv: %s", buffer->data);
+  buffer->data[buffer->end] = '\0';
   return nbytes;
 }
 
@@ -179,8 +178,8 @@ qnet_tcp_send(qdescriptor_t *desc) {
   fd = desc->fd;
   buffer = &(tcp->outbuf);
 
-  nbytes = send(fd, buffer->data + buffer->pos,
-                buffer->len - buffer->pos, 0);
+  nbytes = send(fd, buffer->data + buffer->end,
+                buffer->len - buffer->end, 0);
 
   if (nbytes == -1 &&
       (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) {
@@ -190,5 +189,7 @@ qnet_tcp_send(qdescriptor_t *desc) {
   if (nbytes == -1 && (errno == ECONNRESET || errno == EPIPE)) {
     return -1;
   }
+
+  buffer->end += nbytes;
   return nbytes;
 }

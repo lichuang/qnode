@@ -113,16 +113,12 @@ wait_threads(int thread_num) {
 static int
 init_worker_threads(qserver_t *server) {
   int           i;
-  int           thread_num;
+  int  thread_num;
   qconfig_t    *config;
   
   config = server->config;
   thread_num = config->thread_num + 1;
 
-  if (thread_num > MAX_PID) {
-    printf("worker num bigger than %d\n", MAX_PID);
-    goto error;
-  }
   server->workers = qalloc(thread_num * sizeof(qworker_t*));
   if (server->workers == NULL) {
     goto error;

@@ -9,10 +9,11 @@
 #include "qcore.h"
 
 typedef struct qbuffer_t {
-  char       *data;
-  uint32_t    size;
-  uint32_t    pos;
-  uint32_t    len;
+  char *data;
+  int   size;
+  int   start;
+  int   end;
+  int   len;
 } qbuffer_t;
 
 #define qbuffer_reserve(buffer, len)  \
@@ -20,8 +21,10 @@ typedef struct qbuffer_t {
     qbuffer_extend((buffer), (len));  \
   } 
 
-int  qbuffer_init(qbuffer_t *buffer);
-void qbuffer_free(qbuffer_t *buffer);
-int  qbuffer_extend(qbuffer_t *buffer, uint32_t size);
+int     qbuffer_init(qbuffer_t *buffer);
+void    qbuffer_free(qbuffer_t *buffer);
+int     qbuffer_extend(qbuffer_t *buffer, uint32_t size);
+char*   qbuffer_read(qbuffer_t *buffer, int size);
+void    qbuffer_write(qbuffer_t *buffer, const char *data, int size);
 
 #endif  /* __QBUFFER_H__ */

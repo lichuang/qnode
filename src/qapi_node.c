@@ -149,11 +149,22 @@ qnode_self(lua_State *state) {
   return 1;
 }
 
+static int
+qnode_exit(lua_State *state) {
+  qactor_t *actor;
+
+  actor = qlua_get_actor(state);
+  //lua_pushnumber(state, actor->aid);
+
+  return 0;
+}
+
 luaL_Reg node_apis[] = {
   {"qnode_spawn",       qnode_spawn},
   {"qnode_send",        qnode_send},
   {"qnode_recv",        qnode_recv},
   {"qnode_attach",      qnode_attach},
   {"qnode_self",        qnode_self},
+  {"qnode_exit",        qnode_exit},
   {NULL, NULL},
 };

@@ -5,31 +5,39 @@ local cache = {}
 require("util")
 
 server.storage = function (_args)
-  arg = qnode_recv()
-  for k, v in pairs(arg) do
-    print("k: " .. k .. ", v: " .. v)
-  end
+  print("in storage")
+  while true do
+    local arg = qnode_recv()
+    print("after storage")
+    for k, v in pairs(arg) do
+      print("k: " .. k .. ", v: " .. v)
+    end
 
-  local key = arg.key
-  local cmd = arg.cmd
-  if not key then
-    return
-  end
+    local key = arg.key
+    local cmd = arg.cmd
+    if not key then
+      return server.storage()
+    end
 
-  if cmd == "set" then
-    cache[key] = arg
-    print("set " .. key .. ":" .. arg.value)
-    local data = {}
-    data.response = "STORED\r\n"
-    qnode_send(arg.src, data)
-    return
-  end
-  if cmd == "get" then
-    local data = {}
-    --data.val = cache[key]
-    data.val = "aaabbb"
-    print("get " .. key)
-    qnode_send(arg.src, data)
+    if cmd == "set" then
+      cache[key] = arg
+      print("set " .. key .. ":" .. arg.value)
+      local data = {}
+      data.response = "STORED\r\n"
+      qnode_send(arg.src, data)
+    elseif cmd == "get" then
+      local data = {}
+      --data.val = cache[key]
+      data.val = "aaabbb"
+      print("111before send")
+      data.response = "VALUE " .. key .. " 0 " .. tostring(6) .. "\r\n"
+      print("222before send")
+      data.response = data.response .. data.val .. "\r\n"
+      print("333before send")
+      data.response = data.response .. "END\r\n"
+      print("before send")
+      qnode_send(arg.src, data)
+    end
   end
 end
 
