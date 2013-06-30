@@ -1,4 +1,4 @@
 version 0.1(2013/6/30, commit 2e871cb968):
-  HAHS server model
+  multi worker threads and message passing model
   use Lua coroutine to implement actor model
   a simple memcache server support get/set command
