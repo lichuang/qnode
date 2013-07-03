@@ -4,9 +4,11 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "qalloc.h"
 #include "qassert.h"
 #include "qconfig.h"
@@ -40,13 +42,14 @@ logger_msg_handler(qmsg_t *msg, void *reader) {
 void
 qlogger_open_file() {
   qstring_t   file;
-  char        buff[30];
+  char        buff[30] = {'\0'};
   time_t      t;  
   struct tm   tm; 
 
   t = time(NULL);
+  memset(&tm, 0, sizeof(struct tm));
   localtime_r(&t, &tm);
-  strftime((char*)(&buff[0]), sizeof(buff), "%m-%d-%T", &tm);
+  strftime((char*)(&buff[0]), sizeof(buff), "%Y%m%d-%H%M%S", &tm);
 
   /*
   if (log_size < kLogFileSize) {
@@ -63,6 +66,10 @@ qlogger_open_file() {
 
   logger->fd = open(file, O_CREAT | O_TRUNC | O_RDWR,
                     S_IWUSR | S_IRUSR | S_IWOTH | S_IROTH | S_IRGRP | S_IWGRP);
+  if (logger->fd == -1) {
+    qstdout("open log file %s error: %s\n", file, strerror(errno));
+    exit(-1);
+  }
   qstring_destroy(file);
 }
 

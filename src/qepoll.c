@@ -32,11 +32,15 @@ typedef struct epoll_t {
 
 static int
 epoll_init(qengine_t *engine) {
+  int      i;
   epoll_t *epoll;
 
-  epoll = qalloc(sizeof(epoll_t));
+  epoll = qcalloc(sizeof(epoll_t));
   if (epoll == NULL) {
     return -1;
+  }
+  for (i = 0; i < QMAX_EVENTS; ++i) {
+    memset(&(epoll->events[i]), 0, sizeof(struct epoll_event));
   }
 
   epoll->fd = epoll_create(1024);
@@ -55,6 +59,7 @@ epoll_add(qengine_t *engine, int fd, int flags) {
   struct epoll_event  event;
 
   epoll = (epoll_t*)engine->data;
+  memset(&event, 0, sizeof(struct epoll_event));
 
   op = engine->events[fd].flags == QEVENT_NONE ?
         EPOLL_CTL_ADD : EPOLL_CTL_MOD;
@@ -113,7 +118,7 @@ epoll_poll(qengine_t *engine, int timeout_ms) {
   struct epoll_event *event;
 
   epoll = (epoll_t*)engine->data;
-  num = epoll_wait(epoll->fd, epoll->events, QMAX_EVENTS, timeout_ms);
+  num = epoll_wait(epoll->fd, &(epoll->events[0]), QMAX_EVENTS, timeout_ms);
 
   if (num > 0) {
     for (i = 0; i < num; i++) {
