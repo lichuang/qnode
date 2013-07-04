@@ -21,5 +21,3 @@ cscope*.
 cscope.files
 *.tags*.
 tags
-
-*.log
