@@ -18,6 +18,8 @@
 #include "qstring.h"
 #include "qworker.h"
 
+static int tcp_buffer(lua_State *state, int in);
+
 static void
 init_tcp_listen_params(qactor_t *actor) {
   actor->listen_params = qdict_new(5);
@@ -308,7 +310,7 @@ tcp_send(lua_State *state) {
 }
 
 static int
-tcp_inbuf(lua_State *state) {
+tcp_buffer(lua_State *state, int in) {
   qdescriptor_t     *desc;
   qtcp_descriptor_t *tcp;
 
@@ -320,28 +322,22 @@ tcp_inbuf(lua_State *state) {
     return 2;
   }
 
-  lua_pushlightuserdata(state, &(tcp->inbuf));
+  if (in) {
+    lua_pushlightuserdata(state, &(tcp->inbuf));
+  } else {
+    lua_pushlightuserdata(state, &(tcp->outbuf));
+  }
   return 1;
 }
 
 static int
+tcp_inbuf(lua_State *state) {
+  return tcp_buffer(state, 1);
+}
+
+static int
 tcp_outbuf(lua_State *state) {
-  qdescriptor_t     *desc;
-  qtcp_descriptor_t *tcp;
-
-  desc = (qdescriptor_t*)lua_touserdata(state, 1);
-  if (desc == NULL) {
-    return 0;
-  }
-  tcp = &(desc->data.tcp);
-  if (tcp->inet.state != QINET_STATE_CONNECTED) {
-    lua_pushnil(state);
-    lua_pushliteral(state, "socket closed");
-    return 2;
-  }
-
-  lua_pushlightuserdata(state, &(tcp->outbuf));
-  return 1;
+  return tcp_buffer(state, 0);
 }
 
 luaL_Reg net_apis[] = {
