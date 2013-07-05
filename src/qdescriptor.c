@@ -29,6 +29,8 @@ init_tcp_descriptor(qdescriptor_t *desc) {
   if (qbuffer_init(&(tcp->outbuf)) < 0) {
     qerror("create descriptor buffer error");
   }
+  tcp->addr[0] = '\0';
+  tcp->peer[0] = '\0';
 }
 
 qdescriptor_t*

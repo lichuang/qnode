@@ -117,9 +117,9 @@ qnet_tcp_accept(int listen_fd, struct sockaddr *addr,
 }
 
 int
-qnet_tcp_recv(struct qdescriptor_t *desc) {
-  int                 fd, nbytes, size, n;
-  int                 save;
+qnet_tcp_recv(qdescriptor_t *desc) {
+  int                 fd, save;
+  int                 nbytes, size, n;
   qbuffer_t          *buffer;
   qtcp_descriptor_t  *tcp;
 
@@ -128,6 +128,12 @@ qnet_tcp_recv(struct qdescriptor_t *desc) {
   buffer = &(tcp->inbuf);
 
   nbytes = 0;
+  /*
+   * recv data from tcp socket until:
+   *  1) some error occur or
+   *  2) received data less then required size
+   *    (means there is no data in the tcp stack buffer)
+   */
   do {
     if (qbuffer_writeable_len(buffer) == 0) {
       qbuffer_extend(buffer, buffer->size * 2);
@@ -135,28 +141,36 @@ qnet_tcp_recv(struct qdescriptor_t *desc) {
     if (buffer->data == NULL) {
       return -1;
     }
+
     size = qbuffer_writeable_len(buffer);
-    n = recv(fd, buffer->data + buffer->end, size, 0);
-    save = errno;
-    qdebug("%d recv nbytes: %d\n", fd, n);
+    do {
+      n = recv(fd, qbuffer_writeable(buffer), size, 0);
+      save = errno;
+    } while (save == EINTR);
 
     if (n == -1) { 
       if(save == EAGAIN || save == EWOULDBLOCK) {
-        return 0;
-      } else if (save == ECONNRESET || save == ECONNREFUSED
-        || save == ETIMEDOUT || save == EHOSTUNREACH || save == ENOTCONN) {
-        qerror("recv error: %s\n", strerror(save));
+        /* non-blocking mode, there is no data in the buffer now */
+        break;
+      } else if (save != EINTR) {
+        /* some error has occured */
+        qerror("recv from %s error: %s", tcp->peer, strerror(save));
         return -1;
       }
     }
 
+    /* socket has been closed */
     if (n == 0) {
+      qerror("socket from %s closed", tcp->peer);
       return -1;
     }
+
     buffer->end += n;
     buffer->data[buffer->end] = '\0';
     nbytes += n;
-  } while (save != EINTR);
+    qinfo("%s %d recv:%d, total:%d\n", tcp->peer, fd, n, nbytes);
+    /* while more tcp stack buffer data available continue */
+  } while (n == size);
 
   return nbytes;
 }
@@ -164,6 +178,7 @@ qnet_tcp_recv(struct qdescriptor_t *desc) {
 int
 qnet_tcp_send(qdescriptor_t *desc) {
   int                 fd, nbytes;
+  int                 save, n, size;
   qbuffer_t          *buffer;
   qtcp_descriptor_t  *tcp;
 
@@ -171,18 +186,31 @@ qnet_tcp_send(qdescriptor_t *desc) {
   fd = desc->fd;
   buffer = &(tcp->outbuf);
 
-  nbytes = send(fd, buffer->data + buffer->start,
-                buffer->end - buffer->start, 0);
+  nbytes = 0;
+  do {
+    size = qbuffer_readable_len(buffer);
+    do {
+      n = send(fd, qbuffer_readable(buffer), size, MSG_NOSIGNAL);
+      save = errno;
+    } while (save == EINTR);
 
-  if (nbytes == -1 &&
-      (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) {
-    return 0;
-  }
+    if (n == -1) {
+      if (save == EAGAIN || save == EWOULDBLOCK) {
+        break;
+      } else {
+        qerror("send to %s error: %s", tcp->peer, strerror(save));
+      }
+    }      
 
-  if (nbytes == -1 && (errno == ECONNRESET || errno == EPIPE)) {
-    return -1;
-  }
+    if (n == 0) {
+      qerror("%s closed", tcp->peer);
+      return -1;
+    }
 
-  buffer->start += nbytes;
+    buffer->start += n;
+    nbytes += n;
+    qinfo("%s %d send:%d, total:%d\n", tcp->peer, fd, n, nbytes);
+  } while(n == size);
+
   return nbytes;
 }

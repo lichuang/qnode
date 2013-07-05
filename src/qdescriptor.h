@@ -41,7 +41,8 @@ typedef struct qtcp_descriptor_t {
   qbuffer_t           inbuf;
   qbuffer_t           outbuf;
   struct sockaddr     remote;
-  char                addr[50];
+  char                addr[15];
+  char                peer[25];
   int                 port;
 } qtcp_descriptor_t;
 
