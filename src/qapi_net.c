@@ -72,7 +72,8 @@ new_tcp_descriptor(int fd, lua_State *state, qactor_t *actor,
   memcpy(&(tcp->remote), remote, sizeof(*remote));
   inet_ntop(AF_INET, &remote->sin_addr, tcp->addr, sizeof(tcp->addr));
   tcp->port = ntohs(remote->sin_port);
-  snprintf(tcp->peer, sizeof(tcp->peer), "%s:%d", tcp->addr, tcp->port);
+  snprintf(tcp->peer, sizeof(tcp->peer),
+           "%s:%d:%d", tcp->addr, tcp->port, fd);
   qinfo("accept connection from %s", tcp->peer);
 
   lua_pushlightuserdata(state, desc);
