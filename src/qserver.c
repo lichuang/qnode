@@ -42,6 +42,7 @@ static int  server_init(qconfig_t *config);
 static void destroy_threads();
 static void destroy_server();
 static void make_daemon();
+static void save_pid();
 
 static void
 server_accept(int fd, int flags, void *data) {
@@ -152,12 +153,13 @@ setup_signal() {
   struct sigaction act;
 
   sigemptyset(&act.sa_mask);
-  act.sa_flags = SA_NODEFER | SA_ONSTACK | SA_RESETHAND;
+  act.sa_flags = SA_NODEFER;
   act.sa_handler = signal_handler;
   sigaction(SIGTERM, &act, NULL);
   sigaction(SIGINT,  &act, NULL);
   sigaction(SIGQUIT, &act, NULL);
   sigaction(SIGABRT, &act, NULL);
+  sigaction(SIGUSR1, &act, NULL);
 }
 
 static void
@@ -190,6 +192,22 @@ make_daemon() {
   close(STDERR_FILENO);
 }
 
+static void
+save_pid() {
+  FILE *file;
+  char pid[10];
+  int  n;
+
+  file = fopen("qserver.pid", "w");
+  if (file == NULL) {
+    qstdout("open pid file error\n");
+    exit(-1);
+  }
+  n = snprintf(pid, sizeof(pid), "%d", getpid());
+  fwrite(pid, sizeof(char), n, file);
+  fclose(file);
+}
+
 static int
 server_init(qconfig_t *config) {
   qassert(config);
@@ -205,6 +223,7 @@ server_init(qconfig_t *config) {
   if (config->daemon) {
     make_daemon();
   }
+  save_pid();
   if (qlogger_new(config->thread_num + 1) < 0) {
     goto error;
   }
@@ -220,16 +239,16 @@ server_init(qconfig_t *config) {
     goto error;
   }
 
+  if (chdir(config->script_path) != 0) {
+    qstdout("chdir %s error: %s\n", config->script_path, strerror(errno));
+    goto error;
+  }
   if (init_worker_threads(server) < 0) {
     goto error;
   }
   setup_signal();
 
   server->thread_log[0] = qthread_log_init(0);
-  if (chdir(config->script_path) != 0) {
-    printf("chdir %s error: %s\n", config->script_path, strerror(errno));
-    goto error;
-  }
   server_start(server);
 
   return 0;

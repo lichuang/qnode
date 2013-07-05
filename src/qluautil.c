@@ -5,8 +5,11 @@
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
+#include <errno.h>
 #include <string.h>
+#include <unistd.h>
 #include "qactor.h"
+#include "qapi.h"
 #include "qassert.h"
 #include "qconfig.h"
 #include "qdefines.h"
@@ -43,7 +46,23 @@ qlua_new_state() {
   state = lua_open();
   lua_atpanic(state, panic);
   luaL_openlibs(state);
+  qregister(state);
+  if(luaL_dofile(state, "main.lua")) {
+    qstdout("load file error\n");
+  }
+
   return state;
+}
+
+int
+qlua_reload(lua_State *state) {
+  //qregister(state);
+  if(luaL_dofile(state, "main.lua")) {
+    qstdout("load file error\n");
+    return -1;
+  }
+
+  return 0;
 }
 
 lua_State*

@@ -44,12 +44,14 @@ server_signal_handler(qmsg_t *msg, void *reader) {
     case SIGQUIT:
     case SIGINT:
       server->engine->quit = 1;
-      send_signal(signo);
+      break;
+    case SIGUSR1:
       break;
     default:
       break;
   }
 
+  send_signal(signo);
   return 0;
 }
 

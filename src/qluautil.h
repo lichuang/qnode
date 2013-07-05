@@ -17,6 +17,7 @@ struct qworker_t;
 lua_State* qlua_new_state();
 lua_State* qlua_new_thread(qworker_t *worker);
 
+int qlua_reload(lua_State *state);
 #define qlua_get_global_table(state, key) qlua_get_table(state, LUA_GLOBALSINDEX, key)
 
 int qlua_get_table(lua_State *state, int idx, const char *key);

@@ -56,6 +56,7 @@ worker_start_handler(qmsg_t *msg, void *reader) {
     qerror("load server start script error");
     return -1; 
   }
+
   state = actor->state;
   lua_getglobal(state, "server");
   if (lua_isnil(state, -1)) {
@@ -115,6 +116,9 @@ worker_signal_handler(qmsg_t *msg, void *reader) {
     case SIGQUIT:
     case SIGINT:
       worker->engine->quit = 1;
+      break;
+    case SIGUSR1:
+      qlua_reload(worker->state);
       break;
     default:
       break;
