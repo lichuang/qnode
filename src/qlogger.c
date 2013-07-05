@@ -102,7 +102,7 @@ log_time_handler(void *data) {
   UNUSED(data);
 
   engine = logger->engine;
-  t = engine->timer_mng.now;
+  t = time(NULL);
   localtime_r(&t, &tm);
   strftime(logger->time_buff, sizeof(logger->time_buff),
            "[%m-%d %T", &tm);

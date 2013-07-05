@@ -42,11 +42,11 @@ compare_timer(void *data1, void *data2) {
 
 static void
 update_now_time(qtimer_manager_t *mng) {
-  time_t now;
+  struct timeval   tv;
 
-  now         = time(NULL);
-  mng->now    = now;
-  mng->now_ms = now * 1000; 
+  gettimeofday(&tv, NULL);
+  mng->now    = tv.tv_sec;
+  mng->now_ms = tv.tv_usec / 1000 + tv.tv_sec * 1000;
 }
 
 void
