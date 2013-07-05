@@ -130,6 +130,7 @@ qlog(int level, const char* file, long line, const char *format, ...) {
   log->n += sprintf(log->buff + log->n, " %s:%d] ", log->file, log->line);
   log->n += vsprintf(log->buff + log->n, log->format, args);
   log->buff[log->n++] = '\n';
+  log->buff[log->n++] = '\0';
 
   qlogger_add(log);
 }

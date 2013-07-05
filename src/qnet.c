@@ -117,8 +117,9 @@ qnet_tcp_accept(int listen_fd, struct sockaddr *addr,
 }
 
 int
-qnet_tcp_recv(struct qdescriptor_t *desc, int size) {
-  int                 fd, nbytes;
+qnet_tcp_recv(struct qdescriptor_t *desc) {
+  int                 fd, nbytes, size, n;
+  int                 save;
   qbuffer_t          *buffer;
   qtcp_descriptor_t  *tcp;
 
@@ -126,44 +127,37 @@ qnet_tcp_recv(struct qdescriptor_t *desc, int size) {
   fd = desc->fd;
   buffer = &(tcp->inbuf);
 
-  qbuffer_reserve(buffer, size);
-  if (buffer->data == NULL) {
-    return -1;
-  }
-  nbytes = recv(fd, buffer->data + buffer->end,
-                buffer->size - buffer->end, 0);
+  nbytes = 0;
+  do {
+    if (qbuffer_writeable_len(buffer) == 0) {
+      qbuffer_extend(buffer, buffer->size * 2);
+    }
+    if (buffer->data == NULL) {
+      return -1;
+    }
+    size = qbuffer_writeable_len(buffer);
+    n = recv(fd, buffer->data + buffer->end, size, 0);
+    save = errno;
+    qdebug("%d recv nbytes: %d\n", fd, n);
 
-  qstdout("recv: %s, nbytes: %d\n", buffer->data, nbytes);
-  /*
-   * Several errors are OK. When speculative read is being done we may not
-   * be able to read a single byte to the socket. Also, SIGSTOP issued
-   * by a debugging tool can result in EINTR error.
-   */
-  if (nbytes == -1
-    && (errno == EAGAIN
-      || errno == EWOULDBLOCK
-      || errno == EINTR)) {
-    return 0;
-  }
+    if (n == -1) { 
+      if(save == EAGAIN || save == EWOULDBLOCK) {
+        return 0;
+      } else if (save == ECONNRESET || save == ECONNREFUSED
+        || save == ETIMEDOUT || save == EHOSTUNREACH || save == ENOTCONN) {
+        qerror("recv error: %s\n", strerror(save));
+        return -1;
+      }
+    }
 
-  /*
-   * Signal peer failure.
-   */
-  if (nbytes == -1
-    && (errno == ECONNRESET
-      || errno == ECONNREFUSED
-      || errno == ETIMEDOUT
-      || errno == EHOSTUNREACH
-      || errno == ENOTCONN)) {
-    qerror("recv error: %s\n", strerror(errno));
-    return -1;
-  }
+    if (n == 0) {
+      return -1;
+    }
+    buffer->end += n;
+    buffer->data[buffer->end] = '\0';
+    nbytes += n;
+  } while (save != EINTR);
 
-  if (nbytes == 0) {
-    return -1;
-  }
-  buffer->end += nbytes;
-  buffer->data[buffer->end] = '\0';
   return nbytes;
 }
 

@@ -131,21 +131,21 @@ buffer_reset(lua_State *state) {
 }
 
 static int
-buffer_length(lua_State *state) {
+buffer_readable_len(lua_State *state) {
   qbuffer_t  *buffer;
 
   buffer = (qbuffer_t*)lua_touserdata(state, 1);
   if (buffer == NULL) {
     return 0;
   }
-  lua_pushnumber(state, qbuffer_length(buffer));
+  lua_pushnumber(state, qbuffer_readable_len(buffer));
 
   return 1;
 }
 
 luaL_Reg buffer_apis[] = {
   {"qbuffer_find",          buffer_find},
-  {"qbuffer_length",        buffer_length},
+  {"qbuffer_readable_len",  buffer_readable_len},
 
   {"qbuffer_write_string",  buffer_write_string},
   {"qbuffer_write_char",    buffer_write_char},

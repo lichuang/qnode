@@ -21,7 +21,7 @@ function tokenize_command(_buffer)
   local c = ""
   local left = 0
 
-  length = qbuffer_length(_buffer)
+  length = qbuffer_readable_len(_buffer)
   qlog("get length:" .. length)
 
   while pos < length do
@@ -90,7 +90,7 @@ function process_update_command(_buffer, _tokens, _ntokens,
 
   if _left == vlen + 2 then
     qlog("vlen: " .. vlen)
-    length = qbuffer_length(_buffer)
+    length = qbuffer_readable_len(_buffer)
 
     start = _pos
     while _pos < length do

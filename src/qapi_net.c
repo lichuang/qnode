@@ -191,7 +191,7 @@ socket_recv(int fd, int flags, void *data) {
     return;
   }
   state = actor->state;
-  nret = qnet_tcp_recv(desc, 0);
+  nret = qnet_tcp_recv(desc);
   if (nret < 0) {
     lua_pushnil(state);
     lua_pushliteral(state, "socket closed");
@@ -222,7 +222,7 @@ tcp_recv(lua_State *state) {
     return 2;
   }
 
-  nret = qnet_tcp_recv(desc, 0);
+  nret = qnet_tcp_recv(desc);
   if (nret < 0) {
     lua_pushnil(state);
     lua_pushliteral(state, "socket closed");

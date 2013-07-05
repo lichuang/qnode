@@ -32,12 +32,12 @@ qbuffer_extend(qbuffer_t *buffer, uint32_t size) {
 
   /* align with 128 bytes */
   new_size = (size + 127) & 0xFF80;
-  data = qalloc(sizeof(char) * new_size);
+  data = qrealloc(buffer->data, sizeof(char) * new_size);
   if (data == NULL) {
     return -1;
   }
-  memcpy(data, buffer->data, buffer->size);
-  qfree(buffer->data);
+  //memcpy(data, buffer->data, buffer->size);
+  //qfree(buffer->data);
   buffer->data = data;
   buffer->size = new_size;
 

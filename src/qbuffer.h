@@ -20,8 +20,17 @@ typedef struct qbuffer_t {
     qbuffer_extend((buffer), (len));  \
   } 
 
-#define qbuffer_length(buffer)        \
+#define qbuffer_readable(buffer)      \
+  (buffer)->data[(buffer)->start]
+
+#define qbuffer_readable_len(buffer)  \
   (buffer)->end - (buffer)->start
+
+#define qbuffer_writeable(buffer)     \
+  (buffer)->data[(buffer)->end]
+
+#define qbuffer_writeable_len(buffer) \
+  (buffer)->size - (buffer)->end
 
 #define qbuffer_reset(buffer)         \
   (buffer)->start = (buffer)->end = 0;\
