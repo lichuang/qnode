@@ -56,9 +56,8 @@ qlua_new_state() {
 
 int
 qlua_reload(lua_State *state) {
-  //qregister(state);
   if(luaL_dofile(state, "main.lua")) {
-    qstdout("load file error\n");
+    qerror("load file error");
     return -1;
   }
 
@@ -147,7 +146,8 @@ qlua_get_table_number(lua_State *state, const char *key, int *number) {
 } 
 
 void
-qlua_copy_state_table(lua_State *src, lua_State *dst, int table_idx) {
+qlua_copy_state_table(lua_State *src, lua_State *dst,
+                      int table_idx) {
   int         type;
   int         val_idx;
   int         key_idx;
@@ -198,7 +198,8 @@ qlua_copy_state_table(lua_State *src, lua_State *dst, int table_idx) {
 }
 
 int
-qlua_copy_table(lua_State *state, int table_idx, qdict_t *dict) {
+qlua_copy_table(lua_State *state, int table_idx,
+                qdict_t *dict) {
   int         type;
   int         val_idx;
   int         key_idx;

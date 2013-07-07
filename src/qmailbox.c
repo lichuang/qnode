@@ -91,4 +91,5 @@ qmailbox_handle(qmailbox_t *box) {
   if (box->done) {
     box->done(box->reader);
   }
+  qassert(qlist_empty(read));
 }

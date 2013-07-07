@@ -24,7 +24,7 @@ server.storage = function (_args)
       qlog("set " .. key .. ":" .. arg.value)
       local data = {}
       data.response = "STORED\r\n"
-      qnode_send(arg.src, data)
+      qnode_send(arg.__src, data)
     elseif cmd == "get" then
       local data = {}
       data.val = cache[key]
@@ -38,8 +38,8 @@ server.storage = function (_args)
 	qlog("333before send")
       end
       data.response = data.response .. "END\r\n"
-      qlog("before send")
-      qnode_send(arg.src, data)
+      qlog("before send:" .. arg.__src)
+      qnode_send(arg.__src, data)
     end
   end
 end
