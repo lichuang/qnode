@@ -46,7 +46,7 @@ qlua_new_state() {
   state = lua_open();
   lua_atpanic(state, panic);
   luaL_openlibs(state);
-  qregister(state);
+  qapi_register(state);
   if(luaL_dofile(state, "main.lua")) {
     qstdout("load file error\n");
   }

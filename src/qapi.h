@@ -13,9 +13,8 @@
 /*
  * regist all C APIs to Lua
  * */
-void qapi_register(lua_State *state, qactor_t *actor);
+void qapi_register(lua_State *state);
 
-void qregister(lua_State *state);
 /*
  *  Lua C API:
  *

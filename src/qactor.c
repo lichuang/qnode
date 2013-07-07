@@ -2,6 +2,7 @@
  * See Copyright Notice in qnode.h
  */
 
+#include <lua.h>
 #include <stdint.h>
 #include "qalloc.h"
 #include "qactor.h"
@@ -75,7 +76,9 @@ qactor_destroy(qactor_t *actor) {
 void
 qactor_attach(qactor_t *actor, lua_State *state) {
   qassert(actor->state == NULL);
-  qapi_register(state, actor);
+  lua_pushlightuserdata(state, state);
+  lua_pushlightuserdata(state, actor);
+  lua_settable(state, LUA_REGISTRYINDEX);
   actor->state = state;
 }
 
