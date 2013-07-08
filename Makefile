@@ -12,7 +12,7 @@ EXTENSION=c
 OBJS=$(patsubst $(SRC_DIR)/%.$(EXTENSION), $(OBJ_DIR)/%.o,$(wildcard $(SRC_DIR)/*.$(EXTENSION)))
 DEPS=$(patsubst $(OBJ_DIR)/%.o, $(DEPS_DIR)/%.d, $(OBJS))
 
-INCLUDE= -I$(INCLUDE_DIR)
+INCLUDE= -I$(INCLUDE_DIR) -I$(LUA_DIR)/src
 		
 CC=gcc
 CFLAGS=-Wall -W -Werror -g 
