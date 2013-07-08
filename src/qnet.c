@@ -196,7 +196,7 @@ qnet_tcp_send(qdescriptor_t *desc) {
 
     if (n == -1) {
       if (save == EAGAIN || save == EWOULDBLOCK) {
-        return 0;
+        return nbytes;
       } else {
         qerror("send to %s error: %s", tcp->peer, strerror(save));
         return -1;
@@ -214,5 +214,5 @@ qnet_tcp_send(qdescriptor_t *desc) {
     qinfo("%s sent:%d, total:%d", tcp->peer, n, nbytes);
   }
 
-  return n;
+  return nbytes;
 }
