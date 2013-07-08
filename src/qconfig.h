@@ -9,12 +9,12 @@
 #include "qstring.h"
 
 struct qconfig_t {
-  int           thread_num;
+  int           worker;
   int           daemon;
+  int           log_size;
   qstring_t     script_path;
   qstring_t     log_path;
   qstring_t     log_level;
-  int           log_size;
 };
 
 int  qconfig_init(qconfig_t *config, const char *filename);

@@ -78,7 +78,7 @@ qid_t
 qserver_worker() {
   static qid_t i = 1;
 
-  i = ((i + 1) % server->config->thread_num) + 1;
+  i = ((i + 1) % server->config->worker) + 1;
   return i;
 }
 
@@ -99,25 +99,25 @@ server_start(qserver_t *server) {
 static int
 init_worker_threads(qserver_t *server) {
   int           i;
-  int           thread_num;
+  int           worker;
   qconfig_t    *config;
   
   config = server->config;
-  thread_num = config->thread_num + 1;
+  worker = config->worker + 1;
 
-  server->workers = qalloc(thread_num * sizeof(qworker_t*));
+  server->workers = qalloc(worker * sizeof(qworker_t*));
   if (server->workers == NULL) {
     goto error;
   }
   server->workers[0] = NULL;
 
-  server->thread_log = qalloc(thread_num * sizeof(qthread_log_t*));
+  server->thread_log = qalloc(worker * sizeof(qthread_log_t*));
   if (server->thread_log == NULL) {
     goto error;
   }
 
   /* create worker threads */
-  for (i = 1; i < thread_num; ++i) {
+  for (i = 1; i < worker; ++i) {
     server->workers[i] = qworker_new(i); 
     if (server->workers[i] == NULL) {
       goto error;
@@ -211,7 +211,7 @@ save_pid() {
 static int
 server_init(qconfig_t *config) {
   qassert(config);
-  qassert(config->thread_num > 0);
+  qassert(config->worker > 0);
   qassert(server == NULL);
 
   server = qcalloc(sizeof(qserver_t));
@@ -224,7 +224,7 @@ server_init(qconfig_t *config) {
     make_daemon();
   }
   save_pid();
-  if (qlogger_new(config->thread_num + 1) < 0) {
+  if (qlogger_new(config->worker + 1) < 0) {
     goto error;
   }
 
@@ -262,7 +262,7 @@ destroy_threads() {
   int         i;
   qworker_t  *worker;
 
-  for (i = 1; i <= server->config->thread_num; ++i) {
+  for (i = 1; i <= server->config->worker; ++i) {
     worker = server->workers[i];
     qworker_destroy(worker);
   }

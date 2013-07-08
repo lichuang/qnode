@@ -61,7 +61,7 @@ send_signal(int signo) {
   qworker_t  *worker;
   qmsg_t     *msg;
 
-  for (i = 1; i <= server->config->thread_num; ++i) {
+  for (i = 1; i <= server->config->worker; ++i) {
     worker = server->workers[i];
     msg = qwmsg_signal_new(worker->tid, signo);
     if (msg == NULL) {

@@ -27,7 +27,7 @@ config_init_log(qconfig_t *config, lua_State *state) {
 static void
 config_init_thread(qconfig_t *config, lua_State *state) {
   qlua_get_table(state, -1, "thread");
-  qlua_get_table_number(state, "num", &(config->thread_num));
+  qlua_get_table_number(state, "num", &(config->worker));
   lua_pop(state, 1);
 }
 
@@ -47,7 +47,7 @@ config_init_server(qconfig_t *config, lua_State *state) {
 
 static void
 config_set_default(qconfig_t *config) {
-  config->thread_num  = 5;
+  config->worker  = 5;
   config->daemon      = 0;
   config->script_path = qstring_new("./script");
   config->log_path    = qstring_new("./log");
