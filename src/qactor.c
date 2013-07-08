@@ -86,7 +86,6 @@ qid_t
 qactor_spawn(qactor_t *actor, lua_State *state) {
   qid_t            worker_id;
   qid_t            aid;
-  qid_t            parent;
   qmsg_t          *msg;
   qactor_t        *new_actor;
   qworker_t       *worker;
@@ -95,7 +94,6 @@ qactor_spawn(qactor_t *actor, lua_State *state) {
   worker    = server->workers[worker_id];
   aid       = qworker_new_aid(worker);
 
-  parent = actor->aid;
   new_actor = qactor_new(aid);
   if (new_actor == NULL) {
     return -1;
