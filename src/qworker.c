@@ -18,7 +18,7 @@
 #include "qthread_log.h"
 
 static int   worker_msg_handler(qmsg_t *msg, void *reader);
-static void* worker_main_loop(void *arg);
+static void* worker_main(void *arg);
 static void  free_actors(qworker_t *worker);
 
 extern qmsg_func_t* worker_msg_handlers[];
@@ -33,18 +33,18 @@ worker_msg_handler(qmsg_t *msg, void *reader) {
 }
 
 static void*
-worker_main_loop(void *arg) {
+worker_main(void *arg) {
   qworker_t *worker;
 
   worker = (qworker_t*)arg;
   /* init the worker thread log structure */
-  server->thread_log[worker->tid] = qthread_log_init(worker->tid);
+  //server->thread_log[worker->tid] = qthread_log_init(worker->tid);
   worker->running = 1;
   qengine_loop(worker->engine);
 
   qmailbox_free(&(worker->box));
   qengine_destroy(worker->engine);
-  qthread_log_free();
+  //qthread_log_free();
   free_actors(worker);
   lua_close(worker->state);
   //qengine_destroy(worker->engine);
@@ -80,7 +80,7 @@ qworker_new(qid_t tid) {
   worker->state = qlua_new_state();
   worker->running = 0;
   pthread_create(&worker->id, NULL,
-                 worker_main_loop, worker);
+                 worker_main, worker);
 
   while (!worker->running) {
     usleep(100);

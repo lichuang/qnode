@@ -70,5 +70,5 @@ destroy_log_msg(qmsg_t *msg) {
   lmsg = (qlmsg_log_t*)msg;
   log = lmsg->log;
 
-  qlist_add_tail(&(log->entry), &(logger->free_list));
+  qlist_add_tail(&(log->free), &(logger->free_list));
 }

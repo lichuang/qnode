@@ -26,7 +26,7 @@ config_init_log(qconfig_t *config, lua_State *state) {
 
 static void
 config_init_thread(qconfig_t *config, lua_State *state) {
-  qlua_get_table(state, -1, "thread");
+  qlua_get_table(state, -1, "worker");
   qlua_get_table_number(state, "num", &(config->worker));
   lua_pop(state, 1);
 }

@@ -43,12 +43,12 @@ __list_del(qlist_t *prev, qlist_t *next) {
 }
 
 static inline void
-qlist_del(struct qlist_t *entry) {
+qlist_del(qlist_t *entry) {
   __list_del(entry->prev, entry->next);
 }
 
 static inline void
-qlist_del_init(struct qlist_t *entry) {
+qlist_del_init(qlist_t *entry) {
   __list_del(entry->prev, entry->next);
   qlist_entry_init(entry); 
 }

@@ -17,7 +17,5 @@ struct qthread_log_t {
 };
 
 qthread_log_t*  qthread_log_init(int idx);
-void            qthread_log_free();
-qlog_t*         qthread_log_get();
 
 #endif  /* __QTHREAD_LOG_H__ */

@@ -29,7 +29,7 @@ pthread_key_t thread_log_key = PTHREAD_ONCE_INIT;
 qlogger_t    *logger         = NULL;
 
 static int    logger_msg_handler(qmsg_t *msg, void *reader);
-static void*  log_thread_main_loop(void *arg);
+static void*  logger_main(void *arg);
 static void   log_key_destroy(void *value);
 static void   log_time_handler(void *data);
 static void   logger_handle_msglist_done(void *reader);
@@ -74,7 +74,7 @@ qlogger_open_file() {
 }
 
 static void*
-log_thread_main_loop(void *arg) {
+logger_main(void *arg) {
   qlogger_t *thread;
 
   thread = (qlogger_t*)arg;
@@ -150,7 +150,7 @@ qlogger_new(int thread_num) {
                     1000, NULL);
   logger->running = 0;
   pthread_create(&logger->id, NULL,
-                 log_thread_main_loop, logger);
+                 logger_main, logger);
   while (!logger->running) {
     usleep(100);
   }

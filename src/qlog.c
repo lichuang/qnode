@@ -30,7 +30,7 @@ static int log_level = QLOG_DEBUG;
 static void log_init(qlog_t *log, int level, const char* file,
                      long line, const char *format, va_list args);
 
-static qlist_t  free_log_list;
+static qfreelist_t free_log_list;
 static qmutex_t free_log_list_lock;
 
 const char *
@@ -40,34 +40,15 @@ level_str(int level) {
 
 void
 qlog_init_free_list() {
-  int     i;
-  qlog_t *log;
-
   qmutex_init(&free_log_list_lock);
-  qlist_entry_init(&free_log_list);
-  qassert(free_log_list.next == &free_log_list);
-
-  for (i = 0; i < FREE_LOG_LIST_INIT_NUM; ++i) {
-    log = qcalloc(sizeof(qlog_t));
-    if (log == NULL) {
-      return;
-    }
-    qlist_add_tail(&(log->entry), &free_log_list);
-  }
+  qfreelist_init(&free_log_list, "log free list",
+                 sizeof(qlog_t), FREE_LOG_LIST_INIT_NUM);
 }
 
 void
 qlog_destroy_free_list() {
-  qlog_t  *log;
-  qlist_t *pos;
-
   qmutex_lock(&free_log_list_lock);
-  for (pos = free_log_list.next; pos != &free_log_list; ) {
-    log = qlist_entry(pos, qlog_t, entry);
-    pos = pos->next;
-    qlist_del(&(log->entry));
-    qfree(log);
-  }
+  qfreelist_destroy(&free_log_list);
   qmutex_unlock(&free_log_list_lock);
   qmutex_destroy(&free_log_list_lock);
 }
@@ -75,7 +56,7 @@ qlog_destroy_free_list() {
 void
 qlog_free(qlist_t *free_list) {
   qmutex_lock(&free_log_list_lock);
-  qlist_splice_tail(free_list, &free_log_list);
+  qlist_splice_tail(free_list, &(free_log_list.free));
   qmutex_unlock(&free_log_list_lock);
 }
 
@@ -84,12 +65,7 @@ qlog_new() {
   qlog_t *log;
 
   qmutex_lock(&free_log_list_lock);
-  if (!qlist_empty(&free_log_list)) {
-    log = qlist_entry(free_log_list.next, qlog_t, entry);
-    qlist_del_init(&(log->entry));
-  } else {
-    log = qcalloc(sizeof(qlog_t));
-  }
+  log = (qlog_t*)qfreelist_alloc(&free_log_list);
   qmutex_unlock(&free_log_list_lock);
 
   return log;
@@ -135,13 +111,16 @@ qlog(int level, const char* file, long line, const char *format, ...) {
   qlogger_add(log);
 }
 
-void qlog_freelist_print() {
+void
+qlog_freelist_print() {
+  /*
   qlog_t  *log;
   qlist_t *pos;
 
   for (pos = free_log_list.next; pos != &free_log_list; ) {
-    log = qlist_entry(pos, qlog_t, entry);
+    log = qlist_entry(pos, qlog_t, free);
     pos = pos->next;
     printf("free log: %p\n", log);
   }
+  */
 }

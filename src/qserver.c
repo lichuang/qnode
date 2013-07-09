@@ -7,8 +7,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/types.h>
+#include <sys/resource.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/time.h>
 #include "qalloc.h"
 #include "qactor.h"
 #include "qassert.h"
@@ -43,6 +45,7 @@ static void destroy_threads();
 static void destroy_server();
 static void make_daemon();
 static void save_pid();
+static int  set_core_size();
 
 static void
 server_accept(int fd, int flags, void *data) {
@@ -209,6 +212,16 @@ save_pid() {
 }
 
 static int
+set_core_size() {
+  struct rlimit rlim_core;
+
+  rlim_core.rlim_cur = RLIM_INFINITY; /* Soft limit */
+  rlim_core.rlim_max = RLIM_INFINITY; /* Hard limit (ceiling
+                                         for rlim_cur) */
+  return setrlimit(RLIMIT_CORE, &rlim_core);
+}
+
+static int
 server_init(qconfig_t *config) {
   qassert(config);
   qassert(config->worker > 0);
@@ -224,6 +237,11 @@ server_init(qconfig_t *config) {
     make_daemon();
   }
   save_pid();
+  if (set_core_size() < 0) {
+    qstdout("set core size error\n");
+    goto error;
+  }
+
   if (qlogger_new(config->worker + 1) < 0) {
     goto error;
   }
@@ -248,7 +266,7 @@ server_init(qconfig_t *config) {
   }
   setup_signal();
 
-  server->thread_log[0] = qthread_log_init(0);
+  //server->thread_log[0] = qthread_log_init(0);
   server_start(server);
 
   return 0;

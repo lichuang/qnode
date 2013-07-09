@@ -22,7 +22,7 @@ main(int argc, char *argv[]) {
   const char *file;
   qconfig_t   config;
 
-  file = NULL;
+  file = "./etc/config.lua";
   while ((opt = getopt(argc, argv, "c:h")) != -1) {
     switch (opt) {
     case 'h':

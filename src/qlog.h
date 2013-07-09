@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "qcore.h"
+#include "qfreelist.h"
 #include "qlist.h"
 
 #define QLOG_STDERR      0
@@ -26,7 +27,7 @@
 #define QMAX_FILE_SIZE   200
 
 struct qlog_t {
-  qlist_t entry;
+  qfree_item_fields;
   int     level;
   char    file[QMAX_FILE_SIZE];
   size_t  file_len;
