@@ -27,7 +27,7 @@
 
   		-- script config
   		script = {
-    		path = "./script", -- lua script path
+    		path = "./qcached", -- lua script path
   		},
 
   		-- server config
@@ -37,6 +37,37 @@
 	}
 
 - Lua scripts organization
+
+  When qnode start, it reads Lua script files which locate in config file script/path.First,it reads a main.lua file, which load all Lua files needed.It looks like this:
+
+	package.path = "./?.lua;../script/?.lua"
+
+	require("util")
+
+	require_ex("server")
+	require_ex("child")
+  In the first line, package.path assign where lua files located, in path "./script" there is a lua script util.lua which provide some util functions such as qlog and require_ex.
+
+  After load and execute main.lua, qnode start to execute a function named server.start:
+
+	server.start = function()
+	  qlog("server start");
+	
+	  -- spawn storage process
+	  local storage_id = qnode_spawn("server", "storage")
+	
+	  -- accept connection
+	  local socket = qtcp_listen(22880);
+	  accept(socket, storage_id)
+	end
+	
+	_G["server"] = server
+
+  In server.start function,you can do whatever what a server start,such as listening a socket,spawn a qnode actor.
+
+- Demo
+
+  In qnode_path/qcached,there is a simple server which write in lua using qnode API,it support simple memcache get/set protocol.
 
 
 
