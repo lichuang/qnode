@@ -68,7 +68,7 @@ reserve(qstr_header_t *header, size_t len) {
 
 qstring_t
 qstring_assign(qstring_t str, const char *data) {
-  size_t         len;
+  size_t         len, totallen;
   qstr_header_t *header;
 
   if (data == NULL) {
@@ -78,14 +78,18 @@ qstring_assign(qstring_t str, const char *data) {
   len    = strlen(data);
   header = str_to_header(str);
 
-  header = reserve(header, len);
-  if (header == NULL) {
-    return NULL;
+  totallen = header->len + header->free;
+  if (len > totallen) {
+    header = reserve(header, len - header->len);
+    if (header == NULL) {
+      return NULL;
+    }
+    str = header->data;
+    totallen = header->len + header->free;
   }
-  str = header->data;
   strcpy(str, data);
   header->len   = len;
-  header->free -= len;
+  header->free  = totallen - len;
 
   return str;
 }

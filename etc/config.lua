@@ -12,7 +12,7 @@ qnode_config = {
 
   -- script config
   script = {
-    path = "./script",-- lua script path
+    path = "./qcached",-- lua script path
   },
 
   -- server config

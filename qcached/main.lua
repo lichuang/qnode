@@ -1,4 +1,4 @@
-package.path = "./?.lua"
+package.path = "./?.lua;../script/?.lua"
 
 require("util")
 

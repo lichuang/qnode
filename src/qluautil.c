@@ -48,7 +48,7 @@ qlua_new_state() {
   luaL_openlibs(state);
   qapi_register(state);
   if(luaL_dofile(state, "main.lua")) {
-    qstdout("load file error\n");
+    qstdout("load main.lua error\n");
   }
 
   return state;
@@ -120,15 +120,21 @@ qlua_get_table(lua_State *state, int idx, const char *key) {
 }
 
 int
-qlua_get_table_string(lua_State *state, const char *key, qstring_t string) {
+qlua_get_table_string(lua_State *state, const char *key,
+                      qstring_t *string) {
+  int ret;
+
   lua_pushvalue(state, -1);
   lua_pushstring(state, key);
   lua_gettable(state, -2);
   if(!lua_isnil(state, -1)) {
-    qstring_assign(string, lua_tostring(state, -1));
+    *string = qstring_assign(*string, lua_tostring(state, -1));
+    ret = 0;
+  } else {
+    ret = -1;
   }
   lua_pop(state, 2);
-  return 0;
+  return ret;
 }
 
 int
