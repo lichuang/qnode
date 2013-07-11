@@ -13,7 +13,8 @@
   
   qnode config file is a Lua script.An example config file is in qnodepath/etc/config.lua:
  
-	qnode_config = {  
+
+		qnode_config = {  
 		-- worker config  
 		worker = {
       		num = 1, -- worker thread num
@@ -40,28 +41,28 @@
 
   When qnode start, it reads Lua script files which locate in config file script/path.First,it reads a main.lua file, which load all Lua files needed.It looks like this:
 
-	package.path = "./?.lua;../script/?.lua"
+		package.path = "./?.lua;../script/?.lua"
 
-	require("util")
+		require("util")
 
-	require_ex("server")
-	require_ex("child")
+		require_ex("server")
+		require_ex("child")
   In the first line, package.path assign where lua files located, in path "./script" there is a lua script util.lua which provide some util functions such as qlog and require_ex.
 
   After load and execute main.lua, qnode start to execute a function named server.start:
 
-	server.start = function()
-	  qlog("server start");
+		server.start = function()
+	  		qlog("server start");
 	
-	  -- spawn storage process
-	  local storage_id = qnode_spawn("server", "storage")
+	  		-- spawn storage process
+	  		local storage_id = qnode_spawn("server", "storage")
 	
-	  -- accept connection
-	  local socket = qtcp_listen(22880);
-	  accept(socket, storage_id)
-	end
+	  		-- accept connection
+	  		local socket = qtcp_listen(22880);
+	  		accept(socket, storage_id)
+		end
 	
-	_G["server"] = server
+		_G["server"] = server
 
   In server.start function,you can do whatever what a server start,such as listening a socket,spawn a qnode actor.
 
