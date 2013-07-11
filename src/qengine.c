@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 #include "qalloc.h"
 #include "qassert.h"
 #include "qdefines.h"
@@ -151,6 +152,10 @@ qengine_loop(qengine_t* engine) {
             event->write != NULL) {
           event->write(fd, flags, event->data);
         }
+      }
+      if (event->flags & flags & QEVENT_ERROR) {
+        qengine_del_event(engine, fd, event->flags);
+        close(fd);
       }
     }
     qtimer_process(&(engine->timer_mng));

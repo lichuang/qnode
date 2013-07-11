@@ -130,6 +130,9 @@ epoll_poll(qengine_t *engine, int timeout_ms) {
       if (event->events & EPOLLOUT) {
         flags |= QEVENT_WRITE;
       }
+      if (event->events & (EPOLLERR | EPOLLHUP)) {
+        flags |= QEVENT_ERROR;
+      }
       engine->active_events[i].fd = event->data.fd;
       engine->active_events[i].flags = flags;
     }
