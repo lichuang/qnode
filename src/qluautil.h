@@ -14,7 +14,7 @@ struct qactor_t;
 struct qactor_msg_t;
 struct qworker_t;
 
-lua_State* qlua_new_state();
+lua_State* qlua_new_state(lua_Alloc fun, void *ud);
 lua_State* qlua_new_thread(qworker_t *worker);
 
 int qlua_reload(lua_State *state);

@@ -19,6 +19,8 @@
 
 static int   worker_msg_handler(qmsg_t *msg, void *reader);
 static void* worker_main(void *arg);
+static void* worker_alloc(void *ud, void *ptr,
+                          size_t osize, size_t nsize);
 static void  free_actors(qworker_t *worker);
 
 extern qmsg_func_t* worker_msg_handlers[];
@@ -75,9 +77,10 @@ qworker_new(qid_t tid) {
                 worker->engine, worker);
   worker->tid = tid;
   worker->current = 0;
+  worker->alloc = 0;
   qmutex_init(&(worker->mutex));
   /* create the lua VM for the worker */
-  worker->state = qlua_new_state();
+  worker->state = qlua_new_state(worker_alloc, worker);
   worker->running = 0;
   pthread_create(&worker->id, NULL,
                  worker_main, worker);
@@ -159,6 +162,21 @@ qworker_send(qmsg_t *msg) {
   worker = server->workers[msg->recver];
   box    = &(worker->box);
   qmailbox_add(box, msg);
+}
+
+static void *
+worker_alloc(void *ud, void *ptr, size_t osize, size_t nsize) {
+  qworker_t *worker;
+
+  worker = (qworker_t*)ud;
+  if (nsize == 0) {
+    worker->alloc -= osize;
+    qfree(ptr);
+    return NULL;
+  } else {
+    worker->alloc += nsize - osize;
+    return qrealloc(ptr, nsize);
+  }
 }
 
 static void

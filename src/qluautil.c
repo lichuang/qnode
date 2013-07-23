@@ -40,10 +40,15 @@ panic(lua_State *state) {
 }
 
 lua_State*
-qlua_new_state() {
+qlua_new_state(lua_Alloc fun, void *ud) {
   lua_State *state;
 
-  state = lua_open();
+  state = lua_newstate(fun, ud);
+  if (state == NULL) {
+    qstdout("lua_newstate error\n");
+    return NULL;
+  }
+
   lua_atpanic(state, panic);
   luaL_openlibs(state);
   qapi_register(state);

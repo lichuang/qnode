@@ -51,6 +51,7 @@ struct qworker_t {
   qactor_t            **actors;   /* worker actors array */
   qengine_t            *engine;   /* dispatcher engine */
   lua_State            *state;    /* lua VM */
+  int                   alloc;    /* lua memory size*/
   volatile int          running:1;
 };
 
