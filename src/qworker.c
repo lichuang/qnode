@@ -169,12 +169,11 @@ worker_alloc(void *ud, void *ptr, size_t osize, size_t nsize) {
   qworker_t *worker;
 
   worker = (qworker_t*)ud;
+  worker->alloc += nsize - osize;
   if (nsize == 0) {
-    worker->alloc -= osize;
     qfree(ptr);
     return NULL;
   } else {
-    worker->alloc += nsize - osize;
     return qrealloc(ptr, nsize);
   }
 }
