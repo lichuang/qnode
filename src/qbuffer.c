@@ -17,17 +17,10 @@ static void buffer_destroy(void *data);
 
 int
 qbuffer_init_freelist() {
-  int ret;
-
   qmutex_init(&free_buffer_list_lock);
-  ret = qfreelist_init(&free_buffer_list, "buffer free list",
-                       sizeof(qbuffer_t), QBUFFER_FREE_NUM,
-                       buffer_init, buffer_destroy);
-  if (ret < 0) {
-    return ret;
-  }
-
-  return ret;
+  return qfreelist_init(&free_buffer_list, "buffer free list",
+                        sizeof(qbuffer_t), QBUFFER_FREE_NUM,
+                        buffer_init, buffer_destroy);
 }
 
 qbuffer_t*
