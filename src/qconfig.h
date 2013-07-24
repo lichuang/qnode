@@ -17,7 +17,9 @@ struct qconfig_t {
   qstring_t     log_level;
 };
 
-int  qconfig_init(qconfig_t *config, const char *filename);
-void qconfig_free(qconfig_t *config);
+int  qconfig_init(const char *filename);
+void qconfig_free();
+
+extern qconfig_t config;
 
 #endif  /* __QCONFIG_H__ */

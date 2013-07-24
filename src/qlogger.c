@@ -51,17 +51,12 @@ qlogger_open_file() {
   localtime_r(&t, &tm);
   strftime((char*)(&buff[0]), sizeof(buff), "%Y%m%d-%H%M%S", &tm);
 
-  /*
-  if (log_size < kLogFileSize) {
-    return;
-  }
-  */
   logger->log_size = 0;
   if (logger->fd != -1) {
     fsync(logger->fd);
     close(logger->fd);
   }
-  file = qstring_new(server->config->log_path);
+  file = qstring_new(config.log_path);
   file = qstring_catvprintf(file, "/qserver_%s.log", buff);
 
   logger->fd = open(file, O_CREAT | O_TRUNC | O_RDWR,

@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include "qalloc.h"
+#include "qconfig.h"
 #include "qlmsg.h"
 #include "qlog.h"
 #include "qlogger.h"
@@ -32,10 +33,10 @@ logger_log_handler(qmsg_t *msg, void *reader) {
 
   write(logger->fd, log->buff, log->n);
   logger->log_size += log->n;
-  if (logger->log_size > server->config->log_size) {
+  if (logger->log_size > config.log_size) {
     qlogger_open_file();
   }
-  if (!server->config->daemon) {
+  if (!config.daemon) {
     printf("%s", log->buff);
   }
 

@@ -14,6 +14,7 @@
 #include "qlog.h"
 #include "qthread_log.h"
 
+//qthread_log_t* thread_log[QMAX_WORKER] = {NULL};
 extern pthread_key_t thread_log_key;
 
 qthread_log_t*

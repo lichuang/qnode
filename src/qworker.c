@@ -17,13 +17,14 @@
 #include "qworker.h"
 #include "qthread_log.h"
 
+extern qmsg_func_t* worker_msg_handlers[];
+qworker_t*          workers[QMAX_WORKER] = {NULL};
+
 static int   worker_msg_handler(qmsg_t *msg, void *reader);
 static void* worker_main(void *arg);
 static void* worker_alloc(void *ud, void *ptr,
                           size_t osize, size_t nsize);
 static void  free_actors(qworker_t *worker);
-
-extern qmsg_func_t* worker_msg_handlers[];
 
 static int
 worker_msg_handler(qmsg_t *msg, void *reader) {
@@ -134,7 +135,7 @@ qworker_add(qid_t aid, qactor_t *actor) {
   qworker_t *worker;
   qid_t id;
 
-  worker = server->workers[decode_pid(aid)];
+  worker = workers[decode_pid(aid)];
   id = decode_id(aid);
   qmutex_lock(&(worker->mutex));
   qassert(worker->actors[id] == NULL);
@@ -147,7 +148,7 @@ qworker_delete(qid_t aid) {
   qworker_t *worker;
   qid_t id;
 
-  worker = server->workers[decode_pid(aid)];
+  worker = workers[decode_pid(aid)];
   id = decode_id(aid);
   qmutex_lock(&(worker->mutex));
   worker->actors[id] = NULL;
@@ -159,7 +160,7 @@ qworker_send(qmsg_t *msg) {
   qworker_t  *worker;
   qmailbox_t *box;
 
-  worker = server->workers[msg->recver];
+  worker = workers[msg->recver];
   box    = &(worker->box);
   qmailbox_add(box, msg);
 }

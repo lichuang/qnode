@@ -5,25 +5,16 @@
 #ifndef __QSERVER_H__
 #define __QSERVER_H__
 
-#include "qconfig.h"
 #include "qcore.h"
-#include "qidmap.h"
-#include "qmailbox.h"
-#include "qmutex.h"
 #include "qtype.h"
 
 struct qserver_t {
-  qmailbox_t        box;
-  qconfig_t        *config;       /* server config */
   qdescriptor_t   **descriptors;  /* descriptor array */
-  qengine_t        *engine;       /* event dispatch engine */
-  qworker_t       **workers;      /* worker threads array */
-  qthread_log_t   **thread_log;   /* thread log array(include main) */
 };
 
-int qserver_run(qconfig_t *config);
+int qserver_run();
 
-void qserver_worker_started();
+void qserver_quit();
 
 qid_t qserver_worker();
 

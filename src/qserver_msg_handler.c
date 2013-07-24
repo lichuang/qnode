@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "qassert.h"
 #include "qactor.h"
+#include "qconfig.h"
 #include "qcore.h"
 #include "qdefines.h"
 #include "qlist.h"
@@ -43,7 +44,7 @@ server_signal_handler(qmsg_t *msg, void *reader) {
     case SIGTERM:
     case SIGQUIT:
     case SIGINT:
-      server->engine->quit = 1;
+      qserver_quit();
       break;
     case SIGUSR1:
       break;
@@ -61,8 +62,8 @@ send_signal(int signo) {
   qworker_t  *worker;
   qmsg_t     *msg;
 
-  for (i = 1; i <= server->config->worker; ++i) {
-    worker = server->workers[i];
+  for (i = 1; i <= config.worker; ++i) {
+    worker = workers[i];
     msg = qwmsg_signal_new(worker->tid, signo);
     if (msg == NULL) {
       continue;

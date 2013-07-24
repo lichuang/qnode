@@ -68,7 +68,6 @@ qactor_destroy(qactor_t *actor) {
   }
   if (actor->listen_params != NULL) {
     qdict_destroy(actor->listen_params);
-    qstdout("delete listen_params\n");
   }
   qworker_delete(actor->aid);
   qfree(actor);
@@ -92,7 +91,7 @@ qactor_spawn(qactor_t *actor, lua_State *state) {
   qworker_t       *worker;
 
   worker_id = qserver_worker();
-  worker    = server->workers[worker_id];
+  worker    = workers[worker_id];
   aid       = qworker_new_aid(worker);
 
   new_actor = qactor_new(aid);
@@ -115,7 +114,7 @@ qactor_t*
 qactor_get(qid_t aid) {
   qworker_t *worker;
 
-  worker = server->workers[decode_pid(aid)];
+  worker = workers[decode_pid(aid)];
   return qworket_get_actor(worker, decode_id(aid));
 }
 
@@ -125,7 +124,7 @@ qactor_get_engine(qid_t aid) {
 
   actor = qactor_get(aid);
   if (actor) {
-    return server->workers[actor->tid]->engine;
+    return workers[actor->tid]->engine;
   }
 
   return NULL;
@@ -137,7 +136,7 @@ qactor_get_worker(qid_t aid) {
 
   actor = qactor_get(aid);
   if (actor) {
-    return server->workers[actor->tid];
+    return workers[actor->tid];
   }
 
   return NULL;

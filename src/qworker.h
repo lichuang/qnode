@@ -7,6 +7,7 @@
 
 #include <lua.h>
 #include <pthread.h>
+#include "qlimits.h"
 #include "qlist.h"
 #include "qmailbox.h"
 #include "qmsg.h"
@@ -62,5 +63,7 @@ qid_t       qworker_new_aid(qworker_t *worker);
 void        qworker_add(qid_t aid, qactor_t *actor);
 void        qworker_delete(qid_t aid);
 qactor_t*   qworket_get_actor(qworker_t *worker, qid_t id);
+
+extern qworker_t* workers[QMAX_WORKER];
 
 #endif  /* __qworker_H__ */

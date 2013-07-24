@@ -14,6 +14,7 @@
 #include "qalloc.h"
 #include "qactor.h"
 #include "qassert.h"
+#include "qconfig.h"
 #include "qdescriptor.h"
 #include "qengine.h"
 #include "qdefines.h"
@@ -31,16 +32,18 @@
 
 extern qmsg_func_t* server_msg_handlers[];
 
-qserver_t    *server;
+static qengine_t *engine;
+static qmailbox_t box;
+qserver_t        *server;
 
 static void server_accept(int fd, int flags, void *data);
 static int  init_server_event(qserver_t *server);
 static int  server_msg_handler(qmsg_t *msg, void *reader);
 static void server_start(qserver_t *server);
-static int  init_worker_threads(qserver_t *server);
+static int  init_workers(qserver_t *server);
 static void signal_handler(int sig);
 static void setup_signal();
-static int  server_init(qconfig_t *config);
+static int  server_init();
 static void destroy_threads();
 static void destroy_server();
 static void make_daemon();
@@ -63,7 +66,6 @@ init_server_event(qserver_t *server) {
     return -1;
   }
 
-  qengine_t *engine = server->engine;
   if (qengine_add_event(engine, fd, QEVENT_READ,
                         server_accept, server) < 0) {
     return -1;
@@ -81,7 +83,7 @@ qid_t
 qserver_worker() {
   static qid_t i = 1;
 
-  i = ((i + 1) % server->config->worker) + 1;
+  i = ((i + 1) % config.worker) + 1;
   return i;
 }
 
@@ -100,29 +102,17 @@ server_start(qserver_t *server) {
 }
 
 static int
-init_worker_threads(qserver_t *server) {
+init_workers(qserver_t *server) {
   int           i;
   int           worker;
-  qconfig_t    *config;
   
-  config = server->config;
-  worker = config->worker + 1;
-
-  server->workers = qalloc(worker * sizeof(qworker_t*));
-  if (server->workers == NULL) {
-    goto error;
-  }
-  server->workers[0] = NULL;
-
-  server->thread_log = qalloc(worker * sizeof(qthread_log_t*));
-  if (server->thread_log == NULL) {
-    goto error;
-  }
+  worker = config.worker + 1;
+  workers[0] = NULL;
 
   /* create worker threads */
   for (i = 1; i < worker; ++i) {
-    server->workers[i] = qworker_new(i); 
-    if (server->workers[i] == NULL) {
+    workers[i] = qworker_new(i); 
+    if (workers[i] == NULL) {
       goto error;
     }
   }
@@ -140,15 +130,13 @@ error:
 static void
 signal_handler(int signo) {
   qmsg_t     *msg;
-  qmailbox_t *box;
 
   msg = qmmsg_signal_new(signo);
   if (msg == NULL) {
     return;
   }
 
-  box = &(server->box);
-  qmailbox_add(box, msg);
+  qmailbox_add(&box, msg);
 }
 
 static void
@@ -222,9 +210,8 @@ set_core_size() {
 }
 
 static int
-server_init(qconfig_t *config) {
-  qassert(config);
-  qassert(config->worker > 0);
+server_init() {
+  qassert(config.worker > 0);
   qassert(server == NULL);
 
   server = qcalloc(sizeof(qserver_t));
@@ -232,8 +219,7 @@ server_init(qconfig_t *config) {
     goto error;
   }
 
-  server->config = config;
-  if (config->daemon) {
+  if (config.daemon) {
     make_daemon();
   }
   save_pid();
@@ -242,31 +228,33 @@ server_init(qconfig_t *config) {
     goto error;
   }
 
-  if (qlogger_new(config->worker + 1) < 0) {
+  if (qlogger_new(config.worker + 1) < 0) {
     goto error;
   }
 
-  server->engine = qengine_new();
+  engine = qengine_new();
+  if (engine == NULL) {
+    goto error;
+  }
   if (init_server_event(server) < 0) {
     goto error;
   }
-  qmailbox_init(&(server->box), server_msg_handler,
-                server->engine, server);
+  qmailbox_init(&box, server_msg_handler,
+                engine, server);
   server->descriptors = qcalloc(QID_MAX * sizeof(qdescriptor_t*));
   if (server->descriptors == NULL) {
     goto error;
   }
 
-  if (chdir(config->script_path) != 0) {
-    qstdout("chdir %s error: %s\n", config->script_path, strerror(errno));
+  if (chdir(config.script_path) != 0) {
+    qstdout("chdir %s error: %s\n", config.script_path, strerror(errno));
     goto error;
   }
-  if (init_worker_threads(server) < 0) {
+  if (init_workers(server) < 0) {
     goto error;
   }
   setup_signal();
 
-  //server->thread_log[0] = qthread_log_init(0);
   server_start(server);
 
   return 0;
@@ -278,28 +266,30 @@ error:
 static void
 destroy_threads() {
   int         i;
-  qworker_t  *worker;
 
-  for (i = 1; i <= server->config->worker; ++i) {
-    worker = server->workers[i];
-    qworker_destroy(worker);
+  for (i = 1; i <= config.worker; ++i) {
+    qworker_destroy(workers[i]);
   }
-  qfree(server->workers);
   qlogger_destroy();
 }
 
 static void
 destroy_server() {
   destroy_threads();
-  qconfig_free(server->config);
+  qconfig_free();
 }
 
 int
-qserver_run(qconfig_t *config) {
-  if (server_init(config) != 0) {
+qserver_run() {
+  if (server_init() != 0) {
     return -1;
   }
-  qengine_loop(server->engine);
+  qengine_loop(engine);
   destroy_server();
   return 0;
+}
+
+void
+qserver_quit() {
+  engine->quit = 1;
 }

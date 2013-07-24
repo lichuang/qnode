@@ -7,4 +7,6 @@
 
 #define QPATH_LENGTH 300
 
+#define QMAX_WORKER 200
+
 #endif  /* __QLIMITS_H__ */

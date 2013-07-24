@@ -280,7 +280,7 @@ static qstring_t
 lua_init_filename(const char *filename) {
   qstring_t full_name;
 
-  full_name = qstring_new(server->config->script_path);
+  full_name = qstring_new(config.script_path);
   if (!full_name) {
     return NULL;
   }
@@ -342,7 +342,7 @@ qlua_init_path(struct qactor_t *actor) {
     return -1;
   }
   state = actor->state;
-  path = server->config->script_path;
+  path  = config.script_path;
 
   lua_getglobal(state, "package" );
   lua_getfield(state, -1, "path" );

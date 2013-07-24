@@ -19,7 +19,7 @@ qwmsg_start_new(qid_t sender, qid_t recver) {
     return NULL;
   }
 
-  worker      = server->workers[recver];
+  worker      = workers[recver];
   start       = (qwmsg_start_t*)msg;
   start->aid  = qworker_new_aid(worker);
 

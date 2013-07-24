@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include "qconfig.h"
 #include "qengine.h"
+#include "qlog.h"
 #include "qserver.h"
 
 static void
@@ -20,7 +21,6 @@ int
 main(int argc, char *argv[]) {
   int         opt;
   const char *file;
-  qconfig_t   config;
 
   file = "./etc/config.lua";
   while ((opt = getopt(argc, argv, "c:h")) != -1) {
@@ -35,9 +35,12 @@ main(int argc, char *argv[]) {
     }   
   }
 
-  qconfig_init(&config, file);
+  if (qconfig_init(file) < 0) {
+    qstdout("qconfig_init error\n");
+    return -1;
+  }
 
-  qserver_run(&config);
+  qserver_run();
 
   return 0;
 }
