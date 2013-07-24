@@ -31,7 +31,7 @@ static void log_init(qlog_t *log, int level, const char* file,
                      long line, const char *format, va_list args);
 
 static qfreelist_t free_log_list;
-static qmutex_t free_log_list_lock;
+static qmutex_t    free_log_list_lock;
 
 const char *
 level_str(int level) {

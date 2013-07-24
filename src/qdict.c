@@ -44,14 +44,15 @@ qdict_destroy(qdict_t *dict) {
     if (list == NULL) {
       continue;
     }
-    for (pos = list; pos != list; ) {
+    pos = list;
+    do {
       node = qlist_entry(pos, qdict_node_t, entry);
       next = pos->next;
       qstring_destroy(node->key);
       qvalue_destroy(&(node->value));
       qfree(node);
       pos  = next;
-    }
+    } while (pos != list);
   }
   qfree(dict);
 }
@@ -114,7 +115,7 @@ set(qdict_t *dict, const char *key, qvalue_t *value) {
     return &(node->value);
   }
 
-  node = qalloc(sizeof(qdict_node_t));
+  node = qcalloc(sizeof(qdict_node_t));
   if (node == NULL) {
     return NULL;
   }

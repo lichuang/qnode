@@ -39,6 +39,7 @@ qactor_new(qid_t aid) {
   actor->parent = QINVALID_ID;
   actor->waiting_netio = 0;
   actor->waiting_msg   = 0;
+  actor->active        = 1;
   qspinlock_init(&(actor->desc_list_lock));
   qworker_add(aid, actor);
 
@@ -50,7 +51,6 @@ qactor_destroy(qactor_t *actor) {
   qlist_t *pos, *next;
   qmsg_t  *msg;
 
-  //lua_close(actor->state);
   qspinlock_lock(&(actor->desc_list_lock));
   for (pos = actor->desc_list.next; pos != &(actor->desc_list); ) {
     qdescriptor_t *desc = qlist_entry(pos, qdescriptor_t, entry);
@@ -68,6 +68,7 @@ qactor_destroy(qactor_t *actor) {
   }
   if (actor->listen_params != NULL) {
     qdict_destroy(actor->listen_params);
+    qstdout("delete listen_params\n");
   }
   qworker_delete(actor->aid);
   qfree(actor);
