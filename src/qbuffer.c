@@ -4,25 +4,49 @@
 
 #include "qalloc.h"
 #include "qbuffer.h"
+#include "qlimits.h"
 #include "qlog.h"
+#include "qmutex.h"
 
-#define QBUFFER_SIZE 1024
+#define QBUFFER_FREE_NUM 100
+static qfreelist_t free_buffer_list;
+static qmutex_t    free_buffer_list_lock;
+
+static int  buffer_init(void *data);
+static void buffer_destroy(void *data);
 
 int
-qbuffer_init(qbuffer_t *buffer) {
-  buffer->data = qalloc(sizeof(char) * QBUFFER_SIZE);
-  if (buffer->data == NULL) {
-    return -1;
-  }
-  buffer->start  = buffer->end = 0;
-  buffer->size = QBUFFER_SIZE;
+qbuffer_init_freelist() {
+  int ret;
 
-  return 0;
+  qmutex_init(&free_buffer_list_lock);
+  ret = qfreelist_init(&free_buffer_list, "buffer free list",
+                       sizeof(qbuffer_t), QBUFFER_FREE_NUM,
+                       buffer_init, buffer_destroy);
+  if (ret < 0) {
+    return ret;
+  }
+
+  return ret;
+}
+
+qbuffer_t*
+qbuffer_new() {
+  qbuffer_t *buffer;
+
+  qmutex_lock(&free_buffer_list_lock);
+  buffer = (qbuffer_t*)qfreelist_alloc(&free_buffer_list);
+  qmutex_unlock(&free_buffer_list_lock);
+
+  return buffer;
 }
 
 void
 qbuffer_free(qbuffer_t *buffer) {
-  qfree(buffer->data);
+  qmutex_lock(&free_buffer_list_lock);
+  qfreelist_free(&free_buffer_list, (qfree_item_t*)buffer);
+  qmutex_unlock(&free_buffer_list_lock);
+  qbuffer_reset(buffer);
 }
 
 int
@@ -64,4 +88,27 @@ qbuffer_write(qbuffer_t *buffer, const char *data, int size) {
   buffer->end += size;
 
   return 0;
+}
+
+static int
+buffer_init(void *data) {
+  qbuffer_t *buffer;
+
+  buffer = (qbuffer_t*)data;
+  buffer->data = qalloc(sizeof(char) * QBUFFER_SIZE);
+  if (buffer->data == NULL) {
+    return -1;
+  }
+  buffer->start  = buffer->end = 0;
+  buffer->size = QBUFFER_SIZE;
+
+  return 0;
+}
+
+static void
+buffer_destroy(void *data) {
+  qbuffer_t *buffer;
+
+  buffer = (qbuffer_t*)data;
+  qfree(buffer->data);
 }

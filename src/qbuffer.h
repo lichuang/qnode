@@ -7,8 +7,10 @@
 
 #include <stdint.h>
 #include "qcore.h"
+#include "qfreelist.h"
 
 typedef struct qbuffer_t {
+  qfree_item_fields;
   char *data;
   int   size;
   int   start;
@@ -36,10 +38,12 @@ typedef struct qbuffer_t {
   (buffer)->start = (buffer)->end = 0;\
   (buffer)->data[0] = '\0'
 
-int     qbuffer_init(qbuffer_t *buffer);
-void    qbuffer_free(qbuffer_t *buffer);
-int     qbuffer_extend(qbuffer_t *buffer, uint32_t size);
-char*   qbuffer_read(qbuffer_t *buffer, int size);
-int     qbuffer_write(qbuffer_t *buffer, const char *data, int size);
+qbuffer_t*  qbuffer_new();
+void        qbuffer_free(qbuffer_t *buffer);
+int         qbuffer_extend(qbuffer_t *buffer, uint32_t size);
+char*       qbuffer_read(qbuffer_t *buffer, int size);
+int         qbuffer_write(qbuffer_t *buffer, const char *data, int size);
+
+int         qbuffer_init_freelist();
 
 #endif  /* __QBUFFER_H__ */

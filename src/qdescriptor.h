@@ -38,8 +38,8 @@ typedef struct qinet_descriptor_t {
 
 typedef struct qtcp_descriptor_t {
   qinet_descriptor_t  inet;
-  qbuffer_t           inbuf;
-  qbuffer_t           outbuf;
+  qbuffer_t          *inbuf;
+  qbuffer_t          *outbuf;
   struct sockaddr     remote;
   char                addr[15];
   char                peer[25];
@@ -64,7 +64,8 @@ struct qdescriptor_t {
   } data;
 };
 
-qdescriptor_t*    qdescriptor_new(int fd, unsigned short type, qactor_t *actor);
+qdescriptor_t*    qdescriptor_new(int fd, unsigned short type,
+                                  qactor_t *actor);
 void              qdescriptor_destroy(qdescriptor_t *desc);
 
 #endif  /* __QDESCRIPTOR_H__ */

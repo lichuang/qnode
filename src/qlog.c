@@ -42,7 +42,8 @@ void
 qlog_init_free_list() {
   qmutex_init(&free_log_list_lock);
   qfreelist_init(&free_log_list, "log free list",
-                 sizeof(qlog_t), FREE_LOG_LIST_INIT_NUM);
+                 sizeof(qlog_t), FREE_LOG_LIST_INIT_NUM,
+                 NULL, NULL);
 }
 
 void

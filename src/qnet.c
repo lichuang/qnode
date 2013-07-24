@@ -125,7 +125,7 @@ qnet_tcp_recv(qdescriptor_t *desc) {
 
   tcp = &(desc->data.tcp);
   fd = desc->fd;
-  buffer = &(tcp->inbuf);
+  buffer = tcp->inbuf;
 
   nbytes = 0;
   /*
@@ -184,7 +184,7 @@ qnet_tcp_send(qdescriptor_t *desc) {
 
   tcp = &(desc->data.tcp);
   fd = desc->fd;
-  buffer = &(tcp->outbuf);
+  buffer = tcp->outbuf;
 
   size = qbuffer_readable_len(buffer);
   nbytes = 0;

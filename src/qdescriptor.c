@@ -23,11 +23,15 @@ init_tcp_descriptor(qdescriptor_t *desc) {
   tcp  = &(desc->data.tcp);
   inet = &(tcp->inet);
   inet->state = QINET_STATE_OPEN;
-  if (qbuffer_init(&(tcp->inbuf)) < 0) {
+  tcp->inbuf  = qbuffer_new();
+  if (tcp->inbuf == NULL) {
     qerror("create descriptor buffer error");
+    return;
   }
-  if (qbuffer_init(&(tcp->outbuf)) < 0) {
+  tcp->outbuf  = qbuffer_new();
+  if (tcp->outbuf == NULL) {
     qerror("create descriptor buffer error");
+    return;
   }
   tcp->addr[0] = '\0';
   tcp->peer[0] = '\0';
@@ -69,8 +73,8 @@ inet_descriptor_destroy(qinet_descriptor_t *inet) {
 static void
 tcp_descriptor_destroy(qtcp_descriptor_t *tcp) {
   inet_descriptor_destroy(&(tcp->inet));
-  qbuffer_free(&(tcp->inbuf));
-  qbuffer_free(&(tcp->outbuf));
+  qbuffer_free(tcp->inbuf);
+  qbuffer_free(tcp->outbuf);
 }
 
 void

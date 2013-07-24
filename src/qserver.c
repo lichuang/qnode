@@ -18,6 +18,7 @@
 #include "qdescriptor.h"
 #include "qengine.h"
 #include "qdefines.h"
+#include "qfreelist.h"
 #include "qlog.h"
 #include "qlogger.h"
 #include "qmailbox.h"
@@ -43,7 +44,7 @@ static void server_start(qserver_t *server);
 static int  init_workers(qserver_t *server);
 static void signal_handler(int sig);
 static void setup_signal();
-static int  server_init();
+static int  init_server();
 static void destroy_threads();
 static void destroy_server();
 static void make_daemon();
@@ -210,7 +211,7 @@ set_core_size() {
 }
 
 static int
-server_init() {
+init_server() {
   qassert(config.worker > 0);
   qassert(server == NULL);
 
@@ -229,6 +230,10 @@ server_init() {
   }
 
   if (qlogger_new(config.worker + 1) < 0) {
+    goto error;
+  }
+
+  if (qbuffer_init_freelist() < 0) {
     goto error;
   }
 
@@ -281,7 +286,7 @@ destroy_server() {
 
 int
 qserver_run() {
-  if (server_init() != 0) {
+  if (init_server() != 0) {
     return -1;
   }
   qengine_loop(engine);
