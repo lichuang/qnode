@@ -1,22 +1,27 @@
 qnode_config = {
   -- worker config
   worker = {
-    num = 1,  -- worker thread num
+    -- worker thread num
+    num = 1,
   },
 
   -- log congfig
   log = {
-    path = "./log",   -- log file path
-    level = "debug",  -- log level
+    -- log file path
+    path = "./log",
+
+    -- log level
+    level = "debug",
   },
 
   -- script config
   script = {
-    path = "./qcached",-- lua script path
+    -- lua script path
+    path = "./qcached",
   },
 
   -- server config
   server = {
-    daemon = 0,       -- lua script path
+    daemon = 0,
   }
 }
