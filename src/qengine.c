@@ -19,8 +19,10 @@ extern volatile int g_quit;
 
 extern const qdispatcher_t epoll_dispatcher;
 
+static void init_event(qevent_t *event);
+
 static void
-init_qevent(qevent_t *event) {
+init_event(qevent_t *event) {
   event->fd = QRETIRED_FD;
   event->flags = 0;
   event->read = event->write = NULL;
@@ -54,7 +56,7 @@ qengine_new() {
     event = &(engine->events[i]);
     init_qevent(event);
     event = &(engine->active_events[i]);
-    init_qevent(event);
+    init_event(event);
   }
   qtimer_manager_init(&engine->timer_mng, engine);
   engine->quit = 0;
@@ -156,6 +158,7 @@ qengine_loop(qengine_t* engine) {
       if (event->flags & flags & QEVENT_ERROR) {
         qengine_del_event(engine, fd, event->flags);
         close(fd);
+        init_event(event);
       }
     }
     qtimer_process(&(engine->timer_mng));

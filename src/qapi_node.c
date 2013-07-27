@@ -102,6 +102,7 @@ node_recv(lua_State *state) {
     actor->waiting_msg = 1;
     return lua_yield(state, 0); 
   }
+  actor->waiting_msg = 0;
   msg = qlist_entry(actor->msg_list.next, qactor_msg_t, entry); 
   qlist_del_init(&(msg->entry));
   lua_newtable(state);

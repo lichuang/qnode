@@ -10,7 +10,6 @@
 #include "qdescriptor.h"
 #include "qengine.h"
 #include "qdict.h"
-#include "qengine.h"
 #include "qlog.h"
 #include "qluautil.h"
 #include "qnet.h"
@@ -103,8 +102,8 @@ socket_accept(int fd, int flags, void *data) {
   if (actor == NULL) {
     return;
   }
+  actor->waiting_netio = 0;
   state = actor->state;
-  qinfo("add a socket....");
   sock = qnet_tcp_accept(desc->fd, (struct sockaddr*)&remote, &n);
   if (sock == -1) {
     lua_pushnil(state);
@@ -163,6 +162,7 @@ tcp_accept(lua_State *state) {
     qengine_t *engine = qactor_get_engine(actor->aid);
     qengine_add_event(engine, desc->fd, QEVENT_READ, socket_accept, desc);
     tcp->inet.state = QINET_STATE_ACCEPTING;
+    actor->waiting_netio = 1;
     return lua_yield(state, 0); 
   }
 
@@ -191,6 +191,7 @@ socket_recv(int fd, int flags, void *data) {
   if (actor == NULL) {
     return;
   }
+  actor->waiting_netio = 0;
   state = actor->state;
   nret = qnet_tcp_recv(desc);
   if (nret < 0) {
@@ -231,6 +232,7 @@ tcp_recv(lua_State *state) {
     actor = qlua_get_actor(state);
     engine = qactor_get_engine(actor->aid);
     qengine_add_event(engine, desc->fd, QEVENT_READ, socket_recv, desc);
+    actor->waiting_netio = 1;
     return lua_yield(state, 0); 
   }
   lua_pushlightuserdata(state, desc->data.tcp.inbuf);
@@ -259,6 +261,7 @@ socket_send(int fd, int flags, void *data) {
   if (actor == NULL) {
     return;
   }
+  actor->waiting_netio = 0;
   state = actor->state;
   nret = qnet_tcp_send(desc);
   if (nret < 0) {
@@ -300,6 +303,7 @@ tcp_send(lua_State *state) {
     actor = qlua_get_actor(state);
     engine = qactor_get_engine(actor->aid);
     qengine_add_event(engine, desc->fd, QEVENT_WRITE, socket_send, desc);
+    actor->waiting_netio = 1;
     return lua_yield(state, 0); 
   }
 
