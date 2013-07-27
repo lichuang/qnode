@@ -31,12 +31,13 @@ logger_log_handler(qmsg_t *msg, void *reader) {
   lmsg->destroy = destroy_log_msg;
   log = lmsg->log;
 
-  write(logger->fd, log->buff, log->n);
-  logger->log_size += log->n;
+  logger->log_size += log->size;
   if (logger->log_size > config.log_size) {
     qlogger_open_file();
   }
-  if (!config.daemon) {
+  if (config.daemon) {
+    write(logger->fd, log->buff, log->size);
+  } else {
     printf("%s", log->buff);
   }
 

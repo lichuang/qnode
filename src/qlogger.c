@@ -127,9 +127,11 @@ qlogger_new(int thread_num) {
     return -1;
   }
 
-  logger->fd = 0;
+  logger->fd = -1;
   logger->log_size = 0;
-  qlogger_open_file();
+  if (config.daemon) {
+    qlogger_open_file();
+  }
   logger->engine = qengine_new();
   if (logger->engine == NULL) {
     return -1;

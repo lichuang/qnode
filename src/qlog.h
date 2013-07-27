@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include "qcore.h"
 #include "qfreelist.h"
+#include "qlimits.h"
 #include "qlist.h"
 
 #define QLOG_STDERR      0
@@ -22,25 +23,14 @@
 #define QLOG_INFO        7
 #define QLOG_DEBUG       8
 
-#define QMAX_LOG_SIZE    1000
-#define QMAX_FORMAT_SIZE 1000
-#define QMAX_FILE_SIZE   200
-
 struct qlog_t {
   qfree_item_fields;
-  int     level;
-  char    file[QMAX_FILE_SIZE];
-  size_t  file_len;
-  int     line;
-  char    buff[QMAX_LOG_SIZE];
-  int     n;
+  char    buff[QMAX_LOG_SIZE + 2];
+  int     size;
   int     idx;
-  char    format[QMAX_FORMAT_SIZE];
-  size_t  fmt_len;
-  va_list args;
 };
 
-void qlog(int level, const char* file, long line, const char *format, ...);
+void qlog(int level, const char* file, int line, const char *format, ...);
 
 void qlog_init_free_list();
 void qlog_destroy_free_list();
