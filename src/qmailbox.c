@@ -16,7 +16,7 @@
 #include "qmailbox.h"
 
 void
-qmailbox_init(qmailbox_t *box, qmsg_func_t *func,
+qmailbox_init(qmailbox_t *box, qmsg_pt *func,
               qengine_t *engine, void *reader) {
   qmutex_init(&(box->mutex));
   qlist_entry_init(&(box->lists[0]));
@@ -38,12 +38,14 @@ qmailbox_free(qmailbox_t *box) {
   qlist_t *pos, *next;
 
   qmutex_lock(&(box->mutex));
-  for (i = 0, list = &(box->lists[i]); i < 2; ++i) {
+  for (i = 0; i < 2; ++i) {
+    list = &(box->lists[i]);
     for (pos = list->next; pos != list; ) {
       next = pos->next;
+      qassert(next != pos);
       msg = qlist_entry(pos, qmsg_t, entry);
-      qmsg_destroy(msg);
       pos = next;
+      qmsg_destroy(msg);
     }
   }
   qmutex_unlock(&(box->mutex));
@@ -53,12 +55,11 @@ qmailbox_free(qmailbox_t *box) {
 
 void
 qmailbox_add(qmailbox_t *box, qmsg_t *msg) {
-  qlist_t *p;
-
   qmutex_lock(&(box->mutex));
-  p = box->write;
-  qlist_add_tail(&(msg->entry), p);
+  qlist_add_tail(&(msg->entry), box->write);
+  qassert(msg->entry.next == box->write);
   qmutex_unlock(&(box->mutex));
+
   if (qsignal_active(&(box->signal), 1) == 0) {
     qsignal_send(&(box->signal));
   }

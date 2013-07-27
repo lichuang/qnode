@@ -18,7 +18,4 @@ typedef struct qthread_log_t  qthread_log_t;
 typedef struct qvalue_t       qvalue_t;
 typedef struct qworker_t      qworker_t;
 
-typedef void (qtimer_func_t)(void *data);
-typedef int (qmsg_func_t)(qmsg_t *msg, void *reader);
-
 #endif  /* __QCORE_H__ */

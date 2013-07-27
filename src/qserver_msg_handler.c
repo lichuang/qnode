@@ -24,7 +24,7 @@ static int  server_signal_handler(qmsg_t *msg, void *reader);
 
 static void send_signal(int signo);
 
-qmsg_func_t* server_msg_handlers[] = {
+qmsg_pt* server_msg_handlers[] = {
   &server_signal_handler,  /* signal */
 };
 

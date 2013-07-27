@@ -67,7 +67,7 @@ error:
 
 int
 qengine_add_event(qengine_t *engine, int fd, int flags,
-                  qevent_func_t *callback, void *data) {
+                  qevent_pt *callback, void *data) {
   qevent_t *event;
 
   if (fd > QMAX_EVENTS) {
@@ -174,7 +174,7 @@ qengine_destroy(qengine_t *engine) {
 
 qid_t
 qengine_add_timer(qengine_t* engine, uint32_t timeout_ms,
-                  qtimer_func_t *func, int type, void *data) {
+                  qtimer_pt *func, int type, void *data) {
   return qtimer_add(&engine->timer_mng, timeout_ms, func, type, data);
 }
 

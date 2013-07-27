@@ -22,7 +22,7 @@ static int worker_spawn_handler(qmsg_t *msg, void *reader);
 static int worker_signal_handler(qmsg_t *msg, void *reader);
 static int worker_actor_handler(qmsg_t *msg, void *reader);
 
-qmsg_func_t* worker_msg_handlers[] = {
+qmsg_pt* worker_msg_handlers[] = {
   &worker_start_handler,
   &worker_spawn_handler,
   &worker_signal_handler,

@@ -13,7 +13,8 @@
 
 #define QINVALID_MSG  -1
 
-typedef void (*qmsg_destroy_t)(qmsg_t *);
+typedef void (*qmsg_destroy_pt)(qmsg_t *);
+typedef int  (qmsg_pt)(qmsg_t *msg, void *reader);
 
 #define qmsg_header_fields    \
   qlist_t         entry;      \
@@ -21,7 +22,7 @@ typedef void (*qmsg_destroy_t)(qmsg_t *);
   int             size;       \
   qid_t           sender;     \
   qid_t           recver;     \
-  qmsg_destroy_t  destroy
+  qmsg_destroy_pt destroy
 
 struct qmsg_t {
   qmsg_header_fields;

@@ -31,7 +31,7 @@
 #include "qthread_log.h"
 #include "qwmsg.h"
 
-extern qmsg_func_t* server_msg_handlers[];
+extern qmsg_pt* server_msg_handlers[];
 
 static qengine_t *engine;
 static qmailbox_t box;

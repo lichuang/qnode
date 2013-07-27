@@ -23,8 +23,6 @@ actor_send_handler(qamsg_header_t *header, qactor_t *actor) {
   qamsg_send_t  *msg;
   lua_State     *state;
 
-  qdebug("actor_send_handler");
-
   msg = (qamsg_send_t*)header;
   actor_msg = &(msg->actor_msg);
   state = actor->state;

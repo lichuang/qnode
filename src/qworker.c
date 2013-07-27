@@ -17,8 +17,8 @@
 #include "qworker.h"
 #include "qthread_log.h"
 
-extern qmsg_func_t* worker_msg_handlers[];
-qworker_t*          workers[QMAX_WORKER] = {NULL};
+extern qmsg_pt* worker_msg_handlers[];
+qworker_t*      workers[QMAX_WORKER] = {NULL};
 
 static int   worker_msg_handler(qmsg_t *msg, void *reader);
 static void* worker_main(void *arg);
@@ -138,7 +138,7 @@ qworker_add(qid_t aid, qactor_t *actor) {
   worker = workers[decode_pid(aid)];
   id = decode_id(aid);
   qmutex_lock(&(worker->mutex));
-  qassert(worker->actors[id] == NULL);
+  //qassert(worker->actors[id] == NULL);
   worker->actors[id] = actor;
   qmutex_unlock(&(worker->mutex));
 }

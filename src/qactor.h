@@ -20,16 +20,35 @@ struct qactor_t {
   /*
    * lua thread YIELD reason
    */
-  unsigned int    waiting_netio:1;  /* waiting for network I/O */
-  unsigned int    waiting_msg:1;    /* waiting for message */
+  /* waiting for network I/O */
+  unsigned int    waiting_netio:1;
+
+  /* waiting for message */
+  unsigned int    waiting_msg:1;
+
   unsigned int    active:1;
-  qid_t           tid;              /* thread id which belongs to */
-  qid_t           aid;              /* actor id */
-  qid_t           parent;           /* parent actor id */
-  qlist_t         entry;            /* entry for actor list in thread */
-  qlist_t         desc_list;        /* descriptor list */
-  qspinlock_t     desc_list_lock;   /* descriptor list lock */
-  qlist_t         msg_list;         /* message list */
+
+  /* thread id which belongs to */
+  qid_t           tid;
+
+  /* actor id */
+  qid_t           aid;
+
+  /* parent actor id */
+  qid_t           parent;
+
+  /* entry for actor list in thread */
+  qlist_t         entry;
+
+  /* descriptor list */
+  qlist_t         desc_list;
+
+  /* descriptor list lock */
+  qspinlock_t     desc_list_lock;
+
+  /* actor message list */
+  qlist_t         msg_list;
+
   qdict_t        *listen_params;
 };
 

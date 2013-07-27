@@ -66,7 +66,7 @@ qtimer_manager_free(qtimer_manager_t *mng) {
 
 qid_t
 qtimer_add(qtimer_manager_t *mng, uint32_t timeout,
-           qtimer_func_t *func, uint32_t cycle, void *arg) {
+           qtimer_pt *func, uint32_t cycle, void *arg) {
   qtimer_t *timer;
   qlist_t  *pos;
 

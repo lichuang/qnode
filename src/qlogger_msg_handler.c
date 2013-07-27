@@ -15,7 +15,7 @@ static int  logger_log_handler(qmsg_t *msg, void *reader);
 static int  logger_signal_handler(qmsg_t *msg, void *reader);
 static void destroy_log_msg(qmsg_t *msg);
 
-qmsg_func_t* logger_msg_handlers[] = {
+qmsg_pt* logger_msg_handlers[] = {
   &logger_log_handler,
   &logger_signal_handler,
 };

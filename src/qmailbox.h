@@ -9,23 +9,41 @@
 #include "qcore.h"
 #include "qengine.h"
 #include "qlist.h"
+#include "qmsg.h"
 #include "qmutex.h"
 #include "qsignal.h"
 
-typedef void (qmsg_done_t)(void *reader);
+typedef void (qmsg_done_pt)(void *reader);
 
 struct qmailbox_t {
-  qlist_t           lists[2];   /* one for read, one for write */
-  qlist_t          *write;      /* current write list ptr */
-  qlist_t          *read;       /* current read  list ptr */
-  void             *reader;     /* mailbox reader */
-  qmutex_t          mutex;      /* mutex for protect msg */
-  qsignal_t         signal;     /* signaler */
-  qmsg_func_t      *handler;    /* per-msg handler */
-  qmsg_done_t      *done;       /* when handle msg list done callback */
+  const char       *name;
+
+  /* one for read, one for write */
+  qlist_t           lists[2];
+
+  /* current write list ptr */
+  qlist_t          *write;
+
+  /* current read  list ptr */
+  qlist_t          *read;
+
+  /* mailbox reader */
+  void             *reader;
+
+  /* mutex for protect msg */
+  qmutex_t          mutex;
+
+  /* signaler */
+  qsignal_t         signal;
+
+  /* per-msg handler */
+  qmsg_pt          *handler;
+
+  /* when handle msg list done callback */
+  qmsg_done_pt     *done;
 };
 
-void  qmailbox_init(qmailbox_t *box, qmsg_func_t *func,
+void  qmailbox_init(qmailbox_t *box, qmsg_pt *func,
                     qengine_t *engine, void *reader);
 void  qmailbox_free(qmailbox_t *box);
 void  qmailbox_add(qmailbox_t *box, qmsg_t *msg);

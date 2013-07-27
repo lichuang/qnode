@@ -22,13 +22,13 @@ struct qengine_t;
 struct qevent_t;
 struct qdispatcher_t;
 
-typedef void (qevent_func_t)(int fd, int flags, void *data);
+typedef void (qevent_pt)(int fd, int flags, void *data);
 
 typedef struct qevent_t {
   int            fd;
   int            flags;
-  qevent_func_t *read;
-  qevent_func_t *write;
+  qevent_pt     *read;
+  qevent_pt     *write;
   void          *data;
 } qevent_t;
 
@@ -56,11 +56,11 @@ int        qengine_loop(qengine_t* engine);
 void       qengine_destroy(qengine_t *engine);
 
 int        qengine_add_event(qengine_t* engine, int fd, int flags,
-                             qevent_func_t *callback, void *data);
+                             qevent_pt *callback, void *data);
 int        qengine_del_event(qengine_t* engine, int fd, int flags);
 
 qid_t      qengine_add_timer(qengine_t* engine, uint32_t timeout_ms,
-                             qtimer_func_t *func, int type, void *data);
+                             qtimer_pt *func, int type, void *data);
 int        qengine_del_timer(qengine_t* engine, qid_t id);
 
 #endif  /* __QENGINE_H__ */

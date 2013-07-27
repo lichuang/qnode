@@ -23,7 +23,7 @@
 #include "qsignal.h"
 #include "qthread_log.h"
 
-extern qmsg_func_t* logger_msg_handlers[];
+extern qmsg_pt* logger_msg_handlers[];
 
 pthread_key_t thread_log_key = PTHREAD_ONCE_INIT;
 qlogger_t    *logger         = NULL;
@@ -100,7 +100,7 @@ log_time_handler(void *data) {
   t = time(NULL);
   localtime_r(&t, &tm);
   strftime(logger->time_buff, sizeof(logger->time_buff),
-           "[%m-%d %T", &tm);
+           "[%F %H:%m:%S", &tm);
 }
 
 static void
