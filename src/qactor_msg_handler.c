@@ -3,6 +3,7 @@
  */
 
 #include "qactor.h"
+#include "qalloc.h"
 #include "qamsg.h"
 #include "qcore.h"
 #include "qdict.h"
@@ -35,10 +36,13 @@ actor_send_handler(qamsg_header_t *header, qactor_t *actor) {
     actor->waiting_msg = 0;
     lua_newtable(state);
     qlua_dump_dict(state, actor_msg->arg_dict);
-    return lua_resume(state, 1);
+    qdict_destroy(actor_msg->arg_dict);
+    lua_resume(state, 1);
+  } else {
+    /* else add the msg to the actor msg list */
+    qlist_add_tail(&actor_msg->entry, &(actor->msg_list));
   }
-  /* else add the msg to the actor msg list */
-  qlist_add_tail(&actor_msg->entry, &(actor->msg_list));
 
+  qfree(msg);
   return 0;
 }

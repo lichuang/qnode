@@ -103,8 +103,10 @@ node_recv(lua_State *state) {
     return lua_yield(state, 0); 
   }
   msg = qlist_entry(actor->msg_list.next, qactor_msg_t, entry); 
+  qlist_del_init(&(msg->entry));
   lua_newtable(state);
   qlua_dump_dict(state, msg->arg_dict);
+  qdict_destroy(msg->arg_dict);
 
   return 1;
 }

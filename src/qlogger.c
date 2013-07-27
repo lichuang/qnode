@@ -100,7 +100,7 @@ log_time_handler(void *data) {
   t = time(NULL);
   localtime_r(&t, &tm);
   strftime(logger->time_buff, sizeof(logger->time_buff),
-           "[%F %H:%m:%S", &tm);
+           "[%Y%m%d %H:%M:%S", &tm);
 }
 
 static void

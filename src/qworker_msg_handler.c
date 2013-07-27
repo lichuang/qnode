@@ -134,7 +134,6 @@ worker_actor_handler(qmsg_t *msg, void *reader) {
   qamsg_header_t  *header;
   qactor_t        *actor;
 
-  printf("worker_actor_handler\n");
   amsg   = (qwmsg_actor_t*)msg;
   worker = (qworker_t*)reader;
   header = amsg->data;
@@ -144,5 +143,7 @@ worker_actor_handler(qmsg_t *msg, void *reader) {
     return 0;
   }
 
-  return (*actor_msg_handlers[header->type])(header, actor);
+  (*actor_msg_handlers[header->type])(header, actor);
+
+  return 0;
 }
