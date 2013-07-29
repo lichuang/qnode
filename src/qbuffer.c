@@ -18,8 +18,10 @@ static void buffer_destroy(void *data);
 int
 qbuffer_init_freelist() {
   qmutex_init(&free_buffer_list_lock);
-  return qfreelist_init(&free_buffer_list, "buffer free list",
-                        sizeof(qbuffer_t), QBUFFER_FREE_NUM,
+  return qfreelist_init(&free_buffer_list,
+                        "buffer free list",
+                        sizeof(qbuffer_t),
+                        QBUFFER_FREE_NUM,
                         buffer_init, buffer_destroy);
 }
 
@@ -39,6 +41,10 @@ qbuffer_free(qbuffer_t *buffer) {
   qmutex_lock(&free_buffer_list_lock);
   qfreelist_free(&free_buffer_list, (qfree_item_t*)buffer);
   qmutex_unlock(&free_buffer_list_lock);
+  if (buffer->size > QBUFFER_SIZE) {
+    buffer->data = qrealloc(buffer->data, QBUFFER_SIZE);
+    buffer->size = QBUFFER_SIZE;
+  }
   qbuffer_reset(buffer);
 }
 
@@ -104,4 +110,13 @@ buffer_destroy(void *data) {
 
   buffer = (qbuffer_t*)data;
   qfree(buffer->data);
+}
+
+void
+qbuffer_reinit(qbuffer_t *buffer) {
+  if (buffer->size > QBUFFER_SIZE) {
+    buffer->data = qrealloc(buffer->data, QBUFFER_SIZE);
+    buffer->size = QBUFFER_SIZE;
+  }
+  qbuffer_reset(buffer);
 }

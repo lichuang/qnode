@@ -39,6 +39,7 @@ typedef struct qbuffer_t {
   (buffer)->data[0] = '\0'
 
 qbuffer_t*  qbuffer_new();
+void        qbuffer_reinit(qbuffer_t *buffer);
 void        qbuffer_free(qbuffer_t *buffer);
 int         qbuffer_extend(qbuffer_t *buffer, uint32_t size);
 char*       qbuffer_read(qbuffer_t *buffer, int size);

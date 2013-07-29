@@ -23,7 +23,7 @@ static const char* log_levels[] = {
   "debug"
 };
 
-static int FREE_LOG_LIST_INIT_NUM = 10;
+static int FREE_LOG_LIST_NUM = 10;
 
 static int log_level = QLOG_DEBUG;
 
@@ -39,7 +39,7 @@ void
 qlog_init_free_list() {
   qmutex_init(&free_log_list_lock);
   qfreelist_init(&free_log_list, "log free list",
-                 sizeof(qlog_t), FREE_LOG_LIST_INIT_NUM,
+                 sizeof(qlog_t), FREE_LOG_LIST_NUM,
                  NULL, NULL);
 }
 

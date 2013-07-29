@@ -54,7 +54,7 @@ qengine_new() {
   }
   for (i = 0; i < QMAX_EVENTS; ++i) {
     event = &(engine->events[i]);
-    init_qevent(event);
+    init_event(event);
     event = &(engine->active_events[i]);
     init_event(event);
   }

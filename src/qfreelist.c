@@ -6,27 +6,24 @@
 #include "qassert.h"
 #include "qfreelist.h"
 
-static int prealloc(qfreelist_t *flist);
+static int prealloc(qfreelist_t *flist, qitem_init_pt init);
 
 int
 qfreelist_init(qfreelist_t *flist, const char *name,
-               int size, int num, qitem_init_pt init,
-               qitem_destroy_pt destroy) {
-  int ret;
-
+               int size, int num,
+               qitem_init_pt init, qitem_destroy_pt destroy) {
   qlist_entry_init(&(flist->free));
   flist->size     = size;
   flist->name     = name;
   flist->initnum  = num;
   flist->init     = init;
   flist->destroy  = destroy;
-  ret = prealloc(flist);
 
-  return ret;
+  return prealloc(flist, init);
 }
 
 static int
-prealloc(qfreelist_t *flist) {
+prealloc(qfreelist_t *flist, qitem_init_pt init) {
   int           i;
   int           num, size;
   qfree_item_t *item;
@@ -39,8 +36,8 @@ prealloc(qfreelist_t *flist) {
     if (item == NULL) {
       return -1;
     }
-    if (flist->init) {
-      flist->init(item);
+    if (init) {
+      init(item);
     }
     qlist_add_tail(&(item->fentry), &(flist->free));
   }
@@ -71,7 +68,7 @@ qfreelist_alloc(qfreelist_t *flist) {
   qlist_t      *pos;
 
   if (qlist_empty(&(flist->free))) {
-    prealloc(flist);
+    prealloc(flist, NULL);
     if (qlist_empty(&(flist->free))) {
       return NULL;
     }
