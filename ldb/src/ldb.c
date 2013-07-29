@@ -76,6 +76,7 @@ ldb_new(lua_State *state) {
   }
   ldb->step = 0;
   ldb->call_depth = 0;
+  ldb->state = state;
 
   lua_pushstring(state, lua_debugger_tag);
   lua_pushlightuserdata(state, ldb);
@@ -91,7 +92,9 @@ void
 ldb_destroy(ldb_t *ldb) {
   int         i;
   ldb_file_t *file, *next;
+  lua_State  *state;
 
+  state = ldb->state;
   for (i = 0; i < MAX_FILE_BUCKET; ++i) {
     file = ldb->files[i];
     while (file) {
@@ -101,6 +104,9 @@ ldb_destroy(ldb_t *ldb) {
     }
   }
   free(ldb);
+  lua_pushstring(state, lua_debugger_tag);
+  lua_pushlightuserdata(state, NULL);
+  lua_settable(state, LUA_REGISTRYINDEX);
 }
 
 void
