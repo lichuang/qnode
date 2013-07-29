@@ -2,6 +2,8 @@
  * See Copyright Notice in qnode.h
  */
 
+#include <string.h>
+#include "qactor.h"
 #include "qmutex.h"
 #include "qsocket.h"
 
@@ -11,6 +13,7 @@ static qmutex_t    free_socket_list_lock;
 static int FREE_SOCKET_LIST_NUM = 100;
 
 static int  init_socket(void *data);
+static void reset_socket(qsocket_t *socket);
 static void destroy_socket(void *data);
 
 void
@@ -37,6 +40,9 @@ qsocket_new(int fd, qactor_t *actor) {
   socket = (qsocket_t*)qfreelist_alloc(&free_socket_list);
   qmutex_unlock(&free_socket_list_lock);
 
+  socket->fd = fd;
+  socket->aid = actor->aid;
+
   return socket;
 }
 
@@ -48,6 +54,21 @@ qsocket_free(qsocket_t *socket) {
   qmutex_unlock(&free_socket_list_lock);
   qbuffer_reinit(socket->in);
   qbuffer_reinit(socket->out);
+
+  reset_socket(socket);
+}
+
+static void
+reset_socket(qsocket_t *socket) {
+  qlist_entry_init(&socket->entry);
+  socket->accept = 0;
+  socket->fd = 0;
+  socket->state = 0;
+  socket->aid = QINVALID_ID;
+  socket->addr[0] = '\0';
+  socket->peer[0] = '\0';
+  socket->port    = 0;
+  memset(&(socket->remote), 0, sizeof(struct sockaddr));
 }
 
 static int
@@ -60,6 +81,7 @@ init_socket(void *data) {
   if (socket->in == NULL || socket->out == NULL) {
     return -1;
   }
+  reset_socket(socket);
   return 0;
 }
 

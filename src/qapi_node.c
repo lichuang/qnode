@@ -7,13 +7,13 @@
 #include "qamsg.h"
 #include "qassert.h"
 #include "qdefines.h"
-#include "qdescriptor.h"
 #include "qdict.h"
 #include "qluautil.h"
 #include "qlog.h"
 #include "qmsg.h"
 #include "qmutex.h"
 #include "qserver.h"
+#include "qsocket.h"
 #include "qstring.h"
 #include "qworker.h"
 
@@ -114,11 +114,11 @@ node_recv(lua_State *state) {
 
 static int
 node_attach(lua_State *state) {
-  qdescriptor_t *desc;
-  qactor_t      *old_actor, *actor;
+  qsocket_t *socket;
+  qactor_t  *old_actor, *actor;
 
-  desc = (qdescriptor_t*)lua_touserdata(state, 1);
-  old_actor = qactor_get(desc->aid);
+  socket = (qsocket_t*)lua_touserdata(state, 1);
+  old_actor = qactor_get(socket->aid);
   if (old_actor == NULL) {
     return 0;
   }
@@ -130,13 +130,13 @@ node_attach(lua_State *state) {
 
   /* detach from old actor */
   qspinlock_lock(&(old_actor->desc_list_lock));
-  qlist_del_init(&(desc->entry));
+  qlist_del_init(&(socket->entry));
   qspinlock_unlock(&(old_actor->desc_list_lock));
 
   /* attach to new actor */
   qspinlock_lock(&(actor->desc_list_lock));
-  desc->aid = actor->aid;
-  qlist_add_tail(&desc->entry, &actor->desc_list);
+  socket->aid = actor->aid;
+  qlist_add_tail(&socket->entry, &actor->desc_list);
   qspinlock_unlock(&(actor->desc_list_lock));
 
   return 0;

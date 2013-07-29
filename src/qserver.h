@@ -9,7 +9,7 @@
 #include "qtype.h"
 
 struct qserver_t {
-  qdescriptor_t   **descriptors;  /* descriptor array */
+  //qdescriptor_t   **descriptors;  /* descriptor array */
 };
 
 int qserver_run();

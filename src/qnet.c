@@ -13,9 +13,9 @@
 #include "qassert.h"
 #include "qbuffer.h"
 #include "qdefines.h"
-#include "qdescriptor.h"
 #include "qlog.h"
 #include "qnet.h"
+#include "qsocket.h"
 
 static int create_listen_socket();
 static int set_nonblocking(int fd);
@@ -117,15 +117,13 @@ qnet_tcp_accept(int listen_fd, struct sockaddr *addr,
 }
 
 int
-qnet_tcp_recv(qdescriptor_t *desc) {
+qnet_tcp_recv(qsocket_t *socket) {
   int                 fd, save;
   int                 nbytes, size, n;
   qbuffer_t          *buffer;
-  qtcp_descriptor_t  *tcp;
 
-  tcp = &(desc->data.tcp);
-  fd = desc->fd;
-  buffer = tcp->inbuf;
+  fd = socket->fd;
+  buffer = socket->in;
 
   nbytes = 0;
   /*
@@ -154,21 +152,21 @@ qnet_tcp_recv(qdescriptor_t *desc) {
         break;
       } else if (save != EINTR) {
         /* some error has occured */
-        qerror("recv from %s error: %s", tcp->peer, strerror(save));
+        qerror("recv from %s error: %s", socket->peer, strerror(save));
         return -1;
       }
     }
 
     /* socket has been closed */
     if (n == 0) {
-      qerror("socket from %s closed", tcp->peer);
+      qerror("socket from %s closed", socket->peer);
       return -1;
     }
 
     buffer->end += n;
     buffer->data[buffer->end] = '\0';
     nbytes += n;
-    qinfo("%s recv:%d, total:%d", tcp->peer, n, nbytes);
+    qinfo("%s recv:%d, total:%d", socket->peer, n, nbytes);
     /* while more tcp stack buffer data available continue */
   } while (n == size);
 
@@ -176,15 +174,13 @@ qnet_tcp_recv(qdescriptor_t *desc) {
 }
 
 int
-qnet_tcp_send(qdescriptor_t *desc) {
+qnet_tcp_send(qsocket_t *socket) {
   int                 fd, nbytes;
   int                 save, n, size;
   qbuffer_t          *buffer;
-  qtcp_descriptor_t  *tcp;
 
-  tcp = &(desc->data.tcp);
-  fd = desc->fd;
-  buffer = tcp->outbuf;
+  fd = socket->fd;
+  buffer = socket->out;
 
   size = qbuffer_readable_len(buffer);
   nbytes = 0;
@@ -198,20 +194,20 @@ qnet_tcp_send(qdescriptor_t *desc) {
       if (save == EAGAIN || save == EWOULDBLOCK) {
         return nbytes;
       } else {
-        qerror("send to %s error: %s", tcp->peer, strerror(save));
+        qerror("send to %s error: %s", socket->peer, strerror(save));
         return -1;
       }
     }
 
     if (n == 0) {
-      qerror("socket from %s closed", tcp->peer);
+      qerror("socket from %s closed", socket->peer);
       return -1;
     }
 
     buffer->start += n;
     nbytes += n;
     size -= n;
-    qinfo("%s sent:%d, total:%d", tcp->peer, n, nbytes);
+    qinfo("%s sent:%d, total:%d", socket->peer, n, nbytes);
   }
 
   return nbytes;

@@ -15,7 +15,6 @@
 #include "qactor.h"
 #include "qassert.h"
 #include "qconfig.h"
-#include "qdescriptor.h"
 #include "qengine.h"
 #include "qdefines.h"
 #include "qfreelist.h"
@@ -27,6 +26,7 @@
 #include "qnet.h"
 #include "qserver.h"
 #include "qsignal.h"
+#include "qsocket.h"
 #include "qworker.h"
 #include "qthread_log.h"
 #include "qwmsg.h"
@@ -246,11 +246,7 @@ init_server() {
   }
   qmailbox_init(&box, server_msg_handler,
                 engine, server);
-  server->descriptors = qcalloc(QID_MAX * sizeof(qdescriptor_t*));
-  if (server->descriptors == NULL) {
-    goto error;
-  }
-
+  qsocket_init_free_list();
   if (chdir(config.script_path) != 0) {
     qstdout("chdir %s error: %s\n", config.script_path, strerror(errno));
     goto error;

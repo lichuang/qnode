@@ -9,7 +9,6 @@
 #include "qapi.h"
 #include "qassert.h"
 #include "qdefines.h"
-#include "qdescriptor.h"
 #include "qengine.h"
 #include "qluautil.h"
 #include "qlog.h"
@@ -18,6 +17,7 @@
 #include "qmmsg.h"
 #include "qnet.h"
 #include "qserver.h"
+#include "qsocket.h"
 #include "qwmsg.h"
 #include "qworker.h"
 
@@ -50,12 +50,13 @@ void
 qactor_destroy(qactor_t *actor) {
   qlist_t *pos, *next;
   qmsg_t  *msg;
+  qsocket_t *socket;
 
   qspinlock_lock(&(actor->desc_list_lock));
   for (pos = actor->desc_list.next; pos != &(actor->desc_list); ) {
-    qdescriptor_t *desc = qlist_entry(pos, qdescriptor_t, entry);
+    socket = qlist_entry(pos, qsocket_t, entry);
     next = pos->next;
-    qdescriptor_destroy(desc);
+    qsocket_free(socket);
     pos  = next;
   }
   qspinlock_unlock(&(actor->desc_list_lock));
