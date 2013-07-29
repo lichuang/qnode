@@ -8,6 +8,7 @@ extern "C" {
 #include <lua.h>
 #include <lualib.h>                                                       
 #include <lauxlib.h> 
+#include "ldb_file.h"
 
 typedef struct ldb_breakpoint_t {
   const char   *file;
@@ -15,14 +16,18 @@ typedef struct ldb_breakpoint_t {
   unsigned int  active:1;
 } ldb_breakpoint_t;
 
-typedef struct ldb_t {
+#define MAX_FILE_BUCKET 20
+
+struct ldb_t {
   lua_State    *state;
 
   int           call_depth;
   unsigned int  step:1;
-} ldb_t;
 
-ldb_t*  ldb_new();
+  ldb_file_t   *files[MAX_FILE_BUCKET];
+};
+
+ldb_t*  ldb_new(lua_State *state);
 void    ldb_destroy(ldb_t *ldb);
 
 void    ldb_attach(ldb_t *ldb, lua_State *state);

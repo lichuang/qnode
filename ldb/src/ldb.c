@@ -4,9 +4,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "ldb.h"
+#include "ldb_util.h"
 
 #define LDB_MAX_INPUT 200
 #define LDB_MAX_PARAM 5
+
+static const char* lua_debugger_tag = "__ldb_debugger";
 
 typedef struct input_t {
   char    buffer[LDB_MAX_INPUT][LDB_MAX_PARAM];
@@ -17,7 +20,6 @@ static void single_step(ldb_t *ldb, int step);
 static void enable_line_hook(lua_State *state, int enable);
 static void line_hook(lua_State *state, lua_Debug *ar);
 //static void func_hook(lua_State *state, lua_Debug *ar);
-static void output( const char * format, ... );
 static int  get_input(char *buff, int size);
 static void set_prompt();
 static int  split_input(const char *buff, input_t *input);
@@ -26,6 +28,7 @@ static int  search_local_var(lua_State *state, lua_Debug *ar,
 
 static int  search_global_var(lua_State *state, lua_Debug *ar,
                               const char* var);
+
 static void print_var(lua_State *state, int si, int depth);
 static void print_table_var(lua_State *state, int si, int depth);
 static void print_string_var(lua_State *state, int si, int depth);
@@ -35,26 +38,36 @@ static int help_handler(lua_State *state,  lua_Debug *ar, input_t *input);
 static int quit_handler(lua_State *state,  lua_Debug *ar, input_t *input);
 static int print_handler(lua_State *state, lua_Debug *ar, input_t *input);
 static int backtrace_handler(lua_State *state, lua_Debug *ar, input_t *input);
+static int list_handler(lua_State *state, lua_Debug *ar, input_t *input);
 
 typedef int (*handler_t)(lua_State *state, lua_Debug *ar, input_t *input);
 
 typedef struct ldb_command_t {
   const char* name;
+  const char* help;
   handler_t   handler;
 } ldb_command_t;
 
 ldb_command_t commands[] = {
-  {"help", &help_handler},
-  {"h",    &help_handler},
-  {"quit", &quit_handler},
-  {"q",    &quit_handler},
-  {"p",    &print_handler},
-  {"bt",   &backtrace_handler},
-  {NULL,    NULL},
+  {"help",  "h(help): print help info",     &help_handler},
+  {"h",     NULL,                           &help_handler},
+
+  {"quit",  NULL,                           &quit_handler},
+  {"q",     "q(quit): quit ldb",            &quit_handler},
+
+  {"p",     "p <varname>: print var value", &print_handler},
+
+  {"bt",    "bt: print backtrace info",     &backtrace_handler},
+
+  {"list",  "l(list): list file source",    &list_handler},
+  {"l",     NULL,                           &list_handler},
+
+  {NULL,    NULL,                           NULL},
 };
 
 ldb_t*
-ldb_new() {
+ldb_new(lua_State *state) {
+  int    i;
   ldb_t *ldb;
 
   ldb = (ldb_t*)malloc(sizeof(ldb_t));
@@ -64,14 +77,30 @@ ldb_new() {
   ldb->step = 0;
   ldb->call_depth = 0;
 
+  lua_pushstring(state, lua_debugger_tag);
+  lua_pushlightuserdata(state, ldb);
+  lua_settable(state, LUA_REGISTRYINDEX);
+
+  for (i = 0; i < MAX_FILE_BUCKET; ++i) {
+    ldb->files[i] = NULL;
+  }
   return ldb;
 }
 
 void
 ldb_destroy(ldb_t *ldb) {
-  if (ldb) {
-    free(ldb);
+  int         i;
+  ldb_file_t *file, *next;
+
+  for (i = 0; i < MAX_FILE_BUCKET; ++i) {
+    file = ldb->files[i];
+    while (file) {
+      next = file->next;
+      ldb_file_free(file);
+      file = next;
+    }
   }
+  free(ldb);
 }
 
 void
@@ -146,7 +175,7 @@ split_input(const char *buff, input_t *input) {
      if (isspace(*p)) {
        if (save) {
          if (i > LDB_MAX_PARAM) {
-           output("param %s more than %d", buff, LDB_MAX_PARAM);
+           ldb_output("param %s more than %d", buff, LDB_MAX_PARAM);
            return -1;
          }
          strncpy(input->buffer[i++], save, p - save);
@@ -161,19 +190,19 @@ split_input(const char *buff, input_t *input) {
      ++p;
    }
    if (i > LDB_MAX_PARAM) {
-     output("param %s more than %d", buff, LDB_MAX_PARAM);
+     ldb_output("param %s more than %d", buff, LDB_MAX_PARAM);
      return -1;
    }
    strcpy(input->buffer[i++], save);
    input->num = i;
 
    /*
-   output("input: ");
+   ldb_output("input: ");
    int j = 0;
    for (j = 0; j < i; ++j) {
-     output("%s +", input[j]);
+     ldb_output("%s +", input[j]);
    }
-   output("\n");
+   ldb_output("\n");
    */
 
    return 0;
@@ -183,15 +212,16 @@ static void
 line_hook(lua_State *state, lua_Debug *ar) {
   input_t input;;
 
-  if( !lua_getstack(state, 0, ar )) { 
-    output("[LUA_DEBUG]lua_getstack fail\n");
+  if(!lua_getstack(state, 0, ar)) { 
+    ldb_output("[LUA_DEBUG]lua_getstack fail\n");
     return;
   }
 
-  if( lua_getinfo(state, "lnS", ar ) ) {
+  //if(lua_getinfo(state, "lnS", ar)) {
+  if(lua_getinfo(state, "lnSu", ar)) {
     set_prompt();
   } else {
-    output("[LUA_DEBUG]lua_getinfo fail\n");
+    ldb_output("[LUA_DEBUG]lua_getinfo fail\n");
     return;
   }
 
@@ -211,7 +241,7 @@ line_hook(lua_State *state, lua_Debug *ar) {
        }
      }
      if (commands[i].name == NULL) {
-       output("bad command: %s, output h for help\n", buff);
+       ldb_output("bad command: %s, ldb_output h for help\n", buff);
      }
      //input.clear();
      if (ret < 0) {
@@ -229,36 +259,25 @@ func_hook(lua_State *state, lua_Debug *ar) {
 
 static void
 set_prompt() {   
-  output("(ldb) ");
+  ldb_output("(ldb) ");
 }  
-
-static void
-output(const char * format, ... ) {
-  va_list arg;
-
-  va_start(arg, format);
-  vfprintf(stdout, format, arg);
-  va_end(arg);
-
-  fflush(stdout);
-}
 
 static int
 help_handler(lua_State *state, lua_Debug *ar, input_t *input) {
-  output("Lua debugger written by Lichuang(2013)\n"
-         "cmd:\n"
-         "\th(help): print help info\n"
-         "\tq(quit): quit ldb\n"
-         "\tp <varname>: print var value\n"
-         "\tbt: print backtrace info\n"
-         );
+  int i;
 
+  ldb_output("Lua debugger written by Lichuang(2013)\ncmd:\n");
+  for (i = 0; commands[i].name != NULL; ++i) {
+    if (commands[i].help) {
+      ldb_output("\t%s\n", commands[i].help);
+    }
+  }
   return 0;
 }
 
 static int
 quit_handler(lua_State *state, lua_Debug *ar, input_t *input) {
-  //output( "Continue...\n" );
+  //ldb_output( "Continue...\n" );
   enable_line_hook(state, 0);
 
   return -1;
@@ -267,22 +286,22 @@ quit_handler(lua_State *state, lua_Debug *ar, input_t *input) {
 static int
 print_handler(lua_State *state, lua_Debug *ar, input_t *input) {
   if (input->num < 2) {
-    output("usage: p <varname>\n");
+    ldb_output("usage: p <varname>\n");
     return 0;
   }
 
   if (search_local_var(state, ar, input->buffer[1])) {
-    output("local %s =", input->buffer[1]);
+    ldb_output("local %s =", input->buffer[1]);
     print_var(state, -1, -1);
     lua_pop(state, 1);
-    output("\n");
+    ldb_output("\n");
   } else if (search_global_var(state, ar, input->buffer[1])) {
-    output("global %s =", input->buffer[1]);
+    ldb_output("global %s =", input->buffer[1]);
     print_var(state, -1, -1);
     lua_pop(state, 1);
-    output("\n");
+    ldb_output("\n");
   } else {
-    output("not found var %s\n",  input->buffer[1]);
+    ldb_output("not found var %s\n",  input->buffer[1]);
   }
 
   return 0;
@@ -318,48 +337,48 @@ search_global_var(lua_State *state, lua_Debug *ar, const char* var) {
 static void
 print_table_var(lua_State *state, int si, int depth) {
   int pos_si = si > 0 ? si : (si - 1);
-  output("{");
+  ldb_output("{");
   int top = lua_gettop(state);
   lua_pushnil(state);
   int empty = 1;
   while(lua_next(state, pos_si ) !=0) {
     if(empty) {
-      output("\n");
+      ldb_output("\n");
       empty = 0;
     }
 
     int i;
     for(i = 0; i < depth; i++) {
-      output("\t");
+      ldb_output("\t");
     }
 
-    output( "[" );
+    ldb_output( "[" );
     print_var(state, -2, -1);
-    output( "] = " );
+    ldb_output( "] = " );
     if(depth > 5) {
-      output("{...}");
+      ldb_output("{...}");
     } else {
       print_var(state, -1, depth + 1);
     }
     lua_pop(state, 1);
-    output(",\n");
+    ldb_output(",\n");
   }
 
   if (empty) {
-    output(" }");
+    ldb_output(" }");
   } else {
     int i;
     for (i = 0; i < depth - 1; i++) {
-      output("\t");
+      ldb_output("\t");
     }
-    output("}");
+    ldb_output("}");
   }
   lua_settop(state, top);
 }
 
 static void 
 print_string_var(lua_State *state, int si, int depth) {
-  output( "\"" );
+  ldb_output( "\"" );
 
   const char * val = lua_tostring(state, si);
   int vallen = lua_strlen(state, si);
@@ -367,31 +386,31 @@ print_string_var(lua_State *state, int si, int depth) {
   const char spchar[] = "\"\t\n\r";
   for(i = 0; i < vallen; ) {
     if(val[i] == 0) {
-      output("\\000");
+      ldb_output("\\000");
       ++i;
     } else if (val[i] == '"') {
-      output("\\\"");
+      ldb_output("\\\"");
       ++i;
     } else if(val[i] == '\\') {
-      output("\\\\");
+      ldb_output("\\\\");
       ++i;
     } else if(val[i] == '\t') {
-      output("\\t");
+      ldb_output("\\t");
       ++i;
     } else if(val[i] == '\n') {
-      output("\\n");
+      ldb_output("\\n");
       ++i;
     } else if(val[i] == '\r') {
-      output("\\r");
+      ldb_output("\\r");
       ++i;
     } else {
       int splen = strcspn(val + i, spchar);
 
-      output("%.*s", splen, val+i);
+      ldb_output("%.*s", splen, val+i);
       i += splen;
     }
   }
-  output("\"");
+  ldb_output("\"");
 }
 
 static void
@@ -407,12 +426,12 @@ dump_stack(lua_State *state, int depth, int verbose) {
   for(i = depth; lua_getstack(state, i, &ldb) == 1; i++) {
     lua_getinfo(state, "Slnu", &ldb);
     name = ldb.name;
-    if( !name ) {
+    if(!name) {
       name = "";
     }    
     filename = ldb.source;
 
-    output("#%d: %s:'%s', '%s' line %d\n",
+    ldb_output("#%d: %s:'%s', '%s' line %d\n",
            i + 1 - depth, ldb.what, name,
            filename, ldb.currentline );
     /*
@@ -440,30 +459,30 @@ static void
 print_var(lua_State *state, int si, int depth) {
   switch(lua_type(state, si)) {
   case LUA_TNIL:
-    output("(nil)");
+    ldb_output("(nil)");
     break;
 
   case LUA_TNUMBER:
-    output("%f", lua_tonumber(state, si));
+    ldb_output("%f", lua_tonumber(state, si));
     break;
 
   case LUA_TBOOLEAN:
-    output("%s", lua_toboolean(state, si) ? "true":"false");
+    ldb_output("%s", lua_toboolean(state, si) ? "true":"false");
     break;
 
   case LUA_TFUNCTION:
     {
       lua_CFunction func = lua_tocfunction(state, si);
       if( func != NULL ) {
-        output("(C function)0x%p", func);
+        ldb_output("(C function)0x%p", func);
       } else {
-        output("(function)");
+        ldb_output("(function)");
       }
     }
     break;
 
   case LUA_TUSERDATA:
-    output("(user data)0x%p", lua_touserdata(state, si));
+    ldb_output("(user data)0x%p", lua_touserdata(state, si));
     break;
 
   case LUA_TSTRING:
@@ -483,5 +502,37 @@ static int
 backtrace_handler(lua_State *state, lua_Debug *ar, input_t *input) {
   dump_stack(state, 0, 0);
 
+  return 0;
+}
+
+static int
+list_handler(lua_State *state, lua_Debug *ar, input_t *input) {
+  ldb_file_t *file;
+  ldb_t      *ldb;
+  int         i, j;
+
+  lua_pushstring(state, lua_debugger_tag);
+  lua_gettable(state, LUA_REGISTRYINDEX);
+  ldb = (ldb_t*)lua_touserdata(state, -1);
+  if (ldb == NULL) {
+    return -1;
+  }
+
+  /* ignore `@` char */
+  file = ldb_file_load(ldb, ar->source + 1);
+  if (file == NULL) {
+    return 0;
+  }
+
+  i = ar->currentline - 5;
+  if (i < 0) {
+    i = 0;
+  }
+  for (; i < ar->currentline; ++i) {
+    ldb_output("%s:%d\t%s", file->name, i, file->lines[i]);
+  }
+  for (i = ar->currentline, j = 0; j < 6 && i < file->line; ++j, ++i) {
+    ldb_output("%s:%d\t%s", file->name, i, file->lines[i]);
+  }
   return 0;
 }
