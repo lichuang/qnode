@@ -7,6 +7,6 @@ local t = {out=10}
 local a = 1014
 b = 2024
 print("before debug")
-c_break()
+  c_break()
 test()
 print("after  debug")

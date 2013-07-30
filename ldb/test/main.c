@@ -18,7 +18,7 @@ int main() {
 
   lua_register(L, "c_break", c_break);
 
-  ldb = ldb_new();
+  ldb = ldb_new(L);
   luaL_dofile(L, file);
 
   ldb_destroy(ldb);
