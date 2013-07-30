@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "ldb.h"
 
 ldb_t *ldb;
@@ -12,6 +13,13 @@ c_break(lua_State *state) {
 int main() {
   int i;
   const char *file = "my.lua";
+
+  /*
+  int input;
+  while (input = getchar()) {
+    printf("input%c##\n", input);
+  }
+  */
 
   lua_State *L = lua_open();
   luaL_openlibs(L);

@@ -35,18 +35,28 @@ static void print_string_var(lua_State *state, int si, int depth);
 static void dump_stack(lua_State *state, int depth, int verbose); 
 static int  get_calldepth(lua_State *state);
 static void on_event(int bp, ldb_t *ldb, lua_State *state, lua_Debug *ar);
-static void step_in(lua_State *state, int depth, lua_Debug *ar);
+static void step_in(lua_State *state, ldb_t *ldb, int depth, lua_Debug *ar);
 static void print_current_line(ldb_t *ldb, lua_Debug *ar);
 
-static int help_handler(lua_State *state,  lua_Debug *ar, input_t *input);
-static int quit_handler(lua_State *state,  lua_Debug *ar, input_t *input);
-static int print_handler(lua_State *state, lua_Debug *ar, input_t *input);
-static int backtrace_handler(lua_State *state, lua_Debug *ar, input_t *input);
-static int list_handler(lua_State *state, lua_Debug *ar, input_t *input);
-static int step_handler(lua_State *state, lua_Debug *ar, input_t *input);
-static int next_handler(lua_State *state, lua_Debug *ar, input_t *input);
+static int help_handler(lua_State *state,  ldb_t *ldb,
+                        lua_Debug *ar, input_t *input);
+static int print_handler(lua_State *state, ldb_t *ldb,
+                         lua_Debug *ar, input_t *input);
+static int backtrace_handler(lua_State *state, ldb_t *ldb,
+                             lua_Debug *ar, input_t *input);
+static int list_handler(lua_State *state, ldb_t *ldb,
+                        lua_Debug *ar, input_t *input);
+static int step_handler(lua_State *state, ldb_t *ldb,
+                        lua_Debug *ar, input_t *input);
+static int next_handler(lua_State *state, ldb_t *ldb,
+                        lua_Debug *ar, input_t *input);
+static int break_handler(lua_State *state, ldb_t *ldb,
+                         lua_Debug *ar, input_t *input);
+static int continue_handler(lua_State *state, ldb_t *ldb,
+                            lua_Debug *ar, input_t *input);
 
-typedef int (*handler_t)(lua_State *state, lua_Debug *ar, input_t *input);
+typedef int (*handler_t)(lua_State *state, ldb_t *ldb,
+                         lua_Debug *ar, input_t *input);
 
 typedef struct ldb_command_t {
   const char* name;
@@ -58,8 +68,6 @@ typedef struct ldb_command_t {
 ldb_command_t commands[] = {
   {"help",      "h",  "h(help): print help info",          &help_handler},
 
-  {"quit",      "q",  "q(quit): quit ldb",                 &quit_handler},
-
   {"print",     "p",  "p <varname>: print var value",      &print_handler},
 
   {"backtrace", "bt", "bt: print backtrace info",          &backtrace_handler},
@@ -70,7 +78,10 @@ ldb_command_t commands[] = {
 
   {"next",      "n",  "n(next): one instruction exactly",  &next_handler},
 
-  {NULL,    NULL,                           NULL},
+  {"break",     "b",  "b(break) [function|filename:line]: break at function or line in a file",  &break_handler},
+
+  {"continue",  "c",  "c(continue): continue excute when hit a break point",  &continue_handler},
+  {NULL,        NULL, NULL,                                 NULL},
 };
 
 ldb_t*
@@ -265,7 +276,8 @@ set_prompt() {
 }  
 
 static int
-help_handler(lua_State *state, lua_Debug *ar, input_t *input) {
+help_handler(lua_State *state, ldb_t *ldb,
+             lua_Debug *ar, input_t *input) {
   int i;
 
   ldb_output("Lua debugger written by Lichuang(2013)\ncmd:\n");
@@ -278,15 +290,8 @@ help_handler(lua_State *state, lua_Debug *ar, input_t *input) {
 }
 
 static int
-quit_handler(lua_State *state, lua_Debug *ar, input_t *input) {
-  //ldb_output( "Continue...\n" );
-  enable_line_hook(state, 0);
-
-  return -1;
-} 
-
-static int
-print_handler(lua_State *state, lua_Debug *ar, input_t *input) {
+print_handler(lua_State *state, ldb_t *ldb,
+              lua_Debug *ar, input_t *input) {
   if (input->num < 2) {
     ldb_output("usage: p <varname>\n");
     return 0;
@@ -328,7 +333,7 @@ static int
 search_global_var(lua_State *state, lua_Debug *ar, const char* var) {
   lua_getglobal(state, var);
 
-  if(lua_type(state, -1 ) == LUA_TNIL) {
+  if(lua_type(state, -1) == LUA_TNIL) {
     lua_pop(state, 1);
     return 0;
   }   
@@ -501,24 +506,18 @@ print_var(lua_State *state, int si, int depth) {
 }
 
 static int
-backtrace_handler(lua_State *state, lua_Debug *ar, input_t *input) {
+backtrace_handler(lua_State *state, ldb_t *ldb,
+                  lua_Debug *ar, input_t *input) {
   dump_stack(state, 0, 0);
 
   return 0;
 }
 
 static int
-list_handler(lua_State *state, lua_Debug *ar, input_t *input) {
+list_handler(lua_State *state, ldb_t *ldb,
+             lua_Debug *ar, input_t *input) {
   ldb_file_t *file;
-  ldb_t      *ldb;
   int         i, j;
-
-  lua_pushstring(state, lua_debugger_tag);
-  lua_gettable(state, LUA_REGISTRYINDEX);
-  ldb = (ldb_t*)lua_touserdata(state, -1);
-  if (ldb == NULL) {
-    return -1;
-  }
 
   /* ignore `@` char */
   file = ldb_file_load(ldb, ar->source + 1);
@@ -575,7 +574,7 @@ on_event(int bp, ldb_t *ldb, lua_State *state, lua_Debug *ar) {
       if (!strcmp(input.buffer[0], commands[i].short_name) ||
         !strcmp(input.buffer[0], commands[i].name)) {
         ldb->call_depth = get_calldepth(state);
-        ret = (*commands[i].handler)(state, ar, &input);
+        ret = (*commands[i].handler)(state, ldb, ar, &input);
         break;
       }
     }
@@ -591,15 +590,8 @@ on_event(int bp, ldb_t *ldb, lua_State *state, lua_Debug *ar) {
 }
 
 static void
-step_in(lua_State *state, int depth, lua_Debug *ar) {
-  ldb_t      *ldb;
-
-  lua_pushstring(state, lua_debugger_tag);
-  lua_gettable(state, LUA_REGISTRYINDEX);
-  ldb = (ldb_t*)lua_touserdata(state, -1);
-  if (ldb == NULL) {
-    return;
-  }
+step_in(lua_State *state, ldb_t *ldb,
+        int depth, lua_Debug *ar) {
   if (ldb->step != 1) {
     single_step(ldb, 1);
   }
@@ -628,15 +620,32 @@ print_current_line(ldb_t *ldb, lua_Debug *ar) {
 }
 
 static int
-step_handler(lua_State *state, lua_Debug *ar, input_t *input) {
-  step_in(state, -1, ar);
+step_handler(lua_State *state, ldb_t *ldb,
+             lua_Debug *ar, input_t *input) {
+  step_in(state, ldb, -1, ar);
 
   return -1;
 }
 
 static int
-next_handler(lua_State *state, lua_Debug *ar, input_t *input) {
-  step_in(state, 0, ar);
+next_handler(lua_State *state, ldb_t *ldb,
+             lua_Debug *ar, input_t *input) {
+  step_in(state, ldb, 0, ar);
+
+  return -1;
+}
+
+static int
+break_handler(lua_State *state, ldb_t *ldb,
+              lua_Debug *ar, input_t *input) {
+  return 0;
+}
+
+static int
+continue_handler(lua_State *state, ldb_t *ldb,
+                 lua_Debug *ar, input_t *input) {
+  enable_line_hook(state, 0);
+  ldb->call_depth = -1;
 
   return -1;
 }
