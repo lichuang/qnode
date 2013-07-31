@@ -38,6 +38,12 @@ static void on_event(int bp, ldb_t *ldb, lua_State *state, lua_Debug *ar);
 static void step_in(lua_State *state, ldb_t *ldb, int depth, lua_Debug *ar);
 static void print_current_line(ldb_t *ldb, lua_Debug *ar);
 
+static void handle_line_break(lua_State *state, ldb_t *ldb,
+                              lua_Debug *ar, input_t *input,
+                              const char *dv);
+static void handle_func_break(lua_State *state, ldb_t *ldb,
+                              lua_Debug *ar, input_t *input);
+
 static int help_handler(lua_State *state,  ldb_t *ldb,
                         lua_Debug *ar, input_t *input);
 static int print_handler(lua_State *state, ldb_t *ldb,
@@ -635,9 +641,35 @@ next_handler(lua_State *state, ldb_t *ldb,
   return -1;
 }
 
+static void
+handle_line_break(lua_State *state, ldb_t *ldb,
+                  lua_Debug *ar, input_t *input,
+                  const char *dv) {
+
+  int line;
+}
+
+static void
+handle_func_break(lua_State *state, ldb_t *ldb,
+                  lua_Debug *ar, input_t *input) {
+}
+
 static int
 break_handler(lua_State *state, ldb_t *ldb,
               lua_Debug *ar, input_t *input) {
+  char *dv;
+
+  if (input->num == 1) {
+    ldb_output("usage:\n b(break) function\nb(break) filename:line\n");
+    return 0;
+  }
+
+  dv = strchr(input->buffer, ':');
+  if (dv) {
+    handle_line_break(state, ldb, ar, input, dv);
+  } else {
+    handle_func_break(state, ldb, ar, input);
+  }
   return 0;
 }
 
