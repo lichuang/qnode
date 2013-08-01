@@ -40,9 +40,12 @@ static void print_current_line(ldb_t *ldb, lua_Debug *ar);
 
 static void handle_line_break(lua_State *state, ldb_t *ldb,
                               lua_Debug *ar, input_t *input,
-                              const char *dv);
+                              char *dv);
 static void handle_func_break(lua_State *state, ldb_t *ldb,
                               lua_Debug *ar, input_t *input);
+static int  add_line_break_point(ldb_t *ldb, const char *file, int line);
+//static void delete_break_point(ldb_t *ldb, int index);
+static int  search_break_point(ldb_t *ldb, lua_Debug *ar);
 
 static int help_handler(lua_State *state,  ldb_t *ldb,
                         lua_Debug *ar, input_t *input);
@@ -110,6 +113,10 @@ ldb_new(lua_State *state) {
   for (i = 0; i < MAX_FILE_BUCKET; ++i) {
     ldb->files[i] = NULL;
   }
+  for (i = 0; i < MAX_BREAKPOINT; ++i) {
+    ldb->bkpoints[i].file = NULL;
+  }
+  ldb->bknum = 0;
   return ldb;
 }
 
@@ -118,6 +125,7 @@ ldb_destroy(ldb_t *ldb) {
   int         i;
   ldb_file_t *file, *next;
   lua_State  *state;
+  ldb_breakpoint_t *bkpoint;
 
   state = ldb->state;
   for (i = 0; i < MAX_FILE_BUCKET; ++i) {
@@ -126,6 +134,12 @@ ldb_destroy(ldb_t *ldb) {
       next = file->next;
       ldb_file_free(file);
       file = next;
+    }
+  }
+  for (i = 0; i < MAX_BREAKPOINT; ++i) {
+    bkpoint = &(ldb->bkpoints[i]);
+    if (bkpoint->file) {
+      free(bkpoint->file);
     }
   }
   free(ldb);
@@ -242,6 +256,7 @@ split_input(const char *buff, input_t *input) {
 
 static void
 line_hook(lua_State *state, lua_Debug *ar) {
+  int    index;
   ldb_t  *ldb;
 
   if(!lua_getstack(state, 0, ar)) { 
@@ -259,15 +274,20 @@ line_hook(lua_State *state, lua_Debug *ar) {
   //if(lua_getinfo(state, "lnS", ar)) {
   if(lua_getinfo(state, "lnSu", ar)) {
     if (ldb->step) {
-      return on_event(-1, ldb, state, ar);
+      on_event(-1, ldb, state, ar);
+      return;
     } else {
+      index = search_break_point(ldb, ar);
+      if (index < 0) {
+        return;
+      }
+      on_event(index, ldb, state, ar);
+      return;
     }
-    set_prompt();
   } else {
     ldb_output("[LUA_DEBUG]lua_getinfo fail\n");
     return;
   }
-
 }
 
 /*
@@ -565,6 +585,10 @@ on_event(int bp, ldb_t *ldb, lua_State *state, lua_Debug *ar) {
   }
   ldb->call_depth = depth;
 
+  if (bp >= 0) {
+    ldb_output("Breakpoint #%d hit!\n", bp);
+  }
+
   set_prompt();
   char buff[LDB_MAX_INPUT];
   input_t input;;
@@ -641,12 +665,98 @@ next_handler(lua_State *state, ldb_t *ldb,
   return -1;
 }
 
+#if 0
+static void
+delete_break_point(ldb_t *ldb, int index) {
+  ldb_breakpoint_t *bkpoint;
+
+  bkpoint = &(ldb->bkpoints[index]);
+  if (bkpoint->file == NULL) {
+    return;
+  }
+  free(bkpoint->file);
+  bkpoint->file = NULL;
+}
+#endif
+
+static int
+search_break_point(ldb_t *ldb, lua_Debug *ar) {
+  int i;
+  ldb_breakpoint_t *bkpoint;
+
+  for (i = 0; i < MAX_BREAKPOINT; ++i) {
+    bkpoint = &(ldb->bkpoints[i]);
+    if (bkpoint->file == NULL) {
+      continue;
+    }
+    if (bkpoint->active == 0) {
+      continue;
+    }
+    if (ar->currentline != bkpoint->line + 1) {
+      continue;
+    }
+    if (strcmp(ar->source + 1, bkpoint->file)) {
+      continue;
+    }
+
+    bkpoint->hit += 1;
+    return i;
+  }
+
+  return -1;
+}
+
+static int
+add_line_break_point(ldb_t *ldb, const char *file, int line) {
+  int i;
+  ldb_breakpoint_t *bkpoint;
+
+  for (i = 0; i < MAX_BREAKPOINT; ++i) {
+    if (ldb->bkpoints[i].file == NULL) {
+      break;
+    }
+  }
+
+  if (i == MAX_BREAKPOINT) {
+    return -1;
+  }
+  bkpoint = &(ldb->bkpoints[i]);
+  bkpoint->file   = strdup(file);
+  bkpoint->line   = line;
+  bkpoint->active = 1;
+  bkpoint->index  = i;
+  bkpoint->hit    = 0;
+
+  return i;
+}
+
 static void
 handle_line_break(lua_State *state, ldb_t *ldb,
                   lua_Debug *ar, input_t *input,
-                  const char *dv) {
+                  char *dv) {
+  char name[200];
+  int line, index;
+  ldb_file_t *file;
 
-  int line;
+  line = atoi(dv + 1);
+  *dv = '\0';
+  strcpy(name, input->buffer[1]);
+
+  file = ldb_file_load(ldb, name);
+  if (file == NULL) {
+    return;
+  }
+  if (line > file->line) {
+    ldb_output("line too long\n");
+    return;
+  }
+  index = add_line_break_point(ldb, name, line - 1);
+  if (index < 0) {
+    return;
+  }
+  ldb_output("Breakpoint #%d is set at %s:%d\n",
+             index, name, line);
+  enable_line_hook(state, 1);
 }
 
 static void
@@ -664,7 +774,7 @@ break_handler(lua_State *state, ldb_t *ldb,
     return 0;
   }
 
-  dv = strchr(input->buffer, ':');
+  dv = strchr(input->buffer[1], ':');
   if (dv) {
     handle_line_break(state, ldb, ar, input, dv);
   } else {

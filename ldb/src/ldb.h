@@ -11,20 +11,26 @@ extern "C" {
 #include "ldb_file.h"
 
 typedef struct ldb_breakpoint_t {
-  const char   *file;
+  char         *file;
   int           line;
   unsigned int  active:1;
+  int           index;
+  int           hit;
 } ldb_breakpoint_t;
 
 #define MAX_FILE_BUCKET 20
+#define MAX_BREAKPOINT  60
 
 struct ldb_t {
-  lua_State    *state;
+  lua_State        *state;
 
-  int           call_depth;
-  unsigned int  step:1;
+  int               call_depth;
+  unsigned int      step:1;
 
-  ldb_file_t   *files[MAX_FILE_BUCKET];
+  ldb_file_t       *files[MAX_FILE_BUCKET];
+
+  int               bknum;
+  ldb_breakpoint_t  bkpoints[MAX_BREAKPOINT];
 };
 
 ldb_t*  ldb_new(lua_State *state);
