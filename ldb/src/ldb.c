@@ -86,29 +86,90 @@ typedef struct ldb_command_t {
 } ldb_command_t;
 
 ldb_command_t commands[] = {
-  {"help",      "h",  "h(help): print help info",          &help_handler},
+  {
+    "help",
+    "h",
+    ": print help info",
+    &help_handler
+  },
 
-  {"print",     "p",  "p <varname>: print var value",      &print_handler},
+  {
+    "print",
+    "p",
+    "<varname> : print var value",
+    &print_handler
+  },
 
-  {"backtrace", "bt", "bt: print backtrace info",          &backtrace_handler},
+  {
+    "backtrace",
+    "bt",
+    ": print backtrace info",
+    &backtrace_handler
+  },
 
-  {"list",      "l",  "l(list): list file source",         &list_handler},
+  {
+    "list",
+    "l",
+    ": list file source",
+    &list_handler
+  },
 
-  {"step",      "s",  "s(step): one instruction exactly",  &step_handler},
+  {
+    "step",
+    "s",
+    ": one instruction exactly",
+    &step_handler
+  },
 
-  {"next",      "n",  "n(next): one instruction exactly",  &next_handler},
+  {
+    "next",
+    "n",
+    ":next line",
+    &next_handler
+  },
 
-  {"break",     "b",  "b(break) [function|filename:line]: break at function or line in a file",  &break_handler},
+  {
+    "break",
+    "b",
+    "[function|filename:line] : break at function or line in a file",
+    &break_handler
+  },
 
-  {"disable",   "dis","disable(dis) breakpoint: disable a breakpoint", &disable_handler},
+  {
+    "disable",
+    "dis",
+    "breakpoint : disable a breakpoint",
+    &disable_handler
+  },
 
-  {"enable",    "en", "enable(en) breakpoint: enable a breakpoint", &enable_handler},
+  {
+    "enable",
+    "en",
+    "breakpoint : enable a breakpoint",
+    &enable_handler
+  },
 
-  {"delete",    "del","delete(del) breakpoint: delete a breakpoint", &delete_handler},
+  {
+    "delete",
+    "del",
+    "breakpoint : delete a breakpoint",
+    &delete_handler
+  },
 
-  {"info",      "i",  "i(info): show all break info",      &info_handler},
+  {
+    "info",
+    "i",
+    ":show all break info",
+    &info_handler
+  },
 
-  {"continue",  "c",  "c(continue): continue execute when hit a break point",  &continue_handler},
+  {
+    "continue",
+    "c",
+    ": continue execute when hit a break point",
+    &continue_handler
+  },
+
   {NULL,        NULL, NULL,                                 NULL},
 };
 
@@ -338,7 +399,7 @@ help_handler(lua_State *state, ldb_t *ldb,
   ldb_output("Lua debugger written by Lichuang(2013)\ncmd:\n");
   for (i = 0; commands[i].name != NULL; ++i) {
     if (commands[i].help) {
-      ldb_output("\t%s\n", commands[i].help);
+      ldb_output("\t%s(%s) %s\n", commands[i].name,commands[i].short_name,commands[i].help);
     }
   }
   return 0;
