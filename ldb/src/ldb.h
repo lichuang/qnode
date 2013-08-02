@@ -11,7 +11,10 @@ extern "C" {
 #include "ldb_file.h"
 
 typedef struct ldb_breakpoint_t {
+  unsigned int  available:1;
   char         *file;
+  char         *func;
+  const char   *type;
   int           line;
   unsigned int  active:1;
   int           index;

@@ -18,7 +18,8 @@ typedef struct input_t {
 
 static void single_step(ldb_t *ldb, int step);
 static void enable_line_hook(lua_State *state, int enable);
-static void line_hook(lua_State *state, lua_Debug *ar);
+static void enable_func_hook(lua_State *state, ldb_t *ldb, int enable);
+static void all_hook(lua_State *state, lua_Debug *ar);
 //static void func_hook(lua_State *state, lua_Debug *ar);
 static int  get_input(char *buff, int size);
 static void set_prompt();
@@ -44,6 +45,7 @@ static void handle_line_break(lua_State *state, ldb_t *ldb,
 static void handle_func_break(lua_State *state, ldb_t *ldb,
                               lua_Debug *ar, input_t *input);
 static int  add_line_break_point(ldb_t *ldb, const char *file, int line);
+static int  add_func_break_point(ldb_t *ldb, const char *func, const char *type);
 //static void delete_break_point(ldb_t *ldb, int index);
 static int  search_break_point(ldb_t *ldb, lua_Debug *ar);
 
@@ -114,7 +116,7 @@ ldb_new(lua_State *state) {
     ldb->files[i] = NULL;
   }
   for (i = 0; i < MAX_BREAKPOINT; ++i) {
-    ldb->bkpoints[i].file = NULL;
+    ldb->bkpoints[i].available = 1;
   }
   ldb->bknum = 0;
   return ldb;
@@ -189,9 +191,22 @@ enable_line_hook(lua_State *state, int enable) {
   
   mask = lua_gethookmask(state);
   if (enable) {
-    lua_sethook(state, line_hook, mask | LUA_MASKLINE, 0); 
+    lua_sethook(state, all_hook, mask | LUA_MASKLINE, 0); 
   } else {
-    lua_sethook(state, line_hook, mask & ~LUA_MASKLINE, 0); 
+    lua_sethook(state, all_hook, mask & ~LUA_MASKLINE, 0); 
+  }
+}
+
+static void
+enable_func_hook(lua_State *state, ldb_t *ldb, int enable) {
+  int mask;
+  
+  mask = lua_gethookmask(state);
+  if (enable) {
+    lua_sethook(state, all_hook, mask | LUA_MASKCALL, 0); 
+    ldb->step = 0;
+  } else {
+    lua_sethook(state, all_hook, mask & ~LUA_MASKCALL, 0); 
   }
 }
 
@@ -255,7 +270,7 @@ split_input(const char *buff, input_t *input) {
 }
 
 static void
-line_hook(lua_State *state, lua_Debug *ar) {
+all_hook(lua_State *state, lua_Debug *ar) {
   int    index;
   ldb_t  *ldb;
 
@@ -289,12 +304,6 @@ line_hook(lua_State *state, lua_Debug *ar) {
     return;
   }
 }
-
-/*
-static void
-func_hook(lua_State *state, lua_Debug *ar) {
-}
-*/
 
 static void
 set_prompt() {   
@@ -586,7 +595,7 @@ on_event(int bp, ldb_t *ldb, lua_State *state, lua_Debug *ar) {
   ldb->call_depth = depth;
 
   if (bp >= 0) {
-    ldb_output("Breakpoint #%d hit!\n", bp);
+    ldb_output("breakpoint %d hit!\n", bp);
   }
 
   set_prompt();
@@ -684,8 +693,12 @@ search_break_point(ldb_t *ldb, lua_Debug *ar) {
   int i;
   ldb_breakpoint_t *bkpoint;
 
-  for (i = 0; i < MAX_BREAKPOINT; ++i) {
+  /* search break point by file:line */
+  for (i = 0; i < ldb->bknum; ++i) {
     bkpoint = &(ldb->bkpoints[i]);
+    if (bkpoint->available) {
+      continue;
+    }
     if (bkpoint->file == NULL) {
       continue;
     }
@@ -703,6 +716,23 @@ search_break_point(ldb_t *ldb, lua_Debug *ar) {
     return i;
   }
 
+  /* if not hook by func call, return */
+  if (ar->event != LUA_HOOKCALL) {
+    return -1;
+  }
+  /* search break point by func */
+  for (i = 0; i < ldb->bknum; ++i) {
+    bkpoint = &(ldb->bkpoints[i]);
+    if (bkpoint->available) {
+      continue;
+    }
+    if (strcmp(ar->name, bkpoint->func)) {
+      continue;
+    }
+
+    bkpoint->hit += 1;
+    return i;
+  }
   return -1;
 }
 
@@ -712,7 +742,7 @@ add_line_break_point(ldb_t *ldb, const char *file, int line) {
   ldb_breakpoint_t *bkpoint;
 
   for (i = 0; i < MAX_BREAKPOINT; ++i) {
-    if (ldb->bkpoints[i].file == NULL) {
+    if (ldb->bkpoints[i].available) {
       break;
     }
   }
@@ -721,11 +751,42 @@ add_line_break_point(ldb_t *ldb, const char *file, int line) {
     return -1;
   }
   bkpoint = &(ldb->bkpoints[i]);
+  bkpoint->available = 0;
   bkpoint->file   = strdup(file);
   bkpoint->line   = line;
   bkpoint->active = 1;
   bkpoint->index  = i;
   bkpoint->hit    = 0;
+  bkpoint->func   = NULL;
+  ldb->bknum += 1;
+
+  return i;
+}
+
+static int
+add_func_break_point(ldb_t *ldb, const char *func, const char *type) {
+  int i;
+  ldb_breakpoint_t *bkpoint;
+
+  for (i = 0; i < MAX_BREAKPOINT; ++i) {
+    if (ldb->bkpoints[i].available) {
+      break;
+    }
+  }
+
+  if (i == MAX_BREAKPOINT) {
+    return -1;
+  }
+  bkpoint = &(ldb->bkpoints[i]);
+  bkpoint->available = 0;
+  bkpoint->file   = NULL;
+  bkpoint->func   = strdup(func);
+  bkpoint->line   = -1;
+  bkpoint->active = 1;
+  bkpoint->index  = i;
+  bkpoint->hit    = 0;
+  bkpoint->type   = type;
+  ldb->bknum += 1;
 
   return i;
 }
@@ -754,7 +815,7 @@ handle_line_break(lua_State *state, ldb_t *ldb,
   if (index < 0) {
     return;
   }
-  ldb_output("Breakpoint #%d is set at %s:%d\n",
+  ldb_output("breakpoint %d is set at %s:%d\n",
              index, name, line);
   enable_line_hook(state, 1);
 }
@@ -762,6 +823,53 @@ handle_line_break(lua_State *state, ldb_t *ldb,
 static void
 handle_func_break(lua_State *state, ldb_t *ldb,
                   lua_Debug *ar, input_t *input) {
+  int top, index, len, pos;
+  char *p, *buffer;
+
+  top = lua_gettop(state);
+  index = LUA_GLOBALSINDEX;
+  buffer = &(input->buffer[1][0]);
+  len = strlen(buffer);
+  p  = strchr(buffer, '.');
+  while (p) {
+    lua_pushlstring(state, buffer, p - buffer);
+    lua_gettable(state, index);
+    if(lua_isnil(state, -1)) {
+      lua_settop(state, top);
+      ldb_output("Table '%.*s' not found!\n", p - buffer, buffer); 
+      return;
+    }   
+    index = lua_gettop(state); 
+    buffer = p + 1;
+    p = strchr(buffer, '.');
+  }
+
+  pos = buffer - &(input->buffer[1][0]);
+  lua_pushlstring(state, buffer, len - pos);
+  lua_gettable(state, index);
+  if(lua_isnil(state, -1 ) ) {
+    ldb_output("Function '%.*s' not found!\n", len - pos, buffer); 
+  } else if (lua_iscfunction(state, -1 )) {
+    ldb_output("Cannot break on C Function '%.*s'.\n", len - pos, buffer);
+  } else if (lua_isfunction(state, -1) ) {
+    char tmp[512];
+    int bk;
+    strcpy(tmp, buffer);
+
+    if (p == &(input->buffer[1][0])) {
+      bk = add_func_break_point(ldb, tmp, "golbal");
+    } else {
+      bk = add_func_break_point(ldb, tmp, "local");
+    }
+    if (bk >= 0) {
+      ldb_output("breakpoint %d is set at '%s'\n", bk, input->buffer[1]);
+      enable_func_hook(state, ldb, 1);
+    }
+  } else {
+    ldb_output("'%.*s' is not a function!\n", len - pos, buffer);
+  }
+
+  lua_settop(state, top);
 }
 
 static int
@@ -786,7 +894,8 @@ break_handler(lua_State *state, ldb_t *ldb,
 static int
 continue_handler(lua_State *state, ldb_t *ldb,
                  lua_Debug *ar, input_t *input) {
-  enable_line_hook(state, 0);
+  ldb->step = 0;
+  //enable_line_hook(state, 0);
   ldb->call_depth = -1;
 
   return -1;
