@@ -256,7 +256,8 @@ split_input(const char *buff, input_t *input) {
            ldb_output("param %s more than %d", buff, LDB_MAX_PARAM);
            return -1;
          }
-         strncpy(input->buffer[i++], save, p - save);
+         strncpy(input->buffer[i], save, p - save);
+         input->buffer[i++][p - save] = '\0';
          save = NULL;
        }
      } else {
@@ -271,7 +272,9 @@ split_input(const char *buff, input_t *input) {
      ldb_output("param %s more than %d", buff, LDB_MAX_PARAM);
      return -1;
    }
-   strcpy(input->buffer[i++], save);
+   if (save) {
+     strcpy(input->buffer[i++], save);
+   }
    input->num = i;
 
    /*
