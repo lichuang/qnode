@@ -48,6 +48,7 @@ static int  add_line_break_point(ldb_t *ldb, const char *file, int line);
 static int  add_func_break_point(ldb_t *ldb, const char *func, const char *type);
 //static void delete_break_point(ldb_t *ldb, int index);
 static int  search_break_point(ldb_t *ldb, lua_Debug *ar);
+static int  enable_break_point(ldb_t *ldb, input_t *input, int enable);
 
 static int help_handler(lua_State *state,  ldb_t *ldb,
                         lua_Debug *ar, input_t *input);
@@ -65,6 +66,14 @@ static int break_handler(lua_State *state, ldb_t *ldb,
                          lua_Debug *ar, input_t *input);
 static int continue_handler(lua_State *state, ldb_t *ldb,
                             lua_Debug *ar, input_t *input);
+static int info_handler(lua_State *state, ldb_t *ldb,
+                        lua_Debug *ar, input_t *input);
+static int disable_handler(lua_State *state, ldb_t *ldb,
+                           lua_Debug *ar, input_t *input);
+static int enable_handler(lua_State *state, ldb_t *ldb,
+                          lua_Debug *ar, input_t *input);
+static int delete_handler(lua_State *state, ldb_t *ldb,
+                          lua_Debug *ar, input_t *input);
 
 typedef int (*handler_t)(lua_State *state, ldb_t *ldb,
                          lua_Debug *ar, input_t *input);
@@ -91,7 +100,15 @@ ldb_command_t commands[] = {
 
   {"break",     "b",  "b(break) [function|filename:line]: break at function or line in a file",  &break_handler},
 
-  {"continue",  "c",  "c(continue): continue excute when hit a break point",  &continue_handler},
+  {"disable",   "dis","disable(dis) breakpoint: disable a breakpoint", &disable_handler},
+
+  {"enable",    "en", "enable(en) breakpoint: enable a breakpoint", &enable_handler},
+
+  {"delete",    "del","delete(del) breakpoint: delete a breakpoint", &delete_handler},
+
+  {"info",      "i",  "i(info): show all break info",      &info_handler},
+
+  {"continue",  "c",  "c(continue): continue execute when hit a break point",  &continue_handler},
   {NULL,        NULL, NULL,                                 NULL},
 };
 
@@ -699,10 +716,10 @@ search_break_point(ldb_t *ldb, lua_Debug *ar) {
     if (bkpoint->available) {
       continue;
     }
-    if (bkpoint->file == NULL) {
+    if (bkpoint->active == 0) {
       continue;
     }
-    if (bkpoint->active == 0) {
+    if (bkpoint->file == NULL) {
       continue;
     }
     if (ar->currentline != bkpoint->line + 1) {
@@ -720,10 +737,16 @@ search_break_point(ldb_t *ldb, lua_Debug *ar) {
   if (ar->event != LUA_HOOKCALL) {
     return -1;
   }
+  if (ar->name == NULL) {
+    return -1;
+  }
   /* search break point by func */
   for (i = 0; i < ldb->bknum; ++i) {
     bkpoint = &(ldb->bkpoints[i]);
     if (bkpoint->available) {
+      continue;
+    }
+    if (bkpoint->active == 0) {
       continue;
     }
     if (strcmp(ar->name, bkpoint->func)) {
@@ -898,5 +921,76 @@ continue_handler(lua_State *state, ldb_t *ldb,
   //enable_line_hook(state, 0);
   ldb->call_depth = -1;
 
+  return -1;
+}
+
+static int
+info_handler(lua_State *state, ldb_t *ldb,
+             lua_Debug *ar, input_t *input) {
+  int i;
+  ldb_breakpoint_t *bkpoint;
+
+  ldb_output("Num\tEnable\t\tFunc\t\tFile\t\tLine\tHit\n");
+  /* search break point by file:line */
+  for (i = 0; i < ldb->bknum; ++i) {
+    bkpoint = &(ldb->bkpoints[i]);
+    ldb_output("%d\t%d\t\t%s\t\t%s\t\t%d\t%d\n",
+              i, bkpoint->active,
+              bkpoint->func ? bkpoint->func : "Nil",
+              bkpoint->file ? bkpoint->file : "Nil",
+              bkpoint->line, bkpoint->hit);
+  }
+
+  return 0;
+}
+
+static int
+enable_break_point(ldb_t *ldb, input_t *input, int enable) {
+  int bk;
+
+  bk = atoi(input->buffer[1]);
+  if (bk < -1 || bk > MAX_BREAKPOINT) {
+    ldb_output("breakpoint %d invalid\n", bk);
+    return -1;
+  }
+  if (ldb->bkpoints[bk].available == 1) {
+    ldb_output("breakpoint %d not set\n", bk);
+    return -1;
+  }
+  ldb->bkpoints[bk].active = enable;
+  return 0;
+}
+
+static int
+disable_handler(lua_State *state, ldb_t *ldb,
+                lua_Debug *ar, input_t *input) {
+  enable_break_point(ldb, input, 0);
+  return -1;
+}
+
+static int
+enable_handler(lua_State *state, ldb_t *ldb,
+               lua_Debug *ar, input_t *input) {
+  enable_break_point(ldb, input, 1);
+  return -1;
+}
+
+static int
+delete_handler(lua_State *state, ldb_t *ldb,
+               lua_Debug *ar, input_t *input) {
+  int bk;
+
+  bk = atoi(input->buffer[1]);
+  if (bk < -1 || bk > MAX_BREAKPOINT) {
+    ldb_output("breakpoint %d invalid\n", bk);
+    return -1;
+  }
+  ldb->bkpoints[bk].available = 1;
+  if (ldb->bkpoints[bk].file) {
+    free(ldb->bkpoints[bk].file);
+  }
+  if (ldb->bkpoints[bk].func) {
+    free(ldb->bkpoints[bk].func);
+  }
   return -1;
 }
