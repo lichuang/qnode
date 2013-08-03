@@ -292,9 +292,7 @@ enable_func_hook(lua_State *state, ldb_t *ldb, int enable) {
 
 static int
 get_input(char *buff, int size) {
-  int len;
-  
-  len = read(STDIN_FILENO, buff, size);
+  int len = read(STDIN_FILENO, buff, size);
   if (buff[0] == '\n') {
     strcpy(buff, last);
     return strlen(buff);
@@ -743,9 +741,9 @@ print_current_line(ldb_t *ldb, lua_Debug *ar) {
   if (ar->currentline >= file->line) {
     return;
   }
-  i = ar->currentline + 1;
-  ldb_output("%s:%d\t%s", file->name, i,
-             file->lines[i - 1]);
+  i = ar->currentline;
+  ldb_output("%s:%d\t%s", file->name, i + 1,
+             file->lines[i]);
 }
 
 static int
