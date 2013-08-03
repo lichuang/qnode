@@ -12,9 +12,11 @@
 static const char* lua_debugger_tag = "__ldb_debugger";
 
 typedef struct input_t {
-  char    buffer[LDB_MAX_INPUT][LDB_MAX_PARAM];
+  char    buffer[LDB_MAX_PARAM][LDB_MAX_INPUT];
   int     num;
 } input_t;
+
+static char last[LDB_MAX_INPUT] = {'\0'};
 
 static void single_step(ldb_t *ldb, int step);
 static void enable_line_hook(lua_State *state, int enable);
@@ -290,9 +292,16 @@ enable_func_hook(lua_State *state, ldb_t *ldb, int enable) {
 
 static int
 get_input(char *buff, int size) {
-  int len = read(STDIN_FILENO, buff, size);
+  int len;
+  
+  len = read(STDIN_FILENO, buff, size);
+  if (buff[0] == '\n') {
+    strcpy(buff, last);
+    return strlen(buff);
+  }
   if(len > 0) { 
     buff[len - 1] = '\0';
+    strcpy(last, buff);
     return len - 1;
   }   
   return -1;
