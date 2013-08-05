@@ -181,7 +181,7 @@ function main_loop(_args)
       end
 
       qbuffer_reset(buffer);
-      local out = qtcp_outbuf(socket);
+      local out = qtcp_out(socket);
       qbuffer_write_string(out, arg.response);
       local nret, reason = qtcp_send(socket)
       if not nret then
