@@ -8,6 +8,7 @@
 #include <lua.h>
 #include "qcore.h"
 #include "qdict.h"
+#include "qlog.h"
 #include "qstring.h"
 
 struct qactor_t;
@@ -36,6 +37,9 @@ int qlua_init_path(struct qactor_t *actor);
 
 struct qactor_t* qlua_get_actor(lua_State *state);
 
-void qlua_fail(lua_State *state, char *file, int line);
+#define qlua_fail(state, file, line)    \
+{                                       \
+  qerror("%s:%d lua_call failed\n\t%s", file, line, lua_tostring(state, -1)); \
+}
 
 #endif  /* __QLUAUTIL_H__ */

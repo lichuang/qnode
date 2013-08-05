@@ -14,7 +14,6 @@
 #include "qconfig.h"
 #include "qdefines.h"
 #include "qluautil.h"
-#include "qlog.h"
 #include "qmsg.h"
 #include "qserver.h"
 #include "qstring.h"
@@ -54,6 +53,7 @@ qlua_new_state(lua_Alloc fun, void *ud) {
   qapi_register(state);
   if(luaL_dofile(state, "main.lua")) {
     qstdout("load main.lua error\n");
+    qlua_fail(state, __FILE__, __LINE__);
   }
 
   return state;
@@ -63,6 +63,7 @@ int
 qlua_reload(lua_State *state) {
   if(luaL_dofile(state, "main.lua")) {
     qerror("load file error");
+    qlua_fail(state, __FILE__, __LINE__);
     return -1;
   }
 
@@ -71,7 +72,16 @@ qlua_reload(lua_State *state) {
 
 lua_State*
 qlua_new_thread(qworker_t *worker) {
-  return lua_newthread(worker->state);
+  lua_State *state;
+  
+  state = lua_newthread(worker->state);
+  if (state == NULL) {
+    return NULL;
+  }
+
+  //lua_atpanic(state, panic);
+
+  return state;
 }
 
 static int
@@ -367,22 +377,4 @@ qlua_get_actor(lua_State *state) {
   lua_gettable(state, LUA_REGISTRYINDEX);
   //lua_getfield(state, LUA_REGISTRYINDEX, "qnode");
   return (qactor_t*)lua_touserdata(state, -1);
-}
-
-void
-qlua_fail(lua_State *state, char *file, int line) {                                           \
-  char tmp_buff[8000+1]={0,};                                              
-  snprintf(tmp_buff, 8000, "%s:%d lua_call failed\n\t%s",
-           file, line, lua_tostring(state, -1 )); 
-  qerror(tmp_buff); 
-  /*
-  lua_State* L_ = g_luasvr->L();                                                  
-  assert( L_ );                                                                   
-  g_luasvr->get_lua_ref( ADD_LLUA_FAIL_LOG );                                     
-  lua_pushstring( L_,  tmp_buff );                                                
-  if( llua_call( L_, 1, 0, 0 ) )                                                  
-  {                                                                               
-    ERR(2)("[LUAWRAPPER](lmisc) %s:%d add llua fail err.", __FILE__, __LINE__ );
-  } 
-  */
 }
