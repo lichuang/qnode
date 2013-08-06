@@ -15,6 +15,9 @@ static int  logger_log_handler(qmsg_t *msg, void *reader);
 static int  logger_signal_handler(qmsg_t *msg, void *reader);
 static void destroy_log_msg(qmsg_t *msg);
 
+#define NONE         "\033[m"
+#define RED          "\033[0;32;31m"
+
 qmsg_pt* logger_msg_handlers[] = {
   &logger_log_handler,
   &logger_signal_handler,
@@ -31,14 +34,18 @@ logger_log_handler(qmsg_t *msg, void *reader) {
   lmsg->destroy = destroy_log_msg;
   log = lmsg->log;
 
-  logger->log_size += log->size;
-  if (logger->log_size > config.log_size) {
-    qlogger_open_file();
-  }
   if (config.daemon) {
+    logger->log_size += log->size;
+    if (logger->log_size > config.log_size) {
+      qlogger_open_file();
+    }
     write(logger->fd, log->buff, log->size);
   } else {
-    printf("%s", log->buff);
+    if (log->level > QLOG_ERR) {
+      printf("%s", log->buff);
+    } else {
+      printf(RED"%s"NONE, log->buff);
+    }
   }
 
   return 0;

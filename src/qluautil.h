@@ -33,13 +33,13 @@ void qlua_dump_dict(lua_State *state, qdict_t *dict);
 
 int qlua_threadloadfile(qactor_t *actor, lua_State *state, const char *filename);
 int qlua_dofile(lua_State *state, const char *filename);
-int qlua_init_path(struct qactor_t *actor);
+int qlua_init_path(qactor_t *actor);
 
-struct qactor_t* qlua_get_actor(lua_State *state);
+int qlua_doresume(lua_State *state, int nargs, const char *file, int line);
 
-#define qlua_fail(state, file, line)    \
-{                                       \
-  qerror("%s:%d lua_call failed\n\t%s", file, line, lua_tostring(state, -1)); \
-}
+qactor_t* qlua_get_actor(lua_State *state);
+
+#define qlua_fail(state) qerror("%s:%d lua_call failed\n\t%s", __FILE__, __LINE__, lua_tostring(state, -1));
+#define qlua_resume(state, nargs) qlua_doresume(state, nargs, __FILE__, __LINE__);
 
 #endif  /* __QLUAUTIL_H__ */

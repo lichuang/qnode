@@ -28,6 +28,7 @@ struct qlog_t {
   char    buff[QMAX_LOG_SIZE + 2];
   int     size;
   int     idx;
+  int     level;
 };
 
 void qlog(int level, const char* file, int line, const char *format, ...);

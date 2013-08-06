@@ -72,7 +72,7 @@ worker_start_handler(qmsg_t *msg, void *reader) {
     ret = (int)lua_tonumber(state, -1);
     lua_pop(state, 1 );
   } else {
-    qlua_fail(state, __FILE__, __LINE__);
+    qlua_fail(state);
   }
 
   return ret;
@@ -97,7 +97,7 @@ worker_spawn_handler(qmsg_t *msg, void *reader) {
     ret = (int)lua_tonumber(state, -1);
     lua_pop(state, 1 );
   } else {
-    qlua_fail(state, __FILE__, __LINE__);
+    qlua_fail(state);
   }
 
   return ret;

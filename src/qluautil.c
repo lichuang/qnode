@@ -53,7 +53,7 @@ qlua_new_state(lua_Alloc fun, void *ud) {
   qapi_register(state);
   if(luaL_dofile(state, "main.lua")) {
     qstdout("load main.lua error\n");
-    qlua_fail(state, __FILE__, __LINE__);
+    qlua_fail(state);
   }
 
   return state;
@@ -63,7 +63,7 @@ int
 qlua_reload(lua_State *state) {
   if(luaL_dofile(state, "main.lua")) {
     qerror("load file error");
-    qlua_fail(state, __FILE__, __LINE__);
+    qlua_fail(state);
     return -1;
   }
 
@@ -320,7 +320,7 @@ qlua_threadloadfile(qactor_t *actor, lua_State *state,
   ret = luaL_loadfile(state, full_name);
   //qstring_destroy(full_name);
   /* start the coroutine */
-  lua_resume(state, 0);
+  qlua_resume(state, 0);
 
   return ret;
 }
@@ -377,4 +377,21 @@ qlua_get_actor(lua_State *state) {
   lua_gettable(state, LUA_REGISTRYINDEX);
   //lua_getfield(state, LUA_REGISTRYINDEX, "qnode");
   return (qactor_t*)lua_touserdata(state, -1);
+}
+
+int
+qlua_doresume(lua_State *state, int nargs,
+              const char *file, int line) {
+  int         ret;
+
+  ret = lua_resume(state, nargs);
+
+  /* if an error occured */
+  if (ret > LUA_YIELD) {
+    qerror("%s:%d lua_call failed\n\t%s", __FILE__, __LINE__,
+           lua_tostring(state, -1));
+    /* TODO: when error occur in coroutine, it cannot continue... */
+  }
+
+  return ret;
 }

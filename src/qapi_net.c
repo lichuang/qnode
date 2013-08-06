@@ -63,7 +63,7 @@ new_tcp_socket(int fd, lua_State *state, qactor_t *actor,
   if (socket == NULL) {
     lua_pushnil(state);
     lua_pushliteral(state, "create socket error");
-    lua_resume(state, 2);
+    qlua_resume(state, 2);
     return -1;
   }
 
@@ -107,7 +107,7 @@ socket_accept(int fd, int flags, void *data) {
   if (sock == -1) {
     lua_pushnil(state);
     lua_pushliteral(state, "socket closed");
-    lua_resume(state, 2);
+    qlua_resume(state, 2);
     return;
   }
   /* restore the listen fd state */
@@ -118,7 +118,7 @@ socket_accept(int fd, int flags, void *data) {
   if (new_tcp_socket(sock, state, actor, &remote) < 0) {
     return;
   }
-  lua_resume(state, 1);
+  qlua_resume(state, 1);
 }
 
 static int
@@ -193,13 +193,13 @@ socket_recv(int fd, int flags, void *data) {
   if (nret < 0) {
     lua_pushnil(state);
     lua_pushliteral(state, "socket closed");
-    lua_resume(state, 2);
+    qlua_resume(state, 2);
     return;
   }
   engine = qactor_get_engine(actor->aid);
   qengine_del_event(engine, socket->fd, QEVENT_READ);
   lua_pushlightuserdata(state, socket->in);
-  lua_resume(state, 1);
+  qlua_resume(state, 1);
 }
 
 static int
@@ -260,14 +260,14 @@ socket_send(int fd, int flags, void *data) {
   if (nret < 0) {
     lua_pushnil(state);
     lua_pushliteral(state, "socket closed");
-    lua_resume(state, 2);
+    qlua_resume(state, 2);
     return;
   }
 
   engine = qactor_get_engine(actor->aid);
   qengine_del_event(engine, socket->fd, QEVENT_WRITE);
   socket->in->end = 0;
-  lua_resume(state, 1);
+  qlua_resume(state, 1);
 }
 
 static int

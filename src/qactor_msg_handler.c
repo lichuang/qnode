@@ -37,7 +37,7 @@ actor_send_handler(qamsg_header_t *header, qactor_t *actor) {
     lua_newtable(state);
     qlua_dump_dict(state, actor_msg->arg_dict);
     qdict_destroy(actor_msg->arg_dict);
-    lua_resume(state, 1);
+    qlua_resume(state, 1);
   } else {
     /* else add the msg to the actor msg list */
     qlist_add_tail(&actor_msg->entry, &(actor->msg_list));
