@@ -15,6 +15,7 @@
 #include "qactor.h"
 #include "qassert.h"
 #include "qconfig.h"
+#include "qcore.h"
 #include "qengine.h"
 #include "qdefines.h"
 #include "qfreelist.h"
@@ -27,21 +28,20 @@
 #include "qserver.h"
 #include "qsignal.h"
 #include "qsocket.h"
-#include "qworker.h"
 #include "qthread_log.h"
 #include "qwmsg.h"
+#include "qworker.h"
 
 extern qmsg_pt* server_msg_handlers[];
 
 static qengine_t *engine;
 static qmailbox_t box;
-qserver_t        *server;
 
 static void server_accept(int fd, int flags, void *data);
-static int  init_server_event(qserver_t *server);
+static int  init_server_event();
 static int  server_msg_handler(qmsg_t *msg, void *reader);
-static void server_start(qserver_t *server);
-static int  init_workers(qserver_t *server);
+static void server_start();
+static int  init_workers();
 static void signal_handler(int sig);
 static void setup_signal();
 static int  init_server();
@@ -60,7 +60,7 @@ server_accept(int fd, int flags, void *data) {
 }
 
 static int
-init_server_event(qserver_t *server) {
+init_server_event() {
   return 0;
   int fd = qnet_tcp_listen(22222, "127.0.0.1");
   if (fd < 0) {
@@ -68,7 +68,7 @@ init_server_event(qserver_t *server) {
   }
 
   if (qengine_add_event(engine, fd, QEVENT_READ,
-                        server_accept, server) < 0) {
+                        server_accept, NULL) < 0) {
     return -1;
   }
   return 0;
@@ -89,11 +89,10 @@ qserver_worker() {
 }
 
 static void
-server_start(qserver_t *server) {
+server_start() {
   qid_t  tid;
   qmsg_t *msg;
 
-  UNUSED(server);
   tid = qserver_worker();
   msg = qwmsg_start_new(QMAINTHREAD_TID, tid);
   if (msg == NULL) {
@@ -103,7 +102,7 @@ server_start(qserver_t *server) {
 }
 
 static int
-init_workers(qserver_t *server) {
+init_workers() {
   int           i;
   int           worker;
   
@@ -213,12 +212,6 @@ set_core_size() {
 static int
 init_server() {
   qassert(config.worker > 0);
-  qassert(server == NULL);
-
-  server = qcalloc(sizeof(qserver_t));
-  if (server == NULL) {
-    goto error;
-  }
 
   if (config.daemon) {
     make_daemon();
@@ -241,22 +234,22 @@ init_server() {
   if (engine == NULL) {
     goto error;
   }
-  if (init_server_event(server) < 0) {
+  if (init_server_event() < 0) {
     goto error;
   }
   qmailbox_init(&box, server_msg_handler,
-                engine, server);
+                engine, NULL);
   qsocket_init_free_list();
   if (chdir(config.script_path) != 0) {
     qstdout("chdir %s error: %s\n", config.script_path, strerror(errno));
     goto error;
   }
-  if (init_workers(server) < 0) {
+  if (init_workers() < 0) {
     goto error;
   }
   setup_signal();
 
-  server_start(server);
+  server_start();
 
   return 0;
 

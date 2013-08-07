@@ -32,9 +32,7 @@ static int
 server_signal_handler(qmsg_t *msg, void *reader) {
   int             signo;
   qmmsg_signal_t *signal;
-  qserver_t      *server;
   
-  server = (qserver_t*)reader;
   signal = (qmmsg_signal_t*)msg;
   signo  = signal->signo;
 
