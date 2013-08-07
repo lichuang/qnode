@@ -133,14 +133,14 @@ qnet_tcp_recv(qsocket_t *socket) {
    *    (means there is no data in the tcp stack buffer)
    */
   do {
-    if (qbuffer_writeable_len(buffer) == 0) {
+    if (qbuffer_wlen(buffer) == 0) {
       qbuffer_extend(buffer, buffer->size * 2);
     }
     if (buffer->data == NULL) {
       return -1;
     }
 
-    size = qbuffer_writeable_len(buffer);
+    size = qbuffer_wlen(buffer);
     do {
       n = recv(fd, qbuffer_writeable(buffer), size, 0);
       save = errno;
@@ -182,7 +182,7 @@ qnet_tcp_send(qsocket_t *socket) {
   fd = socket->fd;
   buffer = socket->out;
 
-  size = qbuffer_readable_len(buffer);
+  size = qbuffer_rlen(buffer);
   nbytes = 0;
   while(size > 0) {
     do {

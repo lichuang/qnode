@@ -203,9 +203,11 @@ static int
 set_core_size() {
   struct rlimit rlim_core;
 
-  rlim_core.rlim_cur = RLIM_INFINITY; /* Soft limit */
-  rlim_core.rlim_max = RLIM_INFINITY; /* Hard limit (ceiling
-                                         for rlim_cur) */
+  /* Soft limit */
+  rlim_core.rlim_cur = RLIM_INFINITY;
+  /* Hard limit (ceiling for rlim_cur) */
+  rlim_core.rlim_max = RLIM_INFINITY;
+
   return setrlimit(RLIMIT_CORE, &rlim_core);
 }
 

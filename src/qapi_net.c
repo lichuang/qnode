@@ -17,7 +17,31 @@
 #include "qstring.h"
 #include "qworker.h"
 
-static int tcp_buffer(lua_State *state, int in);
+static void init_tcp_listen_params(qactor_t *actor);
+static int  tcp_buffer(lua_State *state, int in);
+static int  new_tcp_socket(int fd, lua_State *state, qactor_t *actor,
+                           struct sockaddr_in *remote);
+static void socket_accept(int fd, int flags, void *data);
+static void socket_recv(int fd, int flags, void *data);
+static void socket_send(int fd, int flags, void *data);
+static int  tcp_buffer(lua_State *state, int in);
+
+static int  qltcp_listen(lua_State *state);
+static int  qltcp_accept(lua_State *state);
+static int  qltcp_recv(lua_State *state);
+static int  qltcp_send(lua_State *state);
+static int  qltcp_inbuf(lua_State *state);
+static int  qltcp_outbuf(lua_State *state);
+
+luaL_Reg net_apis[] = {
+  {"qltcp_listen",    qltcp_listen},
+  {"qltcp_accept",    qltcp_accept},
+  {"qltcp_recv",      qltcp_recv},
+  {"qltcp_send",      qltcp_send},
+  {"qltcp_inbuf",     qltcp_inbuf},
+  {"qltcp_outbuf",    qltcp_outbuf},
+  {NULL, NULL},
+};
 
 static void
 init_tcp_listen_params(qactor_t *actor) {
@@ -27,7 +51,7 @@ init_tcp_listen_params(qactor_t *actor) {
 }
 
 static int
-tcp_listen(lua_State *state) {
+qltcp_listen(lua_State *state) {
   const char  *addr;
   qactor_t    *actor;
   int          port, fd;
@@ -122,7 +146,7 @@ socket_accept(int fd, int flags, void *data) {
 }
 
 static int
-tcp_accept(lua_State *state) {
+qltcp_accept(lua_State *state) {
   int                 fd;
   int                 timeout;
   struct sockaddr_in  remote;
@@ -203,7 +227,7 @@ socket_recv(int fd, int flags, void *data) {
 }
 
 static int
-tcp_recv(lua_State *state) {
+qltcp_recv(lua_State *state) {
   int                 nret;
   qsocket_t          *socket;
   qactor_t           *actor;
@@ -271,7 +295,7 @@ socket_send(int fd, int flags, void *data) {
 }
 
 static int
-tcp_send(lua_State *state) {
+qltcp_send(lua_State *state) {
   int                 nret;
   qsocket_t          *socket;
   qactor_t           *actor;
@@ -323,21 +347,11 @@ tcp_buffer(lua_State *state, int in) {
 }
 
 static int
-tcp_inbuf(lua_State *state) {
+qltcp_inbuf(lua_State *state) {
   return tcp_buffer(state, 1);
 }
 
 static int
-tcp_outbuf(lua_State *state) {
+qltcp_outbuf(lua_State *state) {
   return tcp_buffer(state, 0);
 }
-
-luaL_Reg net_apis[] = {
-  {"qtcp_listen",    tcp_listen},
-  {"qtcp_accept",    tcp_accept},
-  {"qtcp_recv",      tcp_recv},
-  {"qtcp_send",      tcp_send},
-  {"qtcp_in",        tcp_inbuf},
-  {"qtcp_out",       tcp_outbuf},
-  {NULL, NULL},
-};

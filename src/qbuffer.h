@@ -25,13 +25,13 @@ typedef struct qbuffer_t {
 #define qbuffer_readable(buffer)      \
   ((buffer)->data + (buffer)->start)
 
-#define qbuffer_readable_len(buffer)  \
+#define qbuffer_rlen(buffer)  \
   (buffer)->end - (buffer)->start
 
 #define qbuffer_writeable(buffer)     \
   ((buffer)->data + (buffer)->end)
 
-#define qbuffer_writeable_len(buffer) \
+#define qbuffer_wlen(buffer) \
   (buffer)->size - (buffer)->end
 
 #define qbuffer_reset(buffer)         \

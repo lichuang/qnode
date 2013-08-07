@@ -7,6 +7,11 @@
 
 static int qllog(lua_State *state);
 
+luaL_Reg log_apis[] = {
+  {"qllog",  qllog},
+  {NULL, NULL},
+};
+
 static int
 qllog(lua_State *state) {
   const char* str;
@@ -16,8 +21,3 @@ qllog(lua_State *state) {
 
   return 0;
 }
-
-luaL_Reg log_apis[] = {
-  {"qllog",  qllog},
-  {NULL, NULL},
-};

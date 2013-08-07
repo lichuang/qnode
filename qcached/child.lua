@@ -21,17 +21,17 @@ function tokenize_command(_buffer)
   local c = ""
   local left = 0
 
-  length = qbuffer_readable_len(_buffer)
+  length = qlbuffer_rlen(_buffer)
   qlog("get length:" .. length)
 
   while pos < length do
-    c = qbuffer_get(_buffer, pos, 1)
+    c = qlbuffer_get(_buffer, pos, 1)
     qlog("get c:" .. c)
 
     if c == " " then
       if start ~= pos then
-        qbuffer_set(_buffer, pos, "\0")
-        local str = qbuffer_get(_buffer, start, pos - start)
+        qlbuffer_set(_buffer, pos, "\0")
+        local str = qlbuffer_get(_buffer, start, pos - start)
         local data = {}
         data.value  = str
         data.length = pos - start
@@ -40,9 +40,9 @@ function tokenize_command(_buffer)
 
       start = pos + 1
     elseif c == "\n" then
-      if qbuffer_get(_buffer, pos - 1, 1) == "\r" then
+      if qlbuffer_get(_buffer, pos - 1, 1) == "\r" then
         pos = pos - 1
-        qbuffer_set(_buffer, pos, "\0")
+        qlbuffer_set(_buffer, pos, "\0")
       end
       
       left = length - pos - 2
@@ -53,7 +53,7 @@ function tokenize_command(_buffer)
   end
 
   if start ~= pos then
-    local str = qbuffer_get(_buffer, start, pos - start)
+    local str = qlbuffer_get(_buffer, start, pos - start)
     local data = {}
     data.value  = str
     data.length = pos - start
@@ -78,9 +78,9 @@ function process_update_command(_buffer, _tokens, _ntokens,
   key     = _tokens[KEY_TOKEN].value
   nkey    = _tokens[KEY_TOKEN].length
 
-  flag    = qstring_toul(_tokens[TOKEN_FLAGS].value)
-  exptime = qstring_toul(_tokens[TOKEN_EXPIRY].value)
-  vlen    = qstring_toul(_tokens[TOKEN_VLEN].value)
+  flag    = qlstring_toul(_tokens[TOKEN_FLAGS].value)
+  exptime = qlstring_toul(_tokens[TOKEN_EXPIRY].value)
+  vlen    = qlstring_toul(_tokens[TOKEN_VLEN].value)
 
   data.cmd      = "set"
   data.key      = key
@@ -90,14 +90,14 @@ function process_update_command(_buffer, _tokens, _ntokens,
 
   if _left == vlen + 2 then
     qlog("vlen: " .. vlen)
-    length = qbuffer_readable_len(_buffer)
+    length = qlbuffer_rlen(_buffer)
 
     start = _pos
     while _pos < length do
-      c = qbuffer_get(_buffer, _pos, 1)
+      c = qlbuffer_get(_buffer, _pos, 1)
       if c == "\r" then
-        qbuffer_set(_buffer, _pos, "\0")
-        local str = qbuffer_get(_buffer, start, _pos - start)
+        qlbuffer_set(_buffer, _pos, "\0")
+        local str = qlbuffer_get(_buffer, start, _pos - start)
         qlog("value: " .. str)
         data.value = str
         return data
@@ -153,16 +153,16 @@ function main_loop(_args)
   local storage_id    = _args["storage_id"]
   -- recv data from the socket
   while true do
-    local aid = qnode_self();
+    local aid = qlnode_self();
     qlog("child " .. tostring(aid))
-    local buffer, ret = qtcp_recv(socket)
+    local buffer, ret = qltcp_recv(socket)
     if buffer == nil then
       qlog("reason: " .. ret)
-      qnode_exit()
+      qlnode_exit()
       return
     end
 
-    local tmp = qbuffer_get(buffer, 0)
+    local tmp = qlbuffer_get(buffer, 0)
     qlog("buffer: " .. tmp)
     local tokens, left, pos = tokenize_command(buffer)
     local data = process_command(buffer, tokens, left, pos)
@@ -174,16 +174,16 @@ function main_loop(_args)
 
     if data ~= nil then
       qlog("cmd: " .. data.cmd)
-      qnode_send(storage_id, data)
-      local arg = qnode_recv()
+      qlnode_send(storage_id, data)
+      local arg = qlnode_recv()
       for k, v in pairs(arg) do
 	qlog("response k: " .. k .. ", v: " .. v)
       end
 
-      qbuffer_reset(buffer);
-      local out = qtcp_out(socket);
-      qbuffer_write_string(out, arg.response);
-      local nret, reason = qtcp_send(socket)
+      qlbuffer_reset(buffer);
+      local out = qltcp_outbuf(socket);
+      qlbuffer_write_string(out, arg.response);
+      local nret, reason = qltcp_send(socket)
       if not nret then
 	qlog("qtcp_send error: " .. reason)
       else
@@ -197,7 +197,7 @@ server.child = function (_args)
   local socket        = _args["sock"]
   local storage_id    = _args["storage_id"]
   -- attach the socket to the actor
-  qnode_attach(socket)
+  qlnode_attach(socket)
 
   main_loop(_args)
 end

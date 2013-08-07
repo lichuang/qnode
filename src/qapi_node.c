@@ -17,9 +17,26 @@
 #include "qstring.h"
 #include "qworker.h"
 
+static int qlnode_spawn(lua_State *state);
+static int qlnode_send(lua_State *state);
+static int qlnode_recv(lua_State *state);
+static int qlnode_attach(lua_State *state);
+static int qlnode_self(lua_State *state);
+static int qlnode_exit(lua_State *state);
+
+luaL_Reg node_apis[] = {
+  {"qlnode_spawn",       qlnode_spawn},
+  {"qlnode_send",        qlnode_send},
+  {"qlnode_recv",        qlnode_recv},
+  {"qlnode_attach",      qlnode_attach},
+  {"qlnode_self",        qlnode_self},
+  {"qlnode_exit",        qlnode_exit},
+  {NULL, NULL},
+};
+
 /* spawn an actor, return the actor ID */
 static int
-node_spawn(lua_State *state) {
+qlnode_spawn(lua_State *state) {
   int         id;
   const char *mod;
   const char *fun;
@@ -72,7 +89,7 @@ node_spawn(lua_State *state) {
 }
 
 static int
-node_send(lua_State *state) {
+qlnode_send(lua_State *state) {
   qid_t     id;
   qactor_t *actor;
   qmsg_t   *msg;
@@ -92,7 +109,7 @@ node_send(lua_State *state) {
 }
 
 static int
-node_recv(lua_State *state) {
+qlnode_recv(lua_State *state) {
   qactor_t      *actor;
   qactor_msg_t  *msg;
 
@@ -113,7 +130,7 @@ node_recv(lua_State *state) {
 }
 
 static int
-node_attach(lua_State *state) {
+qlnode_attach(lua_State *state) {
   qsocket_t *socket;
   qactor_t  *old_actor, *actor;
 
@@ -143,7 +160,7 @@ node_attach(lua_State *state) {
 }
 
 static int
-node_self(lua_State *state) {
+qlnode_self(lua_State *state) {
   qactor_t *actor;
 
   actor = qlua_get_actor(state);
@@ -153,7 +170,7 @@ node_self(lua_State *state) {
 }
 
 static int
-node_exit(lua_State *state) {
+qlnode_exit(lua_State *state) {
   qactor_t *actor;
 
   actor = qlua_get_actor(state);
@@ -161,13 +178,3 @@ node_exit(lua_State *state) {
 
   return 0;
 }
-
-luaL_Reg node_apis[] = {
-  {"qnode_spawn",       node_spawn},
-  {"qnode_send",        node_send},
-  {"qnode_recv",        node_recv},
-  {"qnode_attach",      node_attach},
-  {"qnode_self",        node_self},
-  {"qnode_exit",        node_exit},
-  {NULL, NULL},
-};

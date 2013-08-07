@@ -8,8 +8,30 @@
 #include "qluautil.h"
 #include "qlog.h"
 
+static int qlbuffer_find(lua_State *state);
+static int qlbuffer_write_string(lua_State *state);
+static int qlbuffer_write_char(lua_State *state);
+static int qlbuffer_set(lua_State *state);
+static int qlbuffer_get(lua_State *state);
+static int qlbuffer_reset(lua_State *state);
+static int qlbuffer_rlen(lua_State *state);
+
+luaL_Reg buffer_apis[] = {
+  {"qlbuffer_find",          qlbuffer_find},
+  {"qlbuffer_rlen",          qlbuffer_rlen},
+
+  {"qlbuffer_write_string",  qlbuffer_write_string},
+  {"qlbuffer_write_char",    qlbuffer_write_char},
+
+  {"qlbuffer_reset",         qlbuffer_reset},
+  {"qlbuffer_set",           qlbuffer_set},
+  {"qlbuffer_get",           qlbuffer_get},
+
+  {NULL, NULL},
+};
+
 static int
-buffer_find(lua_State *state) {
+qlbuffer_find(lua_State *state) {
   int         pos;
   char       *ret;
   const char *str;
@@ -29,7 +51,7 @@ buffer_find(lua_State *state) {
 }
 
 static int
-buffer_write_string(lua_State *state) {
+qlbuffer_write_string(lua_State *state) {
   const char *str;
   qbuffer_t  *buffer;
 
@@ -53,7 +75,7 @@ buffer_write_string(lua_State *state) {
 }
 
 static int
-buffer_write_char(lua_State *state) {
+qlbuffer_write_char(lua_State *state) {
   const char *str;
   qbuffer_t  *buffer;
 
@@ -77,7 +99,7 @@ buffer_write_char(lua_State *state) {
 }
 
 static int
-buffer_set(lua_State *state) {
+qlbuffer_set(lua_State *state) {
   int         pos, len;
   const char *str;
   qbuffer_t  *buffer;
@@ -103,7 +125,7 @@ buffer_set(lua_State *state) {
 }
 
 static int
-buffer_get(lua_State *state) {
+qlbuffer_get(lua_State *state) {
   qbuffer_t  *buffer;
   int         pos, len;
 
@@ -119,7 +141,7 @@ buffer_get(lua_State *state) {
 }
 
 static int
-buffer_reset(lua_State *state) {
+qlbuffer_reset(lua_State *state) {
   qbuffer_t  *buffer;
 
   buffer = (qbuffer_t*)lua_touserdata(state, 1);
@@ -131,28 +153,14 @@ buffer_reset(lua_State *state) {
 }
 
 static int
-buffer_readable_len(lua_State *state) {
+qlbuffer_rlen(lua_State *state) {
   qbuffer_t  *buffer;
 
   buffer = (qbuffer_t*)lua_touserdata(state, 1);
   if (buffer == NULL) {
     return 0;
   }
-  lua_pushnumber(state, qbuffer_readable_len(buffer));
+  lua_pushnumber(state, qbuffer_rlen(buffer));
 
   return 1;
 }
-
-luaL_Reg buffer_apis[] = {
-  {"qbuffer_find",          buffer_find},
-  {"qbuffer_readable_len",  buffer_readable_len},
-
-  {"qbuffer_write_string",  buffer_write_string},
-  {"qbuffer_write_char",    buffer_write_char},
-
-  {"qbuffer_reset",         buffer_reset},
-  {"qbuffer_set",           buffer_set},
-  {"qbuffer_get",           buffer_get},
-
-  {NULL, NULL},
-};
