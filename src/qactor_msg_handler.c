@@ -12,19 +12,19 @@
 #include "qluautil.h"
 #include "qtype.h"
 
-static int actor_send_handler(qamsg_header_t *msg, qactor_t *actor);
+static int actor_msg_handler(qamsg_header_t *msg, qactor_t *actor);
 
 qamsg_func_t* actor_msg_handlers[] = {
-  &actor_send_handler,
+  &actor_msg_handler,
 };
 
 static int
-actor_send_handler(qamsg_header_t *header, qactor_t *actor) {
+actor_msg_handler(qamsg_header_t *header, qactor_t *actor) {
   qactor_msg_t  *actor_msg;
-  qamsg_send_t  *msg;
+  qamsg_t       *msg;
   lua_State     *state;
 
-  msg = (qamsg_send_t*)header;
+  msg = (qamsg_t*)header;
   actor_msg = &(msg->actor_msg);
   state = actor->state;
 
@@ -44,5 +44,6 @@ actor_send_handler(qamsg_header_t *header, qactor_t *actor) {
   }
 
   qfree(msg);
-  return 0;
+
+  return QOK;
 }

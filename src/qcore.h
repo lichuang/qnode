@@ -17,4 +17,8 @@ typedef struct qthread_log_t  qthread_log_t;
 typedef struct qvalue_t       qvalue_t;
 typedef struct qworker_t      qworker_t;
 
+#define  QOK          0
+#define  QERROR      -1
+
+#define  QINVALID_ID  0
 #endif  /* __QCORE_H__ */

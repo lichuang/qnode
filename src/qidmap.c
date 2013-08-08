@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include "qassert.h"
+#include "qcore.h"
 #include "qidmap.h"
 
 /* page size = 2^12 = 4K */

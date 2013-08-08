@@ -8,6 +8,4 @@
 typedef char*         qptr_t;
 typedef unsigned int  qid_t;
 
-#define QINVALID_ID 0
-
 #endif  /* __QTYPE_H__ */

@@ -14,6 +14,11 @@
 #define QINVALID_MSG  -1
 
 typedef void (*qmsg_destroy_pt)(qmsg_t *);
+
+/* 
+ * return:
+ *  QOK - msg handle done,will delete the msg
+ * */
 typedef int  (qmsg_pt)(qmsg_t *msg, void *reader);
 
 #define qmsg_header_fields    \

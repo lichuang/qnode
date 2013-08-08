@@ -10,7 +10,7 @@
 
 /* A_* means Actor handle message */
 enum {
-  A_SEND    = 0,
+  A_MSG    = 0,
   QAMSG_NUM
 };
 
@@ -28,15 +28,15 @@ typedef struct qamsg_header_t {
   qamsg_header_fields;
 } qamsg_header_t;
 
-typedef struct qamsg_send_t {
+typedef struct qamsg_t {
   qamsg_header_fields;
 
   qactor_msg_t actor_msg;
-} qamsg_send_t;
+} qamsg_t;
 
 typedef int (qamsg_func_t)(qamsg_header_t *msg, qactor_t *actor);
 extern qamsg_func_t* actor_msg_handlers[];
 
-qmsg_t* qamsg_send_new(lua_State *state, qid_t src, qid_t dst); 
+qmsg_t* qamsg_msg_new(lua_State *state, qid_t src, qid_t dst); 
 
 #endif  /* __QAMSG_H__ */

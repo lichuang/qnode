@@ -33,14 +33,14 @@ qactor_new(qid_t aid) {
   actor->state = NULL;
   actor->listen_params = NULL;
   qlist_entry_init(&(actor->entry));
-  qlist_entry_init(&(actor->desc_list));
+  qlist_entry_init(&(actor->sock_list));
   qlist_entry_init(&(actor->msg_list));
   actor->aid = aid;
   actor->parent = QINVALID_ID;
   actor->waiting_netio = 0;
   actor->waiting_msg   = 0;
   actor->active        = 1;
-  qspinlock_init(&(actor->desc_list_lock));
+  qspinlock_init(&(actor->sock_list_lock));
   qworker_add(aid, actor);
 
   return actor;
@@ -52,15 +52,15 @@ qactor_destroy(qactor_t *actor) {
   qmsg_t  *msg;
   qsocket_t *socket;
 
-  qspinlock_lock(&(actor->desc_list_lock));
-  for (pos = actor->desc_list.next; pos != &(actor->desc_list); ) {
+  qspinlock_lock(&(actor->sock_list_lock));
+  for (pos = actor->sock_list.next; pos != &(actor->sock_list); ) {
     socket = qlist_entry(pos, qsocket_t, entry);
     next = pos->next;
     qsocket_free(socket);
     pos  = next;
   }
-  qspinlock_unlock(&(actor->desc_list_lock));
-  qspinlock_destroy(&(actor->desc_list_lock));
+  qspinlock_unlock(&(actor->sock_list_lock));
+  qspinlock_destroy(&(actor->sock_list_lock));
   for (pos = actor->msg_list.next; pos != &(actor->msg_list); ) {
     msg = qlist_entry(pos, qmsg_t, entry);
     next = pos->next;
@@ -97,7 +97,7 @@ qactor_spawn(qactor_t *actor, lua_State *state) {
 
   new_actor = qactor_new(aid);
   if (new_actor == NULL) {
-    return -1;
+    return QINVALID_ID;
   }
 
   msg = qwmsg_spawn_new(new_actor, actor, state,

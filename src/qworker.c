@@ -40,17 +40,13 @@ worker_main(void *arg) {
   qworker_t *worker;
 
   worker = (qworker_t*)arg;
-  /* init the worker thread log structure */
-  //server->thread_log[worker->tid] = qthread_log_init(worker->tid);
   worker->running = 1;
   qengine_loop(worker->engine);
 
   qmailbox_free(&(worker->box));
   qengine_destroy(worker->engine);
-  //qthread_log_free();
   free_actors(worker);
   lua_close(worker->state);
-  //qengine_destroy(worker->engine);
 
   return NULL;
 }
@@ -138,7 +134,6 @@ qworker_add(qid_t aid, qactor_t *actor) {
   worker = workers[decode_pid(aid)];
   id = decode_id(aid);
   qmutex_lock(&(worker->mutex));
-  //qassert(worker->actors[id] == NULL);
   worker->actors[id] = actor;
   qmutex_unlock(&(worker->mutex));
 }

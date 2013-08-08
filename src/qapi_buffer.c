@@ -62,7 +62,7 @@ qlbuffer_write_string(lua_State *state) {
   }
   str = lua_tostring(state, 2);
   if (str == NULL) {
-    lua_pushliteral(state, "str NULL");
+    lua_pushliteral(state, "str NIL");
     return 1;
   }
   if (qbuffer_write(buffer, str, strlen(str)) < 0) {
@@ -86,7 +86,7 @@ qlbuffer_write_char(lua_State *state) {
   }
   str = lua_tostring(state, 2);
   if (str == NULL) {
-    lua_pushliteral(state, "str NULL");
+    lua_pushliteral(state, "str NIL");
     return 1;
   }
   if (qbuffer_write(buffer, &str[0], 1) < 0) {

@@ -14,17 +14,17 @@ static qamsg_header_t* qamsg_new(qid_t src, qid_t dst,
                                  int size, int type);
 
 qmsg_t*
-qamsg_send_new(lua_State *state, qid_t src, qid_t dst) {
+qamsg_msg_new(lua_State *state, qid_t src, qid_t dst) {
   qactor_msg_t   *actor_msg;
   qmsg_t         *msg;
-  qamsg_send_t   *send;
+  qamsg_t        *send;
   qamsg_header_t *header;
 
-  header = qamsg_new(src, dst, sizeof(qamsg_send_t), A_SEND);
+  header = qamsg_new(src, dst, sizeof(qamsg_t), A_MSG);
   if (header == NULL) {
     return NULL;
   }
-  send            = (qamsg_send_t*)header;
+  send            = (qamsg_t*)header;
   actor_msg       = &(send->actor_msg);
   qlist_entry_init(&(actor_msg->entry));
 
@@ -52,9 +52,4 @@ qamsg_new(qid_t src, qid_t dst, int size, int type) {
   header->type  = type;
 
   return header;
-}
-
-void
-qactor_msg_destroy(qactor_msg_t *msg) {
-  qdict_destroy(msg->arg_dict);
 }

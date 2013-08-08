@@ -82,7 +82,7 @@ qmailbox_handle(qmailbox_t *box) {
     next = pos->next;
     qlist_del_init(&(msg->entry));
 
-    if (box->handler(msg, box->reader) == 0) {
+    if (box->handler(msg, box->reader) == QOK) {
       qmsg_destroy(msg);
     }
 

@@ -40,11 +40,11 @@ struct qactor_t {
   /* entry for actor list in thread */
   qlist_t         entry;
 
-  /* descriptor list */
-  qlist_t         desc_list;
+  /* socket list */
+  qlist_t         sock_list;
 
-  /* descriptor list lock */
-  qspinlock_t     desc_list_lock;
+  /* socket list lock */
+  qspinlock_t     sock_list_lock;
 
   /* actor message list */
   qlist_t         msg_list;

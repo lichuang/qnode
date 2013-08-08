@@ -96,7 +96,7 @@ qlnode_send(lua_State *state) {
 
   actor = qlua_get_actor(state);
   id = (qid_t)lua_tonumber(state, 1);
-  msg = qamsg_send_new(state, actor->aid, id);
+  msg = qamsg_msg_new(state, actor->aid, id);
   if (msg == NULL) {
     lua_pushnil(state);
     lua_pushfstring(state, "create msg error");
@@ -146,15 +146,15 @@ qlnode_attach(lua_State *state) {
   }
 
   /* detach from old actor */
-  qspinlock_lock(&(old_actor->desc_list_lock));
+  qspinlock_lock(&(old_actor->sock_list_lock));
   qlist_del_init(&(socket->entry));
-  qspinlock_unlock(&(old_actor->desc_list_lock));
+  qspinlock_unlock(&(old_actor->sock_list_lock));
 
   /* attach to new actor */
-  qspinlock_lock(&(actor->desc_list_lock));
+  qspinlock_lock(&(actor->sock_list_lock));
   socket->aid = actor->aid;
-  qlist_add_tail(&socket->entry, &actor->desc_list);
-  qspinlock_unlock(&(actor->desc_list_lock));
+  qlist_add_tail(&socket->entry, &actor->sock_list);
+  qspinlock_unlock(&(actor->sock_list_lock));
 
   return 0;
 }
