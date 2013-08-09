@@ -363,14 +363,15 @@ qltcp_send(lua_State *state) {
   socket = (qsocket_t*)lua_touserdata(state, 1);
   if (socket->state != QINET_STATE_CONNECTED) {
     lua_pushnil(state);
-    lua_pushliteral(state, "socket closed");
+    lua_pushliteral(state, "socket not in connected state");
     return 2;
   }
 
   nret = qnet_tcp_send(socket, &error);
   if (nret < 0) {
     lua_pushnil(state);
-    lua_pushliteral(state, "socket closed");
+    lua_pushfstring(state, "send to %s error:%s",
+                    socket->peer, strerror(error));
     return 2;
   }
   if (nret == 0) {

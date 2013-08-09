@@ -79,8 +79,6 @@ qlua_new_thread(qworker_t *worker) {
     return NULL;
   }
 
-  //lua_atpanic(state, panic);
-
   return state;
 }
 
@@ -166,7 +164,7 @@ qlua_get_table_number(lua_State *state, const char *key, int *number) {
   return 0;
 } 
 
-void
+int
 qlua_copy_state_table(lua_State *src, lua_State *dst,
                       int table_idx) {
   int         type;
@@ -197,7 +195,7 @@ qlua_copy_state_table(lua_State *src, lua_State *dst,
         user_data = lua_touserdata(src, val_idx);
       } else {
         qerror("error type: %d", type);
-        return;
+        return QERROR;
       }
 
       key = lua_tolstring(src, key_idx, &len);
@@ -216,6 +214,8 @@ qlua_copy_state_table(lua_State *src, lua_State *dst,
       lua_pop(src, 1);
     }
   }
+
+  return QOK;
 }
 
 int

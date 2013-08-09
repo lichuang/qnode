@@ -37,9 +37,8 @@ luaL_Reg node_apis[] = {
 /* spawn an actor, return the actor ID */
 static int
 qlnode_spawn(lua_State *state) {
-  int         id;
-  const char *mod;
-  const char *fun;
+  int         id, type;
+  const char *mod, *fun;
   qactor_t   *actor;
   qworker_t  *worker;
   lua_State  *new_state;
@@ -50,6 +49,24 @@ qlnode_spawn(lua_State *state) {
   fun = lua_tostring(state, 2);
   worker = workers[actor->tid];
   new_state = qlua_new_thread(worker);
+
+  if (!mod) {
+    lua_pushnil(state);
+    lua_pushliteral(state, "mod nil");
+    return 2;
+  }
+
+  if (!fun) {
+    lua_pushnil(state);
+    lua_pushliteral(state, "func nil");
+    return 2;
+  }
+
+  if (!new_state) {
+    lua_pushnil(state);
+    lua_pushliteral(state, "create lua thread error");
+    return 2;
+  }
 
   string = qstring_new(mod);
   if (string == NULL) {
@@ -71,18 +88,32 @@ qlnode_spawn(lua_State *state) {
   qstring_destroy(string);
 
   /* copy args table */
-  qlua_copy_state_table(state, new_state, 3);
+  if (qlua_copy_state_table(state, new_state, 3) != QOK) {
+    lua_pushnil(state);
+    lua_pushliteral(state, "copy arg table error");
+    return 2;
+  }
 
+  /* get mod::func */
   lua_getglobal(new_state, mod);
   lua_getfield(new_state, -1, fun);
+  type = lua_type(new_state, -1);
+  if (type != LUA_TFUNCTION) {
+    lua_pushnil(state);
+    lua_pushfstring(state, "%s::%s not a function, type:%s",
+                    mod, fun, lua_typename(new_state, type));
+    return 2;
+  }
+
   /* push the args table */
   lua_pushvalue(new_state, 1);
   id = qactor_spawn(actor, new_state);
   if (id == -1) {
     lua_pushnil(state);
-    lua_pushliteral(state, "spawn error");
+    lua_pushliteral(state, "new actor id error");
     return 2;
   }
+
   lua_pushnumber(state, id);
 
   return 1;
@@ -96,10 +127,17 @@ qlnode_send(lua_State *state) {
 
   actor = qlua_get_actor(state);
   id = (qid_t)lua_tonumber(state, 1);
+
+  if (id < 0 || id >= MAX_ID) {
+    lua_pushnil(state);
+    lua_pushfstring(state, "send aid: %d error", id);
+    return 2;
+  }
+
   msg = qamsg_msg_new(state, actor->aid, id);
   if (msg == NULL) {
     lua_pushnil(state);
-    lua_pushfstring(state, "create msg error");
+    lua_pushliteral(state, "create msg error");
     return 2;
   }
   qworker_send(msg);
@@ -135,9 +173,17 @@ qlnode_attach(lua_State *state) {
   qactor_t  *old_actor, *actor;
 
   socket = (qsocket_t*)lua_touserdata(state, 1);
+  if (socket == NULL) {
+    lua_pushnil(state);
+    lua_pushliteral(state, "attach socket nil");
+    return 2;
+  }
+
   old_actor = qactor_get(socket->aid);
   if (old_actor == NULL) {
-    return 0;
+    lua_pushnil(state);
+    lua_pushliteral(state, "actor nil");
+    return 2;
   }
   actor = qlua_get_actor(state);
 
