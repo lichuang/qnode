@@ -40,6 +40,9 @@ qsocket_new(int fd, qactor_t *actor) {
   socket = (qsocket_t*)qfreelist_alloc(&free_socket_list);
   qmutex_unlock(&free_socket_list_lock);
 
+  if (!socket) {
+    return NULL;
+  }
   socket->fd = fd;
   socket->aid = actor->aid;
 

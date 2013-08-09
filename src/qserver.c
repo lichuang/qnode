@@ -62,7 +62,8 @@ server_accept(int fd, int flags, void *data) {
 static int
 init_server_event() {
   return 0;
-  int fd = qnet_tcp_listen(22222, "127.0.0.1");
+  int error;
+  int fd = qnet_tcp_listen(22222, "127.0.0.1", &error);
   if (fd < 0) {
     return -1;
   }

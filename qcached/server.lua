@@ -55,12 +55,15 @@ end
 server.start = function()
   qlog("server start");
 
-  -- spawn storage process
-  local storage_id = qlnode_spawn("server", "storage")
-
   -- accept connection
-  local socket = qltcp_listen(22880);
-  accept(socket, storage_id)
+  local socket, ret = qltcp_listen(22880);
+  if socket then
+    -- spawn storage process
+    local storage_id = qlnode_spawn("server", "storage")
+    accept(socket, storage_id)
+  else
+    qerror(ret)
+  end
 end
 
 _G["server"] = server

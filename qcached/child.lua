@@ -155,9 +155,15 @@ function main_loop(_args)
   while true do
     local aid = qlnode_self();
     qlog("child " .. tostring(aid))
-    local buffer, ret = qltcp_recv(socket)
+    local ret, err = qltcp_recv(socket)
+    if not ret then
+      qlerror(err)
+      qlnode_exit()
+      return
+    end
+    buffer, ret = qltcp_inbuf(socket)
     if buffer == nil then
-      qlog("reason: " .. ret)
+      qlerror("reason: " .. ret)
       qlnode_exit()
       return
     end
