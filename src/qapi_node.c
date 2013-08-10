@@ -121,14 +121,15 @@ qlnode_spawn(lua_State *state) {
 
 static int
 qlnode_send(lua_State *state) {
-  qid_t     id;
+  qid_t     id, aid;
   qactor_t *actor;
   qmsg_t   *msg;
 
   actor = qlua_get_actor(state);
   id = (qid_t)lua_tonumber(state, 1);
+  aid   = decode_id(id);
 
-  if (id < 0 || id >= MAX_ID) {
+  if (aid < 0 || aid >= MAX_ID) {
     lua_pushnil(state);
     lua_pushfstring(state, "send aid: %d error", id);
     return 2;
