@@ -37,7 +37,7 @@ struct ldb_t {
 };
 
 ldb_t*  ldb_new(lua_State *state);
-void    ldb_destroy(ldb_t *ldb);
+void    ldb_free(ldb_t *ldb);
 
 void    ldb_step_in(lua_State *state, int step);
 

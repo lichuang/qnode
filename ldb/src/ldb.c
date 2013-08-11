@@ -9,7 +9,7 @@
 #define LDB_MAX_INPUT 200
 #define LDB_MAX_PARAM 5
 
-static const char* lua_debugger_tag = "__ldb_debugger";
+static const char* lua_tag = "__ldb_tag";
 
 typedef struct input_t {
   char    buffer[LDB_MAX_PARAM][LDB_MAX_INPUT];
@@ -188,7 +188,7 @@ ldb_new(lua_State *state) {
   ldb->call_depth = 0;
   ldb->state = state;
 
-  lua_pushstring(state, lua_debugger_tag);
+  lua_pushstring(state, lua_tag);
   lua_pushlightuserdata(state, ldb);
   lua_settable(state, LUA_REGISTRYINDEX);
 
@@ -203,7 +203,7 @@ ldb_new(lua_State *state) {
 }
 
 void
-ldb_destroy(ldb_t *ldb) {
+ldb_free(ldb_t *ldb) {
   int         i;
   ldb_file_t *file, *next;
   lua_State  *state;
@@ -225,7 +225,7 @@ ldb_destroy(ldb_t *ldb) {
     }
   }
   free(ldb);
-  lua_pushstring(state, lua_debugger_tag);
+  lua_pushstring(state, lua_tag);
   lua_pushlightuserdata(state, NULL);
   lua_settable(state, LUA_REGISTRYINDEX);
 }
@@ -234,7 +234,7 @@ void
 ldb_step_in(lua_State *state, int step) {
   ldb_t *ldb;
 
-  lua_pushstring(state, lua_debugger_tag);
+  lua_pushstring(state, lua_tag);
   lua_gettable(state, LUA_REGISTRYINDEX);
   ldb = (ldb_t*)lua_touserdata(state, -1);
   if (ldb == NULL) {
@@ -360,7 +360,7 @@ all_hook(lua_State *state, lua_Debug *ar) {
     return;
   }
 
-  lua_pushstring(state, lua_debugger_tag);
+  lua_pushstring(state, lua_tag);
   lua_gettable(state, LUA_REGISTRYINDEX);
   ldb = (ldb_t*)lua_touserdata(state, -1);
   if (ldb == NULL) {

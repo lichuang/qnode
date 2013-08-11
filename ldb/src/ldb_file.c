@@ -54,13 +54,24 @@ do_load_file(const char *name) {
   ldb_file_t *file;
   char data[2048];  /* assume max chars per line == 2048 */
   FILE *f;
-  int line;
+  int line, i;
 
-  f = NULL;
-  file = (ldb_file_t*)malloc(sizeof(file));
+  f = fopen(name, "r");
+  if (f == NULL) {
+    ldb_output("open file %s error\n");
+    goto error;
+  }
+
+  file = (ldb_file_t*)malloc(sizeof(ldb_file_t));
   if (file == NULL) {
     goto error;
   }
+  file->next  = NULL;
+  file->name  = NULL;
+  file->lines = NULL;
+  file->alloc = LINE_NUM;
+  file->line  = 0;
+
   file->name = strdup(name);
   if (file->name == NULL) {
     goto error;
@@ -69,24 +80,20 @@ do_load_file(const char *name) {
   if (file->lines == NULL) {
     goto error;
   }
-  file->next  = NULL;
-  file->alloc = LINE_NUM;
-  file->line  = 0;
-
-  f = fopen(name, "r");
-  if (f == NULL) {
-    ldb_output("open file %s error\n");
-    goto error;
+  for (i = 0; i < LINE_NUM; ++i) {
+    file->lines[i] = NULL;
   }
-
   line = 0;
   while (fgets(data, sizeof(data), f) != NULL) {
     if (line > file->alloc) {
       file->alloc += LINE_NUM;
       file->lines = (char **)realloc(file->lines,
                                      sizeof(char*) * file->alloc);
-      if (file->lines) {
+      if (file->lines == NULL) {
         goto error;
+      }
+      for (i = line; i < file->alloc; ++i) {
+        file->lines[i] = NULL;
       }
     }
 
@@ -98,16 +105,20 @@ do_load_file(const char *name) {
   }
   file->line = line;
   fclose(f);
+
   return file;
 
 error:
-  if (file->name) {
-    free(file->name);
-  }
-  if (file->lines) {
-    free(file->lines);
-  }
   if (file) {
+    if (file->name) {
+      free(file->name);
+    }
+    if (file->lines) {
+      for (i = 0; i < line; ++i) {
+        free(file->lines[i]);
+      }
+      free(file->lines);
+    }
     free(file);
   }
   if (f) {

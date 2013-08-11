@@ -13,13 +13,6 @@ int main() {
   int i;
   const char *file = "my.lua";
 
-  /*
-  int input;
-  while (input = getchar()) {
-    printf("input%c##\n", input);
-  }
-  */
-
   lua_State *L = lua_open();
   luaL_openlibs(L);
 
@@ -28,7 +21,8 @@ int main() {
   ldb = ldb_new(L);
   luaL_dofile(L, file);
 
-  ldb_destroy(ldb);
+  ldb_free(ldb);
+  lua_close(L);
 
   return 0;
 }
