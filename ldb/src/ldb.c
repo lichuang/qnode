@@ -231,17 +231,10 @@ ldb_destroy(ldb_t *ldb) {
 }
 
 void
-ldb_attach(ldb_t *ldb, lua_State *state) {
-  lua_pushlightuserdata(state, state);
-  lua_pushlightuserdata(state, ldb);
-  lua_settable(state, LUA_REGISTRYINDEX);
-}
-
-void
 ldb_step_in(lua_State *state, int step) {
   ldb_t *ldb;
 
-  lua_pushlightuserdata(state, state);
+  lua_pushstring(state, lua_debugger_tag);
   lua_gettable(state, LUA_REGISTRYINDEX);
   ldb = (ldb_t*)lua_touserdata(state, -1);
   if (ldb == NULL) {
