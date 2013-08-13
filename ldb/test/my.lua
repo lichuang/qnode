@@ -1,6 +1,7 @@
 function test()
   local ab = 2034
   print("test")
+  print("test12")
 end
 
 local t = {out=10}

@@ -3,6 +3,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 #include "ldb.h"
 #include "ldb_util.h"
 
@@ -17,6 +19,7 @@ typedef struct input_t {
 } input_t;
 
 static char last[LDB_MAX_INPUT] = {'\0'};
+static char *prompt = "(ldb)";
 
 static void single_step(ldb_t *ldb, int step);
 static void enable_line_hook(lua_State *state, int enable);
@@ -292,15 +295,20 @@ enable_func_hook(lua_State *state, ldb_t *ldb, int enable) {
 
 static int
 get_input(char *buff, int size) {
-  int len = read(STDIN_FILENO, buff, size);
-  if (buff[0] == '\n') {
+  //int len = read(STDIN_FILENO, buff, size);
+  char *p = readline(prompt);
+  strcpy(buff, p);
+  free(p);
+  //fgets(buff, size, stdin);
+  int len = strlen(buff);
+  if (len == 0) {
     strcpy(buff, last);
     return strlen(buff);
   }
   if(len > 0) { 
-    buff[len - 1] = '\0';
+    //buff[len - 1] = '\0';
     strcpy(last, buff);
-    return len - 1;
+    return len;
   }   
   return -1;
 }
@@ -395,7 +403,7 @@ all_hook(lua_State *state, lua_Debug *ar) {
 
 static void
 set_prompt() {   
-  ldb_output("(ldb) ");
+  //ldb_output(prompt);
 }  
 
 static int
@@ -689,9 +697,13 @@ on_event(int bp, ldb_t *ldb, lua_State *state, lua_Debug *ar) {
   set_prompt();
   char buff[LDB_MAX_INPUT];
   input_t input;;
-  int ret, i;
-  while (get_input(&buff[0], sizeof(buff)) > 0) {
-    if (split_input(&(buff[0]), &input) < 0) {
+  int ret, i, len;
+  while ((len = get_input(&(buff[0]), LDB_MAX_INPUT)) >= 0) {
+    //ldb_output("input: %s, len: %d\n", buff, len);
+    if (len == 0) {
+      continue;
+    }
+    if (split_input(buff, &input) < 0) {
       set_prompt();
       continue;
     }
@@ -708,7 +720,6 @@ on_event(int bp, ldb_t *ldb, lua_State *state, lua_Debug *ar) {
     if (commands[i].name == NULL) {
       ldb_output("bad command: %s, ldb_output h for help\n", buff);
     }
-    //input.clear();
     if (ret < 0) {
       break;
     }

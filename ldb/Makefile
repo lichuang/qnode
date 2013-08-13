@@ -15,7 +15,7 @@ INCLUDE= -I$(INCLUDE_DIR) -I$(LUA_DIR)/src
 CC=gcc
 AR= ar rcu
 CFLAGS=-Wall -Werror -g 
-LDFLAGS= -L ./lib -L ../lib -rdynamic -llua -ldl -lm -lldb
+LDFLAGS= -L ./lib -L ../lib -rdynamic -llua -ldl -lm -lldb -lreadline
 
 all:$(OBJS)
 	$(AR) $(LIB_DIR)/$(LIB) $(OBJS)
