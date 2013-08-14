@@ -55,6 +55,7 @@ do_load_file(const char *name) {
   char data[2048];  /* assume max chars per line == 2048 */
   FILE *f;
   int line, i;
+  char *p;
 
   f = fopen(name, "r");
   if (f == NULL) {
@@ -84,7 +85,7 @@ do_load_file(const char *name) {
     file->lines[i] = NULL;
   }
   line = 0;
-  while (fgets(data, sizeof(data), f) != NULL) {
+  while ((p = fgets(data, sizeof(data), f)) != NULL) {
     if (line > file->alloc) {
       file->alloc += LINE_NUM;
       file->lines = (char **)realloc(file->lines,
@@ -97,7 +98,7 @@ do_load_file(const char *name) {
       }
     }
 
-    file->lines[line] = strdup(data);
+    file->lines[line] = strdup(p);
     if (file->lines[line] == NULL) {
       goto error;
     }
