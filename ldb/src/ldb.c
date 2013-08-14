@@ -199,6 +199,8 @@ ldb_new(lua_State *state) {
   }
   for (i = 0; i < MAX_BREAKPOINT; ++i) {
     ldb->bkpoints[i].available = 1;
+    ldb->bkpoints[i].file = NULL;
+    ldb->bkpoints[i].func = NULL;
   }
   ldb->bknum = 0;
   return ldb;
@@ -225,6 +227,9 @@ ldb_free(ldb_t *ldb) {
     if (bkpoint->file) {
       free(bkpoint->file);
     }
+    if (bkpoint->func) {
+      free(bkpoint->file);
+    }
   }
   free(ldb);
   lua_pushstring(state, lua_tag);
@@ -233,7 +238,7 @@ ldb_free(ldb_t *ldb) {
 }
 
 void
-ldb_step_in(lua_State *state, int step) {
+ldb_break(lua_State *state) {
   ldb_t *ldb;
 
   lua_pushstring(state, lua_tag);
@@ -247,7 +252,7 @@ ldb_step_in(lua_State *state, int step) {
     single_step(ldb, 1);
   }
 
-  ldb->step       = step;
+  ldb->step       = 1;
   ldb->call_depth = -1;
 }
 
@@ -412,12 +417,12 @@ print_handler(lua_State *state, ldb_t *ldb,
   }
 
   if (search_local_var(state, ar, input->buffer[1])) {
-    ldb_output("local %s =", input->buffer[1]);
+    ldb_output("local %s = ", input->buffer[1]);
     print_var(state, -1, -1);
     lua_pop(state, 1);
     ldb_output("\n");
   } else if (search_global_var(state, ar, input->buffer[1])) {
-    ldb_output("global %s =", input->buffer[1]);
+    ldb_output("global %s = ", input->buffer[1]);
     print_var(state, -1, -1);
     lua_pop(state, 1);
     ldb_output("\n");
@@ -739,8 +744,7 @@ print_current_line(ldb_t *ldb, lua_Debug *ar) {
     return;
   }
   i = ar->currentline;
-  ldb_output("%s:%d\t%s", file->name, i + 1,
-             file->lines[i]);
+  ldb_output("%d\t%s", i + 1, file->lines[i]);
 }
 
 static int

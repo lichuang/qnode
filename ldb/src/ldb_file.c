@@ -85,6 +85,7 @@ do_load_file(const char *name) {
     file->lines[i] = NULL;
   }
   line = 0;
+  p = NULL;
   while ((p = fgets(data, sizeof(data), f)) != NULL) {
     if (line > file->alloc) {
       file->alloc += LINE_NUM;

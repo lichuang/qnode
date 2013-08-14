@@ -5,7 +5,7 @@ ldb_t *ldb;
 
 static int
 c_break(lua_State *state) {
-  ldb_step_in(state, 1);
+  ldb_break(state);
   return 0;
 }
 
