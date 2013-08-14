@@ -18,7 +18,6 @@ typedef struct input_t {
   int     num;
 } input_t;
 
-static char last[LDB_MAX_INPUT] = {'\0'};
 static char *prompt = "(ldb)";
 
 static void single_step(ldb_t *ldb, int step);
@@ -26,7 +25,7 @@ static void enable_line_hook(lua_State *state, int enable);
 static void enable_func_hook(lua_State *state, ldb_t *ldb, int enable);
 static void all_hook(lua_State *state, lua_Debug *ar);
 //static void func_hook(lua_State *state, lua_Debug *ar);
-static int  get_input(char *buff, int size);
+static int  get_input(char **buff);
 static void set_prompt();
 static int  split_input(const char *buff, input_t *input);
 static int  search_local_var(lua_State *state, lua_Debug *ar,
@@ -287,23 +286,14 @@ enable_func_hook(lua_State *state, ldb_t *ldb, int enable) {
 }
 
 static int
-get_input(char *buff, int size) {
-  //int len = read(STDIN_FILENO, buff, size);
-  char *p = readline(prompt);
-  strcpy(buff, p);
-  free(p);
-  //fgets(buff, size, stdin);
-  int len = strlen(buff);
-  if (len == 0) {
-    strcpy(buff, last);
-    return strlen(buff);
-  }
+get_input(char **buff) {
+  *buff = readline(prompt);
+  int len = strlen(*buff);
   if(len > 0) { 
-    //buff[len - 1] = '\0';
-    strcpy(last, buff);
+    add_history(*buff);
     return len;
   }   
-  return -1;
+  return len;
 }
 
 static int
@@ -688,16 +678,18 @@ on_event(int bp, ldb_t *ldb, lua_State *state, lua_Debug *ar) {
   }
 
   set_prompt();
-  char buff[LDB_MAX_INPUT];
+  char *buff;
   input_t input;;
   int ret, i, len;
-  while ((len = get_input(&(buff[0]), LDB_MAX_INPUT)) >= 0) {
+  while ((len = get_input(&buff)) >= 0) {
     //ldb_output("input: %s, len: %d\n", buff, len);
     if (len == 0) {
+      free(buff);
       continue;
     }
     if (split_input(buff, &input) < 0) {
       set_prompt();
+      free(buff);
       continue;
     }
 
@@ -713,6 +705,7 @@ on_event(int bp, ldb_t *ldb, lua_State *state, lua_Debug *ar) {
     if (commands[i].name == NULL) {
       ldb_output("bad command: %s, ldb_output h for help\n", buff);
     }
+    free(buff);
     if (ret < 0) {
       break;
     }
