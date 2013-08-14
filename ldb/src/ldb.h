@@ -28,7 +28,8 @@ struct ldb_t {
   lua_State        *state;
 
   int               call_depth;
-  unsigned int      step:1;
+  int               step:1;
+  int               first:1;
 
   ldb_file_t       *files[MAX_FILE_BUCKET];
 

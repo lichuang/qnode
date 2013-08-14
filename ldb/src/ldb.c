@@ -187,6 +187,7 @@ ldb_new(lua_State *state) {
     return NULL;
   }
   ldb->step = 0;
+  ldb->first = 1;
   ldb->call_depth = 0;
   ldb->state = state;
 
@@ -253,6 +254,7 @@ ldb_break(lua_State *state) {
   }
 
   ldb->step       = 1;
+  ldb->first      = 1;
   ldb->call_depth = -1;
 }
 
@@ -373,6 +375,10 @@ all_hook(lua_State *state, lua_Debug *ar) {
   //if(lua_getinfo(state, "lnS", ar)) {
   if(lua_getinfo(state, "lnSu", ar)) {
     if (ldb->step) {
+      if (ldb->first) {
+        ldb->first = 0;
+        ldb_output("Break at %s:%d\n", ar->source + 1, ar->currentline);
+      }
       on_event(-1, ldb, state, ar);
       return;
     } else {
@@ -560,24 +566,6 @@ dump_stack(lua_State *state, int depth, int verbose) {
     ldb_output("#%d: %s:'%s', '%s' line %d\n",
            i + 1 - depth, ldb.what, name,
            filename, ldb.currentline );
-    /*
-    addr_len = strlen(strlcpy( fn, search_path_, 4096)); 
-    strlcpy(fn + addr_len, filename + 3, 4096-addr_len ); // @./
-    */
-    /*
-    if(verbose) {
-      if( ldb.source[0]=='@' && ldb.currentline!=-1 ) {
-        const char * line = src_manager_->load_file_line( fn, ldb.currentline-1 );
-        if( line ) {
-          print( "%s\n", line );
-        } else {
-          print( "[no source available]\n" );
-        }    
-      } else {
-        print( "[no source available]\n" );
-      }
-    }
-    */
   }
 }
 
@@ -679,7 +667,7 @@ on_event(int bp, ldb_t *ldb, lua_State *state, lua_Debug *ar) {
   ldb->call_depth = depth;
 
   if (bp >= 0) {
-    ldb_output("breakpoint %d hit!\n", bp);
+    ldb_output("Breakpoint %d hit!\n", bp);
   }
 
   set_prompt();
@@ -687,7 +675,6 @@ on_event(int bp, ldb_t *ldb, lua_State *state, lua_Debug *ar) {
   input_t input;;
   int ret, i, len;
   while ((len = get_input(&buff)) >= 0) {
-    //ldb_output("input: %s, len: %d\n", buff, len);
     if (len == 0) {
       free(buff);
       continue;
