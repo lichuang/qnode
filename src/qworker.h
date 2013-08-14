@@ -12,6 +12,9 @@
 #include "qmailbox.h"
 #include "qmsg.h"
 #include "qtype.h"
+#ifdef DEBUG
+#include "ldb.h"
+#endif
 
 /* max bit for actor id */
 #define MAX_BIT sizeof(qid_t) * 8
@@ -54,6 +57,9 @@ struct qworker_t {
   lua_State            *state;    /* lua VM */
   int                   alloc;    /* lua memory size*/
   volatile int          running:1;
+#ifdef DEBUG
+  ldb_t                *ldb;
+#endif
 };
 
 qworker_t*  qworker_new(qid_t tid);

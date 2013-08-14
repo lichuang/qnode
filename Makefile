@@ -15,12 +15,12 @@ EXTENSION=c
 OBJS=$(patsubst $(SRC_DIR)/%.$(EXTENSION), $(OBJ_DIR)/%.o,$(wildcard $(SRC_DIR)/*.$(EXTENSION)))
 DEPS=$(patsubst $(OBJ_DIR)/%.o, $(DEPS_DIR)/%.d, $(OBJS))
 
-INCLUDE= -I$(INCLUDE_DIR) -I$(LUA_DIR)/src
+INCLUDE= -I$(INCLUDE_DIR) -I$(LUA_DIR)/src  -I$(LDB_DIR)/src
 		
 CC=gcc
-CFLAGS=-Wall -Werror -g 
+CFLAGS=-Wall -Werror -g -DDEBUG
 #LDFLAGS= -lpthread -rdynamic -llua -ldl -lm -ltcmalloc
-LDFLAGS= -L ./lib -lpthread -rdynamic -llua -ldl -lm
+LDFLAGS= -L ./lib -lpthread -rdynamic -llua -ldl -lm -lldb -lreadline
 
 all:$(LUA) $(LDB) $(OBJS)
 	$(CC) -o $(PROGRAM) $(OBJS) $(LDFLAGS) 

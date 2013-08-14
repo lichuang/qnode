@@ -46,6 +46,9 @@ worker_main(void *arg) {
   qmailbox_free(&(worker->box));
   qengine_destroy(worker->engine);
   free_actors(worker);
+#ifdef DEBUG
+  ldb_free(worker->ldb);
+#endif
   lua_close(worker->state);
 
   return NULL;
@@ -82,6 +85,11 @@ qworker_new(qid_t tid) {
   pthread_create(&worker->id, NULL,
                  worker_main, worker);
 
+#ifdef DEBUG
+  worker->ldb = ldb_new(worker->state);
+#else
+  worker->ldb = NULL;
+#endif
   while (!worker->running) {
     usleep(100);
   }
