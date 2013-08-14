@@ -571,7 +571,10 @@ dump_stack(lua_State *state, int depth, int verbose) {
 
 static void
 print_var(lua_State *state, int si, int depth) {
-  switch(lua_type(state, si)) {
+  int type;
+
+  type = lua_type(state, si);
+  switch(type) {
   case LUA_TNIL:
     ldb_output("(nil)");
     break;
@@ -588,7 +591,7 @@ print_var(lua_State *state, int si, int depth) {
     {
       lua_CFunction func = lua_tocfunction(state, si);
       if( func != NULL ) {
-        ldb_output("(C function)0x%p", func);
+        ldb_output("(C function)%p", func);
       } else {
         ldb_output("(function)");
       }
@@ -596,7 +599,11 @@ print_var(lua_State *state, int si, int depth) {
     break;
 
   case LUA_TUSERDATA:
-    ldb_output("(user data)0x%p", lua_touserdata(state, si));
+    ldb_output("(user data)%p", lua_touserdata(state, si));
+    break;
+
+  case LUA_TLIGHTUSERDATA:
+    ldb_output("(light user data)%p", lua_touserdata(state, si));
     break;
 
   case LUA_TSTRING:
