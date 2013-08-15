@@ -372,10 +372,8 @@ qlua_init_path(struct qactor_t *actor) {
 
 qactor_t*
 qlua_get_actor(lua_State *state) {
-  //lua_getglobal(state, "qnode");
   lua_pushlightuserdata(state, state);
   lua_gettable(state, LUA_REGISTRYINDEX);
-  //lua_getfield(state, LUA_REGISTRYINDEX, "qnode");
   return (qactor_t*)lua_touserdata(state, -1);
 }
 

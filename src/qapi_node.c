@@ -221,7 +221,10 @@ qlnode_exit(lua_State *state) {
   qactor_t *actor;
 
   actor = qlua_get_actor(state);
-  //lua_pushnumber(state, actor->aid);
+  if (actor == NULL) {
+    return 0;
+  }
+  actor->active = 0;
 
   return 0;
 }

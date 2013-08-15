@@ -24,6 +24,7 @@ static int   worker_msg_handler(qmsg_t *msg, void *reader);
 static void* worker_main(void *arg);
 static void* worker_alloc(void *ud, void *ptr,
                           size_t osize, size_t nsize);
+//static void  recycle_actors(void *data);
 static void  free_actors(qworker_t *worker);
 
 static int

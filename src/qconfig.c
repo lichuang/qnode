@@ -23,8 +23,7 @@ static void config_set_default();
 
 static void
 config_init_log(lua_State *state) {
-  qlua_get_global_table(state, "qnode_config");
-  if (qlua_get_table(state, -1, "log") < 0) {
+  if (qlua_get_global_table(state, "log") < 0) {
     qstdout("not found log config, use default\n");
     return;
   }
@@ -41,8 +40,7 @@ config_init_log(lua_State *state) {
 
 static void
 config_init_worker(lua_State *state) {
-  qlua_get_global_table(state, "qnode_config");
-  if (qlua_get_table(state, -1, "worker") < 0) {
+  if (qlua_get_global_table(state, "worker") < 0) {
     qstdout("not found worker config, use default\n");
     return;
   }
@@ -55,8 +53,7 @@ config_init_worker(lua_State *state) {
 
 static void
 config_init_script(lua_State *state) {
-  qlua_get_global_table(state, "qnode_config");
-  if (qlua_get_table(state, -1, "script") < 0) {
+  if (qlua_get_global_table(state, "script") < 0) {
     qstdout("not found script config, use default\n");
     return;
   }
@@ -69,8 +66,7 @@ config_init_script(lua_State *state) {
 
 static void
 config_init_server(lua_State *state) {
-  qlua_get_global_table(state, "qnode_config");
-  if (qlua_get_table(state, -1, "server") < 0) {
+  if (qlua_get_global_table(state, "server") < 0) {
     qstdout("not found server config, use default\n");
     return;
   }
@@ -98,17 +94,15 @@ qconfig_init(const char *filename) {
   }
 
   state = lua_open();
-  if (luaL_dofile(state, filename) != 0) {
-    printf("open config %s error\n", filename);
+  if (state == NULL) {
+    qstdout("create lua state error\n");
     return -1;
   }
 
-  if (qlua_get_global_table(state, "qnode_config") < 0) {
-    qstdout("table qnode_config not exist in config, use default config\n");
-    lua_close(state);
-    return 0;
-  } else {
-    lua_pop(state, 1);
+  if (luaL_dofile(state, filename) != 0) {
+    qstdout("parse config %s error:\n\t%s\n", filename,
+            lua_tostring(state, -1));
+    return -1;
   }
 
   config_init_worker(state);  
@@ -117,6 +111,7 @@ qconfig_init(const char *filename) {
   config_init_log(state);
 
   lua_close(state);
+
   return 0;
 }
 
