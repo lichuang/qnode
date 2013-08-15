@@ -92,11 +92,9 @@ static void
 log_time_handler(void *data) {
   time_t     t;
   struct tm  tm;
-  qengine_t *engine;
 
   UNUSED(data);
 
-  engine = logger->engine;
   t = time(NULL);
   localtime_r(&t, &tm);
   strftime(logger->time_buff, sizeof(logger->time_buff),

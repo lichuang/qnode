@@ -33,12 +33,11 @@ qdict_new(int hashsize) {
 
 void
 qdict_destroy(qdict_t *dict) {
-  int           i, hashsize;
+  int           i;
   qlist_t      *list;
   qlist_t      *pos, *next;
   qdict_node_t *node;
 
-  hashsize = dict->hashsize;
   for (i = 0; i < dict->hashsize; ++i) {
     list = dict->buckets[i];
     if (list == NULL) {

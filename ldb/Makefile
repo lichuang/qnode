@@ -1,6 +1,7 @@
 DIR=.
 BIN_DIR=$(DIR)/bin
 SRC_DIR=$(DIR)/src
+LUA_DIR=$(shell cd ../lua-5.1.4 && pwd)
 INCLUDE_DIR=$(DIR)/
 OBJ_DIR=$(DIR)/obj
 LIB_DIR=$(DIR)/lib
@@ -19,10 +20,10 @@ LDFLAGS= -L ./lib -L ../lib -rdynamic -llua -ldl -lm -lldb -lreadline
 
 all:$(OBJS)
 	$(AR) $(LIB_DIR)/$(LIB) $(OBJS)
-	$(CC) test/main.c -I./src -o test/test $(LDFLAGS)
+	$(CC) test/main.c -I./src $(INCLUDE) -o test/test $(LDFLAGS)
 
 test:$(LIB_DIR)/$(LIB)
-	$(CC) test/main.c -I./src -o test/test $(LDFLAGS)
+	$(CC) test/main.c -I./src $(INCLUDE) -o test/test $(LDFLAGS)
 
 $(OBJ_DIR)/%.o:$(SRC_DIR)/%.$(EXTENSION) 
 	$(CC) $< -o $@ -c $(CFLAGS) $(INCLUDE) 
