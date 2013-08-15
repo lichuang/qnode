@@ -47,16 +47,40 @@
 #define decode_pid(aid) ((aid) & MASK1(PID_BIT, 0))
 
 struct qworker_t {
-  qmailbox_t            box;      /* worker msg box */
-  pthread_t             id;       /* pthread id */
-  qid_t                 tid;      /* worker thread id allocate by main thread */
-  qid_t                 current;  /* current allocate id */
-  qmutex_t              mutex;    /* current lock */
-  qactor_t            **actors;   /* worker actors array */
-  qengine_t            *engine;   /* dispatcher engine */
-  lua_State            *state;    /* lua VM */
-  int                   alloc;    /* lua memory size*/
+  /* worker msg box */
+  qmailbox_t            box;
+
+  /* pthread id */
+  pthread_t             id;
+
+  /* worker thread id allocate by main thread */
+  qid_t                 tid;
+
+  /* current allocate id */
+  qid_t                 current;
+
+  /* current lock */
+  qmutex_t              mutex;
+
+  /* worker actors array */
+  qactor_t            **actors;
+
+  /* dispatcher engine per thread */
+  qengine_t            *engine;
+
+  /* lua VM */
+  lua_State            *state;
+
+  /* lua memory size*/
+  int                   alloc;
+
+  /* worker active actor list */
+  qlist_t               actor_list;
+
+  /* thread running flag */
   volatile int          running:1;
+
+  /* lua debugger */
 #ifdef DEBUG
   ldb_t                *ldb;
 #endif

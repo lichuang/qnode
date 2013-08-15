@@ -60,7 +60,7 @@ int        qengine_add_event(qengine_t* engine, int fd, int flags,
 int        qengine_del_event(qengine_t* engine, int fd, int flags);
 
 qid_t      qengine_add_timer(qengine_t* engine, uint32_t timeout_ms,
-                             qtimer_pt *func, int type, void *data);
+                             qtimer_pt *func, int cycle, void *data);
 int        qengine_del_timer(qengine_t* engine, qid_t id);
 
 #endif  /* __QENGINE_H__ */

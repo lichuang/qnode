@@ -71,17 +71,20 @@ config_init_server(lua_State *state) {
     return;
   }
   qlua_get_table_number(state, "daemon", &(config.daemon));
+  qlua_get_table_number(state, "recycle_internal",
+                        &(config.recycle_internal));
   lua_pop(state, 1);
 }
 
 static void
 config_set_default() {
-  config.worker      = 5;
-  config.daemon      = 0;
-  config.script_path = qstring_new("./script");
-  config.log_path    = qstring_new("./log");
-  config.log_level   = qstring_new("debug");
-  config.log_size    = 1024000000;
+  config.worker           = 5;
+  config.daemon           = 0;
+  config.recycle_internal = 60;
+  config.script_path      = qstring_new("./script");
+  config.log_path         = qstring_new("./log");
+  config.log_level        = qstring_new("debug");
+  config.log_size         = 1024000000;
 }
 
 int

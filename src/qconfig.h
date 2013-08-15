@@ -12,6 +12,7 @@ struct qconfig_t {
   int           worker;
   int           daemon;
   int           log_size;
+  int           recycle_internal;
   qstring_t     script_path;
   qstring_t     log_path;
   qstring_t     log_level;

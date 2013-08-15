@@ -32,7 +32,7 @@ qactor_new(qid_t aid) {
 
   actor->state = NULL;
   actor->listen_params = NULL;
-  qlist_entry_init(&(actor->entry));
+  qlist_entry_init(&(actor->actor_entry));
   qlist_entry_init(&(actor->sock_list));
   qlist_entry_init(&(actor->msg_list));
   actor->aid = aid;

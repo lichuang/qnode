@@ -24,7 +24,7 @@ static int   worker_msg_handler(qmsg_t *msg, void *reader);
 static void* worker_main(void *arg);
 static void* worker_alloc(void *ud, void *ptr,
                           size_t osize, size_t nsize);
-//static void  recycle_actors(void *data);
+static void  recycle_actors(void *data);
 static void  free_actors(qworker_t *worker);
 
 static int
@@ -74,6 +74,9 @@ qworker_new(qid_t tid) {
     printf("create worker actors error\n");
     return NULL;
   }
+  qengine_add_timer(worker->engine, config.recycle_internal * 1000,
+                    recycle_actors,
+                    config.recycle_internal * 1000, worker);
   qmailbox_init(&(worker->box), worker_msg_handler,
                 worker->engine, worker);
   worker->tid = tid;
@@ -83,6 +86,7 @@ qworker_new(qid_t tid) {
   /* create the lua VM for the worker */
   worker->state = qlua_new_state(worker_alloc, worker);
   worker->running = 0;
+  qlist_entry_init(&(worker->actor_list));
   pthread_create(&worker->id, NULL,
                  worker_main, worker);
 
@@ -144,6 +148,7 @@ qworker_add(qid_t aid, qactor_t *actor) {
   id = decode_id(aid);
   qmutex_lock(&(worker->mutex));
   worker->actors[id] = actor;
+  qlist_add_tail(&(actor->actor_entry), &(worker->actor_list));
   qmutex_unlock(&(worker->mutex));
 }
 
@@ -155,7 +160,8 @@ qworker_delete(qid_t aid) {
   worker = workers[decode_pid(aid)];
   id = decode_id(aid);
   qmutex_lock(&(worker->mutex));
-  worker->actors[id] = NULL;
+  worker->actors[id]->active = 0;
+  //worker->actors[id] = NULL;
   qmutex_unlock(&(worker->mutex));
 }
 
@@ -181,6 +187,13 @@ worker_alloc(void *ud, void *ptr, size_t osize, size_t nsize) {
   } else {
     return qrealloc(ptr, nsize);
   }
+}
+
+static void
+recycle_actors(void *data) {
+  qworker_t *worker;
+
+  worker = (qworker_t*)data;
 }
 
 static void

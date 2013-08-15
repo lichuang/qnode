@@ -177,8 +177,8 @@ qengine_destroy(qengine_t *engine) {
 
 qid_t
 qengine_add_timer(qengine_t* engine, uint32_t timeout_ms,
-                  qtimer_pt *func, int type, void *data) {
-  return qtimer_add(&engine->timer_mng, timeout_ms, func, type, data);
+                  qtimer_pt *func, int cycle, void *data) {
+  return qtimer_add(&engine->timer_mng, timeout_ms, func, cycle, data);
 }
 
 int

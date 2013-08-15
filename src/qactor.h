@@ -16,7 +16,9 @@
 #include "qmutex.h"
 
 struct qactor_t {
+  /* lua thread */
   lua_State     *state;
+
   /*
    * lua thread YIELD reason
    */
@@ -26,6 +28,7 @@ struct qactor_t {
   /* waiting for message */
   unsigned int    waiting_msg:1;
 
+  /* active flag */
   unsigned int    active:1;
 
   /* thread id which belongs to */
@@ -37,9 +40,6 @@ struct qactor_t {
   /* parent actor id */
   qid_t           parent;
 
-  /* entry for actor list in thread */
-  qlist_t         entry;
-
   /* socket list */
   qlist_t         sock_list;
 
@@ -48,6 +48,9 @@ struct qactor_t {
 
   /* actor message list */
   qlist_t         msg_list;
+
+  /* worker active actor list entry */
+  qlist_t         actor_entry;
 
   qdict_t        *listen_params;
 };
