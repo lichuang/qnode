@@ -10,7 +10,7 @@ end
 function require_ex(name)
   qlog( string.format("require_ex = %s", name))
   if package.loaded[name] then
-    qlog(string.format("require_ex module[%s] reload", mname))
+    qlog(string.format("require_ex module[%s] reload", name))
   end 
   package.loaded[name] = nil 
   require(name)
