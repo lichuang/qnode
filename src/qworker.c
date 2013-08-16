@@ -194,6 +194,8 @@ recycle_actors(void *data) {
   qworker_t *worker;
 
   worker = (qworker_t*)data;
+  UNUSED(worker);
+  UNUSED(data);
 }
 
 static void

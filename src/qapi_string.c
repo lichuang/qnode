@@ -20,9 +20,7 @@ qlstring_toul(lua_State *state) {
   unsigned long long result;
   const char        *input;
   char              *endptr;
-  qactor_t          *actor;
 
-  actor = qlua_get_actor(state);
   input = lua_tostring(state, 1);
 
   result = strtoull(input, &endptr, 10);
