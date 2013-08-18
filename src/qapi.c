@@ -28,10 +28,11 @@ static api_array array[] = {
 void
 qapi_register(lua_State *state) {
   int i, j;
+  const char *name;
 
   for (i = 0; array[i] != NULL; ++i) {
     for (j = 0; array[i][j].name != NULL; ++j) {
-      const char *name = array[i][j].name;
+      name = array[i][j].name;
       lua_CFunction func = array[i][j].func;
       lua_register(state, name, func);
     }

@@ -129,7 +129,7 @@ qlnode_send(lua_State *state) {
   id = (qid_t)lua_tonumber(state, 1);
   aid   = decode_id(id);
 
-  if (aid < 0 || aid >= MAX_ID) {
+  if (aid >= MAX_ID) {
     lua_pushnil(state);
     lua_pushfstring(state, "send aid: %d error", id);
     return 2;

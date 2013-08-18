@@ -16,49 +16,40 @@
 void qapi_register(lua_State *state);
 
 /*
- *  Lua C API:
+ * Lua C API:
+ *   1) Buffer
  *
- *  1) actor 
+ *     qlbuffer_find: find a str from pos
+ *     [IN]buffer, pos, str
+ *     [OUT]pos
  *
- *  qnode_spawn: spawn an actor
- *      [IN]mod, fun, args table
- *      [OUT]actor id
+ *     qlbuffer_rlen: return read length of the buffer
+ *     [IN]buffer
+ *     [OUT]buffer read len
  *
- *  qnode_send: send message to an actor
- *      [IN]id, args table
- *      [OUT]NONE
+ *     qlbuffer_wlen: return write length of the buffer
+ *     [IN]buffer
+ *     [OUT]buffer write len
  *
- *  qnode_controll: attach a descriptor to a node
- *      [IN]descriptor
- *      [OUT]NONE
+ *     qlbuffer_write_string: write a string into the buffer
+ *     [IN]buffer, string
+ *     [OUT]OK
  *
- *  2) tcp
+ *     qlbuffer_write_char: write a char into the buffer
+ *     [IN]buffer, string(only one char)
+ *     [OUT]OK
  *
- *  qnode_tcp_listen: 
- *      [IN]port, listen params table
- *      [OUT]descriptor or nil
- *      [ERROR]nil, error message
+ *     qlbuffer_reset: reset the buffer
+ *     [IN]buffer
+ *     [OUT]OK
  *
- *  qnode_tcp_accept: 
- *      [IN]descriptor, [, timeout]
- *      [OUT]descriptor or nil(timeout)
- *      [ERROR]nil, error message
+ *     qlbuffer_set: set the buffer str at pos
+ *     [IN]buffer, pos, str
+ *     [OUT]OK
  *
- *  qnode_tcp_recv: 
- *      [IN]socket [, timeout]
- *      [OUT]buffer
- *      [ERROR]nil, error message
- *
- *  qnode_tcp_send: 
- *      [IN]socket [, timeout]
- *      [OUT]0
- *      [ERROR]nil, error message
- *
- *  3) buffer
- *  qnode_buffer_find: 
- *      [IN]buffer, ch
- *      [OUT]pos(-1 if not find)
- *
+ *     qlbuffer_get: get the buffer length str from pos
+ *     [IN]buffer, pos, length
+ *     [OUT]string
  */
 
 #endif  /* __QAPI_H__ */
