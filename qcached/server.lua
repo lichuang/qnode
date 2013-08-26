@@ -56,7 +56,7 @@ server.start = function()
   qlog("server start");
 
   -- accept connection
-  local socket, ret = qltcp_listen(22880);
+  local socket, ret = qltcp_listen("0.0.0.0", 22880);
   if socket then
     -- spawn storage process
     local storage_id = qlnode_spawn("server", "storage")

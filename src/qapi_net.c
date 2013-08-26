@@ -58,11 +58,21 @@ qltcp_listen(lua_State *state) {
   int          port, fd, error;
   qsocket_t   *socket;
 
-  addr = "0.0.0.0";
   actor = qlua_get_actor(state);
-  qassert(actor);
-  //const char *addr = lua_tostring(state, 1);
-  port = (int)lua_tonumber(state, 1);
+  addr = lua_tostring(state, 1);
+  if (addr == NULL) {
+    lua_pushnil(state);
+    lua_pushliteral(state, "listen addr nil");
+    return 2;
+  }
+
+  port = (int)lua_tonumber(state, 2);
+  if (port < 0) {
+    lua_pushnil(state);
+    lua_pushfstring(state, "wrong port %d", port);
+    return 2;
+  }
+
   fd = qnet_tcp_listen(port, addr, &error);
   if (fd < 0) {
     lua_pushnil(state);

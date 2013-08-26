@@ -55,11 +55,9 @@ set_nonblocking(int fd) {
 }
 
 int
-qnet_tcp_listen(int port, const char *bindaddr, int *error) {
+qnet_tcp_listen(int port, const char *addr, int *error) {
   int                 fd;
   struct sockaddr_in  sa;
-
-  UNUSED(bindaddr);
 
   if ((fd = create_listen_socket()) < 0) {
     return QERROR;
@@ -72,9 +70,8 @@ qnet_tcp_listen(int port, const char *bindaddr, int *error) {
   memset(&sa,0,sizeof(sa));
   sa.sin_family = AF_INET;
   sa.sin_port = htons(port);
-  sa.sin_addr.s_addr = htonl(INADDR_ANY);
   *error = 0;
-  if (bindaddr && inet_aton(bindaddr, &sa.sin_addr) == 0) {
+  if (inet_aton(addr, &sa.sin_addr) == 0) {
     qerror("invalid bind address");
     *error = errno;
     close(fd);

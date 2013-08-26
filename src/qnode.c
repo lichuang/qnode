@@ -41,7 +41,7 @@ main(int argc, char *argv[]) {
     return -1;
   }
 
-  if (qconfig_init(file) < 0) {
+  if (qconfig_init(file) != QOK) {
     qstdout("qconfig_init error\n");
     return -1;
   }
