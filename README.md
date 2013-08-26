@@ -7,11 +7,11 @@
   qnode is implemented in pure ANSI C, and compile in Linux(which support epoll).
 
 ### How to use ###
-  When qnode start,it will read a config file, you can use -c option to assign a config file.By default,it will use qnodepath/etc/config.lua.
+  When qnode start,it will read a config file, you MUST use -c option to assign a config file，such qcached/config.lua
 
 - Config file format
   
-  qnode config file is a Lua script.An example config file is in qnodepath/etc/config.lua:
+  qnode config file is a Lua script.An example config file is in qnode path qcached/config.lua:
  
 
 		qnode_config = {  
@@ -74,5 +74,4 @@
 
 
   
-
 

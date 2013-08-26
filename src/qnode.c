@@ -11,7 +11,7 @@
 
 static void
 usage() {
-  printf("\nUsage: qserver [option]\n"
+  printf("Usage: qserver [option]\n"
     "options:\n"
     "\t-c config file\n"
     "\t-h print usage\n");
@@ -22,7 +22,7 @@ main(int argc, char *argv[]) {
   int         opt;
   const char *file;
 
-  file = "./etc/config.lua";
+  file = NULL;
   while ((opt = getopt(argc, argv, "c:h")) != -1) {
     switch (opt) {
     case 'h':
@@ -33,6 +33,12 @@ main(int argc, char *argv[]) {
       file = optarg; 
       break;
     }   
+  }
+
+  if (file == NULL) {
+    qstdout("no config file\n");
+    usage();
+    return -1;
   }
 
   if (qconfig_init(file) < 0) {

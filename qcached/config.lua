@@ -22,4 +22,6 @@ script = {
 -- server config
 server = {
   daemon = 0,
+  -- recycle timer internal(second)
+  recycle_internal = 60,
 }

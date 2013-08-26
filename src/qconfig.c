@@ -55,7 +55,11 @@ config_init_script(lua_State *state) {
     return;
   }
 
-  qlua_get_table_string(state, "path", &(config.script_path));
+  if (qlua_get_table_string(state, "path",
+                            &(config.script_path)) < 0) {
+    qstdout("not found script path config\n");
+    exit(-1);
+  }
 
   lua_pop(state, 1);
 }
@@ -88,9 +92,6 @@ qconfig_init(const char *filename) {
   lua_State *state;
 
   config_set_default();
-  if (filename == NULL) {
-    return QERROR;
-  }
 
   state = lua_open();
   if (state == NULL) {
