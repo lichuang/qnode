@@ -34,7 +34,7 @@ alloc_qid(qidmap_t *idmap) {
 }
 
 void
-qid_free(qidmap_t *idmap, qid_t id) {
+qid_detach(qidmap_t *idmap, qid_t id) {
   idmap->data[id] = NULL;
 }
 

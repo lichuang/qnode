@@ -138,7 +138,7 @@ qtimer_del(qtimer_manager_t *mng, qid_t id) {
 
   timer = (qtimer_t*)mng->id_map.data[id];
   qminheap_erase(&(mng->min_heap), timer->heap_index);
-  qid_free(&(mng->id_map), id);
+  qid_detach(&(mng->id_map), id);
   qlist_add_tail(&(timer->entry), &(mng->free_list));
 
   return 0;

@@ -34,11 +34,11 @@ typedef struct qevent_t {
 
 typedef struct qdispatcher_t {
   const char *name;
-  int  (*init)(struct qengine_t*);
-  int  (*add)(struct qengine_t *engine, int fd, int flags);
-  int  (*del)(struct qengine_t *engine, int fd, int flags);
-  int  (*poll)(struct qengine_t *, int timeout_ms);
-  void (*destroy)(struct qengine_t *);
+  int  (*init)(qengine_t*);
+  int  (*add)(qengine_t *engine, int fd, int flags);
+  int  (*del)(qengine_t *engine, int fd, int flags);
+  int  (*poll)(qengine_t *, int timeout_ms);
+  void (*destroy)(qengine_t *);
 } qdispatcher_t;
 
 struct qengine_t {
