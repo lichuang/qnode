@@ -199,14 +199,14 @@ qnet_tcp_send(qsocket_t *socket, int *error) {
       if (save == EAGAIN || save == EWOULDBLOCK) {
         return nbytes;
       } else {
-        qerror("send to %s error: %s", socket->peer, strerror(save));
+        qinfo("send to %s error: %s", socket->peer, strerror(save));
         *error = save;
         return QERROR;
       }
     }
 
     if (n == 0) {
-      qerror("socket from %s closed", socket->peer);
+      qinfo("socket from %s closed", socket->peer);
       *error = save;
       return QERROR;
     }
