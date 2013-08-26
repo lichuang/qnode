@@ -4,6 +4,7 @@
 
 #include <string.h>
 #include "qactor.h"
+#include "qlog.h"
 #include "qmutex.h"
 #include "qsocket.h"
 
@@ -82,7 +83,14 @@ init_socket(void *data) {
   socket->in = qbuffer_new();
   socket->out = qbuffer_new();
   if (socket->in == NULL || socket->out == NULL) {
-    return -1;
+    qerror("create socket buffer error");
+    if (socket->in) {
+      qbuffer_free(socket->in);
+    }
+    if (socket->out) {
+      qbuffer_free(socket->out);
+    }
+    return QERROR;
   }
   reset_socket(socket);
   return 0;

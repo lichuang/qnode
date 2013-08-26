@@ -37,7 +37,7 @@ epoll_init(qengine_t *engine) {
 
   epoll = qcalloc(sizeof(epoll_t));
   if (epoll == NULL) {
-    return -1;
+    return QERROR;
   }
   for (i = 0; i < QMAX_EVENTS; ++i) {
     memset(&(epoll->events[i]), 0, sizeof(struct epoll_event));
@@ -46,10 +46,11 @@ epoll_init(qengine_t *engine) {
   epoll->fd = epoll_create(1024);
   if (epoll->fd == -1) {
     qerror("epoll_create error: %s", strerror(errno));
-    return -1;
+    return QERROR;
   }
   engine->data = epoll;
-  return 0;
+
+  return QOK;
 }
 
 static int
@@ -78,9 +79,10 @@ epoll_add(qengine_t *engine, int fd, int flags) {
   event.data.fd = fd;
   if (epoll_ctl(epoll->fd, op, fd, &event) == -1) {
     qerror("epoll_ctl error: %s", strerror(errno));
-    return -1;
+    return QERROR;
   }
-  return 0;
+
+  return QOK;
 }
 
 static int
@@ -102,11 +104,13 @@ epoll_del(qengine_t *engine, int fd, int delflags) {
   event.data.fd = fd;
   event.events = events;
   if (flags != QEVENT_NONE) {
-    epoll_ctl(epoll->fd, EPOLL_CTL_MOD, fd, &event);
+    return epoll_ctl(epoll->fd, EPOLL_CTL_MOD, fd, &event);
   } else {
-    epoll_ctl(epoll->fd, EPOLL_CTL_DEL, fd, &event);
+    return epoll_ctl(epoll->fd, EPOLL_CTL_DEL, fd, &event);
   }
-  return 0;
+
+  /* nerver reach here */
+  return QOK;
 }
 
 static int
@@ -137,6 +141,7 @@ epoll_poll(qengine_t *engine, int timeout_ms) {
       engine->active_events[i].flags = flags;
     }
   }
+
   return num;
 }
 

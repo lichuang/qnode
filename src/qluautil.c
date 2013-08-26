@@ -64,10 +64,10 @@ qlua_reload(lua_State *state) {
   if(luaL_dofile(state, "main.lua")) {
     qerror("load file error");
     qlua_fail(state);
-    return -1;
+    return QERROR;
   }
 
-  return 0;
+  return QOK;
 }
 
 lua_State*
@@ -243,18 +243,18 @@ qlua_copy_table(lua_State *state, int table_idx,
         num_val = lua_tonumber(state, val_idx);
       } else {
         qerror("child arg table val MUST be number or string");
-        return -1;
+        return QERROR;
       }
 
       key = lua_tolstring(state, key_idx, &len);
 
       if (str_val) {
         if (qdict_setstr(dict, key, str_val) == NULL) {
-          return -1;
+          return QERROR;
         }
       } else {
         if (qdict_setnum(dict, key, num_val) == NULL) {
-          return -1;
+          return QERROR;
         }
       }
       lua_pop(state, 1);
@@ -262,7 +262,7 @@ qlua_copy_table(lua_State *state, int table_idx,
       str_val = NULL;
     }
   }
-  return 0;
+  return QOK;
 }
 
 void
@@ -312,13 +312,11 @@ qlua_threadloadfile(qactor_t *actor, lua_State *state,
   UNUSED(actor);
 
   /* TODO: check the state is a lua thread */
-  //full_name = lua_init_filename(filename);
   full_name = (qstring_t)filename;
   if (full_name == NULL) {
     return -1;
   }
   ret = luaL_loadfile(state, full_name);
-  //qstring_destroy(full_name);
   /* start the coroutine */
   qlua_resume(state, 0);
 
@@ -349,7 +347,7 @@ qlua_init_path(struct qactor_t *actor) {
 
   full_path = qstring_new("");
   if (full_path == NULL) {
-    return -1;
+    return QERROR;
   }
   state = actor->state;
   path  = config.script_path;
@@ -367,7 +365,7 @@ qlua_init_path(struct qactor_t *actor) {
   lua_pop(state, 1);
   qstring_destroy(full_path);
 
-  return 0;
+  return QOK;
 }
 
 qactor_t*

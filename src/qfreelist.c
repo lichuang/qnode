@@ -4,6 +4,7 @@
 
 #include "qalloc.h"
 #include "qassert.h"
+#include "qcore.h"
 #include "qfreelist.h"
 
 static int prealloc(qfreelist_t *flist, qitem_init_pt init);
@@ -34,7 +35,7 @@ prealloc(qfreelist_t *flist, qitem_init_pt init) {
   for (i = num; i > 0; --i) {
     item = (qfree_item_t*)qcalloc(size);
     if (item == NULL) {
-      return -1;
+      return QERROR;
     }
     if (init) {
       init(item);
@@ -42,7 +43,7 @@ prealloc(qfreelist_t *flist, qitem_init_pt init) {
     qlist_add_tail(&(item->fentry), &(flist->free));
   }
 
-  return 0;
+  return QOK;
 }
 
 void

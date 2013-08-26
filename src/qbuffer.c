@@ -9,6 +9,7 @@
 #include "qmutex.h"
 
 #define QBUFFER_FREE_NUM 100
+
 static qfreelist_t free_buffer_list;
 static qmutex_t    free_buffer_list_lock;
 
@@ -57,14 +58,12 @@ qbuffer_extend(qbuffer_t *buffer, uint32_t size) {
   new_size = (size + 127) & 0xFF80;
   data = qrealloc(buffer->data, sizeof(char) * new_size);
   if (data == NULL) {
-    return -1;
+    return QERROR;
   }
-  //memcpy(data, buffer->data, buffer->size);
-  //qfree(buffer->data);
   buffer->data = data;
   buffer->size = new_size;
 
-  return 0;
+  return QOK;
 }
 
 char*
@@ -81,12 +80,12 @@ int
 qbuffer_write(qbuffer_t *buffer, const char *data, int size) {
   qbuffer_reserve(buffer, size); 
   if (buffer->data == NULL) {
-    return -1;
+    return QERROR;
   }
   memcpy(buffer->data + buffer->end, data, size);
   buffer->end += size;
 
-  return 0;
+  return QOK;
 }
 
 static int
@@ -96,12 +95,12 @@ buffer_init(void *data) {
   buffer = (qbuffer_t*)data;
   buffer->data = qalloc(sizeof(char) * QBUFFER_SIZE);
   if (buffer->data == NULL) {
-    return -1;
+    return QERROR;
   }
   buffer->start  = buffer->end = 0;
   buffer->size = QBUFFER_SIZE;
 
-  return 0;
+  return QOK;
 }
 
 static void

@@ -48,7 +48,7 @@ logger_log_handler(qmsg_t *msg, void *reader) {
     }
   }
 
-  return 0;
+  return QOK;
 }
 
 static int
@@ -68,7 +68,8 @@ logger_signal_handler(qmsg_t *msg, void *reader) {
     default:
       break;
   }
-  return 0;
+
+  return QOK;
 }
 
 static void

@@ -24,17 +24,13 @@ static void config_set_default();
 static void
 config_init_log(lua_State *state) {
   if (qlua_get_global_table(state, "log") < 0) {
-    qstdout("not found log config, use default\n");
     return;
   }
-  if (qlua_get_table_string(state, "path", &(config.log_path)) < 0) {
-    qstdout("read log[path] config error\n");
-    exit(-1);
-  }
-  if (qlua_get_table_string(state, "level", &(config.log_level)) < 0) {
-    qstdout("read log[level] config error\n");
-    exit(-1);
-  }
+
+  qlua_get_table_string(state, "path", &(config.log_path));
+
+  qlua_get_table_string(state, "level", &(config.log_level));
+
   lua_pop(state, 1);
 }
 
@@ -44,6 +40,7 @@ config_init_worker(lua_State *state) {
     qstdout("not found worker config, use default\n");
     return;
   }
+
   qlua_get_table_number(state, "num", &(config.worker));
   if (config.worker > QMAX_WORKER) {
     config.worker = QMAX_WORKER;
@@ -57,10 +54,9 @@ config_init_script(lua_State *state) {
     qstdout("not found script config, use default\n");
     return;
   }
-  if (qlua_get_table_string(state, "path", &(config.script_path)) < 0) {
-    qstdout("read script[path] config error\n");
-    exit(-1);
-  }
+
+  qlua_get_table_string(state, "path", &(config.script_path));
+
   lua_pop(state, 1);
 }
 
@@ -93,19 +89,19 @@ qconfig_init(const char *filename) {
 
   config_set_default();
   if (filename == NULL) {
-    return -1;
+    return QERROR;
   }
 
   state = lua_open();
   if (state == NULL) {
     qstdout("create lua state error\n");
-    return -1;
+    return QERROR;
   }
 
   if (luaL_dofile(state, filename) != 0) {
     qstdout("parse config %s error:\n\t%s\n", filename,
             lua_tostring(state, -1));
-    return -1;
+    return QERROR;
   }
 
   config_init_worker(state);  
@@ -115,7 +111,7 @@ qconfig_init(const char *filename) {
 
   lua_close(state);
 
-  return 0;
+  return QOK;
 }
 
 void

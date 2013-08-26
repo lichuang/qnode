@@ -27,12 +27,12 @@ create_listen_socket() {
   on = 1;
   if ((fd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
     qerror("create socket error: %s", strerror(errno));
-    return -1;
+    return QERROR;
   }
 
   if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) == -1) {
     qerror("setsockopt SO_REUSEADDR error: %s", strerror(errno));
-    return -1;
+    return QERROR;
   }
 
   return fd;
@@ -44,13 +44,14 @@ set_nonblocking(int fd) {
 
   if ((flags = fcntl(fd, F_GETFL)) == -1) {
     qerror("fcntl(F_GETFL) error: %s", strerror(errno));
-    return -1;
+    return QERROR;
   }
   if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) {
     qerror("fcntl(F_SETFL,O_NONBLOCK) error: %s", strerror(errno));
-    return -1;
+    return QERROR;
   }
-  return 0;
+
+  return QOK;
 }
 
 int
@@ -61,11 +62,11 @@ qnet_tcp_listen(int port, const char *bindaddr, int *error) {
   UNUSED(bindaddr);
 
   if ((fd = create_listen_socket()) < 0) {
-    return -1;
+    return QERROR;
   }
 
   if (set_nonblocking(fd) < 0) {
-    return -1;
+    return QERROR;
   }
 
   memset(&sa,0,sizeof(sa));
@@ -77,21 +78,21 @@ qnet_tcp_listen(int port, const char *bindaddr, int *error) {
     qerror("invalid bind address");
     *error = errno;
     close(fd);
-    return -1;
+    return QERROR;
   }
 
   if (bind(fd, (struct sockaddr*)&sa, sizeof(sa)) < 0) {
     *error =  errno;
     qerror("bind error: %s", strerror(*error));
     close(fd);
-    return -1;
+    return QERROR;
   }
 
   if (listen(fd, 511) == -1) {
     *error =  errno;
     qerror("listen error: %s", strerror(*error));
     close(fd);
-    return -1;
+    return QERROR;
   }
 
   return fd;
@@ -106,14 +107,14 @@ qnet_tcp_accept(int listen_fd, struct sockaddr *addr,
     fd = accept(listen_fd, addr, addrlen);
     if (fd == -1) { 
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
-        return 0;
+        return QOK;
       }
       if (errno == EINTR) {
         continue;
       }
       *error = errno;
       qerror("accept error: %s", strerror(*error));
-      return -1;
+      return QERROR;
     }
     set_nonblocking(fd);
     break;
@@ -142,7 +143,7 @@ qnet_tcp_recv(qsocket_t *socket, int *error) {
       qbuffer_extend(buffer, buffer->size * 2);
     }
     if (buffer->data == NULL) {
-      return -1;
+      return QERROR;
     }
 
     size = qbuffer_wlen(buffer);
@@ -157,17 +158,17 @@ qnet_tcp_recv(qsocket_t *socket, int *error) {
         break;
       } else if (save != EINTR) {
         /* some error has occured */
-        qerror("recv from %s error: %s", socket->peer, strerror(save));
+        qinfo("recv from %s error: %s", socket->peer, strerror(save));
         *error = save;
-        return -1;
+        return QERROR;
       }
     }
 
     /* socket has been closed */
     if (n == 0) {
-      qerror("socket from %s closed", socket->peer);
+      qinfo("socket from %s closed", socket->peer);
       *error = save;
-      return -1;
+      return QERROR;
     }
 
     buffer->end += n;
@@ -203,14 +204,14 @@ qnet_tcp_send(qsocket_t *socket, int *error) {
       } else {
         qerror("send to %s error: %s", socket->peer, strerror(save));
         *error = save;
-        return -1;
+        return QERROR;
       }
     }
 
     if (n == 0) {
       qerror("socket from %s closed", socket->peer);
       *error = save;
-      return -1;
+      return QERROR;
     }
 
     buffer->start += n;

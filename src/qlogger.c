@@ -118,11 +118,11 @@ qlogger_new(int thread_num) {
   qlog_init_free_list();
   logger = qcalloc(sizeof(qlogger_t));
   if (logger == NULL) {
-    return -1;
+    return QERROR;
   }
 
   if (pthread_key_create(&thread_log_key, log_key_destroy) < 0) {
-    return -1;
+    return QERROR;
   }
 
   logger->fd = -1;
@@ -132,7 +132,7 @@ qlogger_new(int thread_num) {
   }
   logger->engine = qengine_new();
   if (logger->engine == NULL) {
-    return -1;
+    return QERROR;
   }
   qmailbox_init(&(logger->box), logger_msg_handler,
                 logger->engine, logger);
@@ -149,7 +149,8 @@ qlogger_new(int thread_num) {
   while (!logger->running) {
     usleep(100);
   }
-  return 0;
+
+  return QOK;
 }
 
 void

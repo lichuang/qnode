@@ -46,7 +46,7 @@ worker_start_handler(qmsg_t *msg, void *reader) {
   actor  = qactor_new(aid);
   if (actor == NULL) {
     qerror("new actor: %d error", aid);
-    return -1;
+    return QERROR;
   }
   qassert(actor->state == NULL);
   qactor_attach(actor, qlua_new_thread(worker));
@@ -54,19 +54,19 @@ worker_start_handler(qmsg_t *msg, void *reader) {
 
   if (qlua_threadloadfile(actor, actor->state, "server.lua") != 0) {
     qerror("load server start script error");
-    return -1; 
+    return QERROR;
   }
 
   state = actor->state;
   lua_getglobal(state, "server");
   if (lua_isnil(state, -1)) {
-    qerror("load server start script error");
-    return -1;
+    qerror("load server script server table error");
+    return QERROR;
   }
   lua_getfield(state, -1, "start");
   if (lua_isnil(state, -1)) {
-    qerror("load server start script error");
-    return -1;
+    qerror("load server script server.start func error");
+    return QERROR;
   }
   if (qlua_call(state, 0, 0) == 0) {
     ret = (int)lua_tonumber(state, -1);
@@ -124,7 +124,7 @@ worker_signal_handler(qmsg_t *msg, void *reader) {
       break;
   }
 
-  return 0;
+  return QOK;
 }
 
 static int
@@ -140,7 +140,7 @@ worker_actor_handler(qmsg_t *msg, void *reader) {
   actor  = qworket_get_actor(worker, decode_id(header->dst));
   if (actor == NULL) {
     qerror("actor %d not exist", header->dst);
-    return 0;
+    return QOK;
   }
 
   (*actor_msg_handlers[header->type])(header, actor);

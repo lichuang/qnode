@@ -118,14 +118,14 @@ init_workers() {
     }
   }
     
-  return 0;
+  return QOK;
 
 error:
   /*
    * no need to free memory, cause this function called
    * when server start, just end the server wiil be fine
    */
-  return -1;
+  return QERROR;
 }
 
 static void
@@ -254,15 +254,15 @@ init_server() {
 
   server_start();
 
-  return 0;
+  return QOK;
 
 error:
-  return -1;
+  return QERROR;
 }
 
 static void
 destroy_threads() {
-  int         i;
+  int i;
 
   for (i = 1; i <= config.worker; ++i) {
     qworker_destroy(workers[i]);
@@ -278,12 +278,12 @@ destroy_server() {
 
 int
 qserver_run() {
-  if (init_server() != 0) {
-    return -1;
+  if (init_server() != QOK) {
+    return QERROR;
   }
   qengine_loop(engine);
   destroy_server();
-  return 0;
+  return QOK;
 }
 
 void

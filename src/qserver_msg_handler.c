@@ -51,7 +51,7 @@ server_signal_handler(qmsg_t *msg, void *reader) {
   }
 
   send_signal(signo);
-  return 0;
+  return QOK;
 }
 
 static void
