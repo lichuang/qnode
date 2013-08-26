@@ -7,16 +7,10 @@
 
 #include "qtype.h"
 
-/* id allocate algorithm, refer to Linux Kernel pid map */
-
-/* max id, equal to 2^15=32768 */
-#define QID_MAX 0x8000
-
+#define QID_MAX 10240
 
 typedef struct qidmap_t {
-  qid_t         last_qid;
-  unsigned int  nr_free;
-  char          page[QID_MAX];
+  qid_t         current;
   void*         data[QID_MAX];
 } qidmap_t;
 

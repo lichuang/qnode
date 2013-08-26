@@ -15,14 +15,26 @@
 typedef void (qtimer_pt)(void *data);
 
 typedef struct qtimer_t {
-  int             heap_index;   /* heap index in the minheap */
-  void           *arg;          /* client data */
-  uint64_t        timeout;      /* timeout(in ms) */
-  uint64_t        cycle;        /* timer cycle */
-  qid_t           id;           /* timer id */
-  qlist_t         entry;        /* timer free list entry */
-  qtimer_pt  *handler;      /* timer handler */
-  char data[1000];
+  /* heap index in the minheap */
+  int             heap_index;
+
+  /* client data */
+  void           *arg;
+
+  /* timeout(in ms) */
+  uint64_t        timeout;
+
+  /* timer cycle(in ms) */
+  uint64_t        cycle;
+
+  /* timer id */
+  qid_t           id;
+
+  /* timer free list entry */
+  qlist_t         entry;
+
+  /* timer handler */
+  qtimer_pt      *handler;      /* timer handler */
 } qtimer_t;
 
 typedef struct qtimer_manager_t {

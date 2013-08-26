@@ -110,7 +110,7 @@ qnet_tcp_accept(int listen_fd, struct sockaddr *addr,
         continue;
       }
       *error = errno;
-      qerror("accept error: %s", strerror(*error));
+      qinfo("accept error: %s", strerror(*error));
       return QERROR;
     }
     set_nonblocking(fd);
