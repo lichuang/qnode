@@ -81,7 +81,7 @@ void qapi_register(lua_State *state);
  *
  *  4) net
  *     qltcp_listen: create listen socket
- *     [IN]addr, port
+ *     [IN]port, addr(default 0.0.0.0)
  *     [OUT]socket
  *
  *     qltcp_accept: accept a connection from listen socket

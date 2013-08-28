@@ -9,7 +9,8 @@
 #include <sys/socket.h>
 #include "qcore.h"
 
-int   qnet_tcp_listen(int port, const char *bindaddr, int *error);
+int   qnet_tcp_listen(int port, const char *addr, int *error);
+int   qnet_tcp_connect(int port, const char *addr, int *error);
 int   qnet_tcp_accept(int listen_fd,  struct sockaddr *addr,
                       socklen_t *addrlen, int *error);
 

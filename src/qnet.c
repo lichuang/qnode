@@ -96,6 +96,57 @@ qnet_tcp_listen(int port, const char *addr, int *error) {
 }
 
 int
+qnet_tcp_connect(int port, const char *addr, int *error) {
+  int                 fd;
+  struct sockaddr_in  dstaddr;
+  socklen_t           len;
+
+  if ((fd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
+    *error = errno;
+    qerror("create socket error: %s", strerror(errno));
+    return QERROR;
+  }
+
+  if (set_nonblocking(fd) < 0) {
+    *error = errno;
+    return QERROR;
+  }
+
+  dstaddr.sin_family = AF_INET;
+  dstaddr.sin_port = htons(port);
+  if (inet_aton(addr, &dstaddr.sin_addr) == 0) {
+    qerror("invalid bind address");
+    *error = errno;
+    close(fd);
+    return QERROR;
+  }
+
+  len = sizeof(dstaddr);
+  while (1) {
+    if (connect(fd, (struct sockaddr*)(&dstaddr), len) == -1) {
+      if (errno == EINTR) {
+        continue;
+      }   
+      if (errno == EINPROGRESS) {
+        *error = errno;
+        return QNONBLOCKING;
+      }   
+
+      if (errno == EISCONN) {
+        return fd;
+      }
+
+      qerror("connect to %s:%d error: %s", addr, port, strerror(errno));
+      close(fd);
+      return QERROR;
+    }
+    break;
+  }
+
+  return fd;
+}
+
+int
 qnet_tcp_accept(int listen_fd, struct sockaddr *addr,
                 socklen_t *addrlen, int *error) {
   int fd;

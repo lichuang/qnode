@@ -23,12 +23,14 @@ static qsocket_t*  new_tcp_socket(int fd, lua_State *state,
                                   qactor_t *actor,
                                   struct sockaddr_in *remote);
 static void socket_accept(int fd, int flags, void *data);
+static void socket_connect(int fd, int flags, void *data);
 static void socket_recv(int fd, int flags, void *data);
 static void socket_send(int fd, int flags, void *data);
 static int  tcp_buffer(lua_State *state, int in);
 
 static int  qltcp_listen(lua_State *state);
 static int  qltcp_accept(lua_State *state);
+static int  qltcp_connect(lua_State *state);
 static int  qltcp_recv(lua_State *state);
 static int  qltcp_send(lua_State *state);
 static int  qltcp_inbuf(lua_State *state);
@@ -37,6 +39,7 @@ static int  qltcp_outbuf(lua_State *state);
 luaL_Reg net_apis[] = {
   {"qltcp_listen",    qltcp_listen},
   {"qltcp_accept",    qltcp_accept},
+  {"qltcp_connect",   qltcp_connect},
   {"qltcp_recv",      qltcp_recv},
   {"qltcp_send",      qltcp_send},
   {"qltcp_inbuf",     qltcp_inbuf},
@@ -59,18 +62,18 @@ qltcp_listen(lua_State *state) {
   qsocket_t   *socket;
 
   actor = qlua_get_actor(state);
-  addr = lua_tostring(state, 1);
-  if (addr == NULL) {
-    lua_pushnil(state);
-    lua_pushliteral(state, "listen addr nil");
-    return 2;
-  }
 
-  port = (int)lua_tonumber(state, 2);
+  port = (int)lua_tonumber(state, 1);
   if (port < 0) {
     lua_pushnil(state);
     lua_pushfstring(state, "wrong port %d", port);
     return 2;
+  }
+
+  addr = lua_tostring(state, 2);
+  if (addr == NULL) {
+    /* default 0.0.0.0 */
+    addr = "0.0.0.0";
   }
 
   fd = qnet_tcp_listen(port, addr, &error);
@@ -232,6 +235,113 @@ qltcp_accept(lua_State *state) {
   }
 
   lua_pushlightuserdata(state, socket);
+  return 1;
+}
+
+static void
+socket_connect(int fd, int flags, void *data) {
+  int                 error;
+  socklen_t           len;
+  struct sockaddr_in  remote;
+  qsocket_t          *socket;
+  lua_State          *state;
+  qengine_t          *engine;
+  qactor_t           *actor;
+
+  UNUSED(flags);
+  UNUSED(data);
+
+  actor = (qactor_t*)data;
+  actor->waiting_netio = 0;
+  state = actor->state;
+  engine = qactor_get_engine(actor->aid);
+
+  error = 0;
+  len = sizeof(error);
+  getsockopt(fd, SOL_SOCKET, SO_ERROR, (char*)&error, &len);
+  if (error == -1) {
+    qengine_del_event(engine, fd, QEVENT_WRITE);
+    qnet_close(fd);
+  } else if (error == 0) {
+    qengine_del_event(engine, fd, QEVENT_WRITE);
+    //engine_->Add(this, kEventRead);
+  }   
+  
+  socket = new_tcp_socket(fd, state, actor, &remote);
+  if (!socket) {
+    qnet_close(fd);
+    lua_pushnil(state);
+    lua_pushliteral(state, "create socket error");
+    qlua_resume(state, 2);
+    return;
+  }
+  socket->state = QINET_STATE_CONNECTED;
+
+  lua_pushlightuserdata(state, socket);
+  qlua_resume(state, 1);
+  return;
+}
+
+static int
+qltcp_connect(lua_State *state) {
+  const char  *addr;
+  qactor_t    *actor;
+  int          port, fd, error;
+  qsocket_t   *socket;
+  qengine_t   *engine;
+
+  actor = qlua_get_actor(state);
+
+  addr = lua_tostring(state, 1);
+  if (addr == NULL) {
+    lua_pushnil(state);
+    lua_pushfstring(state, "addr nil");
+    return 2;
+  }
+
+  port = (int)lua_tonumber(state, 2);
+  if (port < 0) {
+    lua_pushnil(state);
+    lua_pushfstring(state, "wrong port %d", port);
+    return 2;
+  }
+
+  fd = qnet_tcp_connect(port, addr, &error);
+
+  if (fd == QERROR) {
+    lua_pushnil(state);
+    lua_pushfstring(state, "connect to %s:%d error: %s", addr, port, strerror(error));
+    return 2;
+  }
+
+  /*
+  socket = qsocket_new(fd, actor);
+  if (!socket) {
+    qnet_close(fd);
+    lua_pushnil(state);
+    lua_pushfstring(state, "create socket on %s:%d error", addr, port);
+    return 2;
+  }
+  */
+
+  if (fd == QNONBLOCKING) {
+    engine = qactor_get_engine(actor->aid);
+    qengine_add_event(engine, fd, QEVENT_READ,
+                      socket_connect, actor);
+    actor->waiting_netio = 1;
+    return lua_yield(state, 0); 
+  }
+
+  socket = qsocket_new(fd, actor);
+  if (!socket) {
+    qnet_close(fd);
+    lua_pushnil(state);
+    lua_pushfstring(state, "create socket on %s:%d error", addr, port);
+    return 2;
+  }
+  socket->state = QINET_STATE_CONNECTED;
+  lua_pushlightuserdata(state, socket);
+
   return 1;
 }
 
