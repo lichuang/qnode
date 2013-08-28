@@ -225,6 +225,7 @@ qlnode_exit(lua_State *state) {
     return 0;
   }
   actor->active = 0;
+  qactor_destroy(actor);
 
   return 0;
 }

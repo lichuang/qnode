@@ -40,7 +40,6 @@
 #define encode_aid(id, pid) (((id) << ID_BIT) | (pid))
 
 /* decode id from aid */
-//#define decode_id(aid) (((aid) & MASK1(ID_BIT, POS_ID)) >> ID_BIT)
 #define decode_id(aid) ((aid)  >> ID_BIT)
 
 /* decode pid from aid */
@@ -71,7 +70,7 @@ struct qworker_t {
   /* lua VM */
   lua_State            *state;
 
-  /* lua memory size*/
+  /* lua memory size */
   int                   alloc;
 
   /* worker active actor list */

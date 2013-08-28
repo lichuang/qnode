@@ -48,8 +48,8 @@ qactor_new(qid_t aid) {
 
 void
 qactor_destroy(qactor_t *actor) {
-  qlist_t *pos, *next;
-  qmsg_t  *msg;
+  qlist_t   *pos, *next;
+  qmsg_t    *msg;
   qsocket_t *socket;
 
   qspinlock_lock(&(actor->sock_list_lock));
