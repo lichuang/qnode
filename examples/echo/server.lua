@@ -55,7 +55,7 @@ server.start = function()
   qlog("echo server start");
 
   -- accept connection
-  local socket, ret = qltcp_listen("0.0.0.0", 22881);
+  local socket, ret = qltcp_listen(22881);
   if socket then
     accept(socket)
   else

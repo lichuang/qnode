@@ -96,18 +96,17 @@ qnet_tcp_listen(int port, const char *addr, int *error) {
 }
 
 int
-qnet_tcp_connect(int port, const char *addr, int *error) {
-  int                 fd;
+qnet_tcp_connect(int port, const char *addr, int *error, int *fd) {
   struct sockaddr_in  dstaddr;
   socklen_t           len;
 
-  if ((fd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
+  if ((*fd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
     *error = errno;
     qerror("create socket error: %s", strerror(errno));
     return QERROR;
   }
 
-  if (set_nonblocking(fd) < 0) {
+  if (set_nonblocking(*fd) < 0) {
     *error = errno;
     return QERROR;
   }
@@ -117,13 +116,13 @@ qnet_tcp_connect(int port, const char *addr, int *error) {
   if (inet_aton(addr, &dstaddr.sin_addr) == 0) {
     qerror("invalid bind address");
     *error = errno;
-    close(fd);
+    close(*fd);
     return QERROR;
   }
 
   len = sizeof(dstaddr);
   while (1) {
-    if (connect(fd, (struct sockaddr*)(&dstaddr), len) == -1) {
+    if (connect(*fd, (struct sockaddr*)(&dstaddr), len) == -1) {
       if (errno == EINTR) {
         continue;
       }   
@@ -133,17 +132,17 @@ qnet_tcp_connect(int port, const char *addr, int *error) {
       }   
 
       if (errno == EISCONN) {
-        return fd;
+        return QOK;
       }
 
       qerror("connect to %s:%d error: %s", addr, port, strerror(errno));
-      close(fd);
+      close(*fd);
       return QERROR;
     }
     break;
   }
 
-  return fd;
+  return QOK;
 }
 
 int

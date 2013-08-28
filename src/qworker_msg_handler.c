@@ -7,6 +7,7 @@
 #include "qassert.h"
 #include "qactor.h"
 #include "qamsg.h"
+#include "qconfig.h"
 #include "qdefines.h"
 #include "qlist.h"
 #include "qlog.h"
@@ -52,8 +53,8 @@ worker_start_handler(qmsg_t *msg, void *reader) {
   qactor_attach(actor, qlua_new_thread(worker));
   actor->tid = worker->tid;
 
-  if (qlua_threadloadfile(actor, actor->state, "server.lua") != 0) {
-    qerror("load server start script error");
+  if (qlua_threadloadfile(actor, actor->state, config.main) != 0) {
+    qerror("load server start script %s error", config.main);
     return QERROR;
   }
 

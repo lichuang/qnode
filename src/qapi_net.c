@@ -286,7 +286,7 @@ static int
 qltcp_connect(lua_State *state) {
   const char  *addr;
   qactor_t    *actor;
-  int          port, fd, error;
+  int          port, fd, error, ret;
   qsocket_t   *socket;
   qengine_t   *engine;
 
@@ -306,27 +306,18 @@ qltcp_connect(lua_State *state) {
     return 2;
   }
 
-  fd = qnet_tcp_connect(port, addr, &error);
+  ret = qnet_tcp_connect(port, addr, &error, &fd);
 
-  if (fd == QERROR) {
+  if (ret == QERROR) {
     lua_pushnil(state);
-    lua_pushfstring(state, "connect to %s:%d error: %s", addr, port, strerror(error));
+    lua_pushfstring(state, "connect to %s:%d error: %s",
+                    addr, port, strerror(error));
     return 2;
   }
 
-  /*
-  socket = qsocket_new(fd, actor);
-  if (!socket) {
-    qnet_close(fd);
-    lua_pushnil(state);
-    lua_pushfstring(state, "create socket on %s:%d error", addr, port);
-    return 2;
-  }
-  */
-
-  if (fd == QNONBLOCKING) {
+  if (ret == QNONBLOCKING) {
     engine = qactor_get_engine(actor->aid);
-    qengine_add_event(engine, fd, QEVENT_READ,
+    qengine_add_event(engine, fd, QEVENT_WRITE,
                       socket_connect, actor);
     actor->waiting_netio = 1;
     return lua_yield(state, 0); 
