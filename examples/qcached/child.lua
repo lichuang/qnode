@@ -158,6 +158,7 @@ function main_loop(_args)
     local ret, err = qltcp_recv(socket)
     if not ret then
       qlerror(err)
+      qlog("node exit");
       qlnode_exit()
       return
     end
@@ -183,7 +184,7 @@ function main_loop(_args)
       qlnode_send(storage_id, data)
       local arg = qlnode_recv()
       for k, v in pairs(arg) do
-	qlog("response k: " .. k .. ", v: " .. v)
+	      qlog("response k: " .. k .. ", v: " .. v)
       end
 
       qlbuffer_reset(buffer);
@@ -191,9 +192,10 @@ function main_loop(_args)
       qlbuffer_write_string(out, arg.response);
       local nret, reason = qltcp_send(socket)
       if not nret then
-	qlog("qtcp_send error: " .. reason)
+	      qlog("qtcp_send error: " .. reason)
+        qlnode_exit()
       else
-	qlog("qtcp_send: " .. tostring(nret))
+	      qlog("qtcp_send: " .. tostring(nret))
       end
     end
   end
