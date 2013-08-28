@@ -62,6 +62,8 @@ config_init_script(lua_State *state) {
     exit(-1);
   }
 
+  qlua_get_table_string(state, "main", &(config.main));
+
   lua_pop(state, 1);
 }
 
@@ -83,6 +85,7 @@ config_set_default() {
   config.daemon           = 0;
   config.recycle_internal = 60;
   config.script_path      = qstring_new("./script");
+  config.main             = qstring_new("main.lua");
   config.log_path         = qstring_new("./log");
   config.log_level        = qstring_new("debug");
   config.log_size         = 1024000000;

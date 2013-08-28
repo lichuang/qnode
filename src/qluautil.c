@@ -57,9 +57,11 @@ qlua_new_state(lua_Alloc fun, void *ud) {
     return NULL;
   }
 
-  if(luaL_dofile(state, "main.lua")) {
-    qstdout("load main.lua error\n");
+  if(luaL_dofile(state, config.main)) {
+    qerror("load main script %s error\n", config.main);
     qlua_fail(state);
+    lua_close(state);
+    return NULL;
   }
 
   return state;
@@ -67,8 +69,8 @@ qlua_new_state(lua_Alloc fun, void *ud) {
 
 int
 qlua_reload(lua_State *state) {
-  if(luaL_dofile(state, "main.lua")) {
-    qerror("load file error");
+  if(luaL_dofile(state, config.main)) {
+    qerror("reload main script %s error\n", config.main);
     qlua_fail(state);
     return QERROR;
   }

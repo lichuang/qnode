@@ -88,6 +88,9 @@ qworker_new(qid_t tid) {
   qmutex_init(&(worker->mutex));
   /* create the lua VM for the worker */
   worker->state = qlua_new_state(worker_alloc, worker);
+  if (worker->state == NULL) {
+    return NULL;
+  }
   worker->running = 0;
   qlist_entry_init(&(worker->actor_list));
   pthread_create(&worker->id, NULL,

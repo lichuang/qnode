@@ -14,6 +14,7 @@ struct qconfig_t {
   int           log_size;
   int           recycle_internal;
   qstring_t     script_path;
+  qstring_t     main;
   qstring_t     log_path;
   qstring_t     log_level;
   char          cwd[1024];
