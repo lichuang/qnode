@@ -51,6 +51,12 @@ qlua_new_state(lua_Alloc fun, void *ud) {
   lua_atpanic(state, panic);
   luaL_openlibs(state);
   qapi_register(state);
+  if (qlua_init_path(state) != QOK) {
+    qstdout("qlua_init_path error\n");
+    lua_close(state);
+    return NULL;
+  }
+
   if(luaL_dofile(state, "main.lua")) {
     qstdout("load main.lua error\n");
     qlua_fail(state);
@@ -339,26 +345,26 @@ qlua_dofile(lua_State *state, const char *filename) {
 }
 
 int
-qlua_init_path(struct qactor_t *actor) {
-  const char *path;
+qlua_init_path(lua_State *state) {
   const char *cur_path;
   qstring_t   full_path;
-  lua_State  *state;
 
   full_path = qstring_new("");
   if (full_path == NULL) {
     return QERROR;
   }
-  state = actor->state;
-  path  = config.script_path;
 
-  lua_getglobal(state, "package" );
-  lua_getfield(state, -1, "path" );
-  cur_path = lua_tostring( state, -1 );
-  qstring_assign(full_path, cur_path);
-  qstring_append(full_path, ";");
-  qstring_append(full_path, path);
-  qstring_append(full_path, "/?.lua");
+  lua_getglobal(state, "package");
+  lua_getfield(state, -1, "path");
+  cur_path = lua_tostring(state, -1);
+  full_path = qstring_assign(full_path, cur_path);
+  if (full_path == NULL) {
+    return QERROR;
+  }
+  full_path = qstring_append(full_path, ";../script/?.lua");
+  if (full_path == NULL) {
+    return QERROR;
+  }
   lua_pop(state, 1);
   lua_pushstring(state, full_path);
   lua_setfield(state, -2, "path");

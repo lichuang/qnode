@@ -37,7 +37,7 @@ void qlua_dump_dict(lua_State *state, qdict_t *dict);
 int  qlua_threadloadfile(qactor_t *actor, lua_State *state,
                          const char *filename);
 int  qlua_dofile(lua_State *state, const char *filename);
-int  qlua_init_path(qactor_t *actor);
+int  qlua_init_path(lua_State *state);
 
 int  qlua_doresume(lua_State *state, int nargs,
                    const char *file, int line);
