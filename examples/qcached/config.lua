@@ -16,7 +16,7 @@ log = {
 -- script config
 script = {
   -- lua script path
-  path = "./qcached",
+  path = "./examples/qcached",
 }
 
 -- server config

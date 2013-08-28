@@ -357,7 +357,9 @@ qlua_init_path(lua_State *state) {
     return QERROR;
   }
 
-  full_path = qstring_append(full_path, ";../script/?.lua");
+  full_path = qstring_append(full_path, ";");
+  full_path = qstring_append(full_path, config.cwd);
+  full_path = qstring_append(full_path, "/script/?.lua");
   if (full_path == NULL) {
     return QERROR;
   }

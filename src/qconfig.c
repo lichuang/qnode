@@ -7,6 +7,7 @@
 #include <lauxlib.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "qconfig.h"
 #include "qlimits.h"
 #include "qlog.h"
@@ -85,6 +86,7 @@ config_set_default() {
   config.log_path         = qstring_new("./log");
   config.log_level        = qstring_new("debug");
   config.log_size         = 1024000000;
+  getcwd(config.cwd, 1024);
 }
 
 int

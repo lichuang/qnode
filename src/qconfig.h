@@ -16,6 +16,7 @@ struct qconfig_t {
   qstring_t     script_path;
   qstring_t     log_path;
   qstring_t     log_level;
+  char          cwd[1024];
 };
 
 int  qconfig_init(const char *filename);
