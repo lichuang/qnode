@@ -78,15 +78,17 @@ static int enable_handler(lua_State *state, ldb_t *ldb,
                           lua_Debug *ar, input_t *input);
 static int delete_handler(lua_State *state, ldb_t *ldb,
                           lua_Debug *ar, input_t *input);
+static int reload_handler(lua_State *state, ldb_t *ldb,
+                          lua_Debug *ar, input_t *input);
 
-typedef int (*handler_t)(lua_State *state, ldb_t *ldb,
-                         lua_Debug *ar, input_t *input);
+typedef int (*handler_pt)(lua_State *state, ldb_t *ldb,
+                          lua_Debug *ar, input_t *input);
 
 typedef struct ldb_command_t {
   const char* name;
   const char* short_name;
   const char* help;
-  handler_t   handler;
+  handler_pt  handler;
 } ldb_command_t;
 
 ldb_command_t commands[] = {
@@ -174,11 +176,18 @@ ldb_command_t commands[] = {
     &continue_handler
   },
 
+  {
+    "reload",
+    "r",
+    ": reload a lua script",
+    &reload_handler
+  },
+
   {NULL,        NULL, NULL,                                 NULL},
 };
 
 ldb_t*
-ldb_new(lua_State *state) {
+ldb_new(lua_State *state, ldb_reload_pt reload) {
   int    i;
   ldb_t *ldb;
 
@@ -190,6 +199,7 @@ ldb_new(lua_State *state) {
   ldb->first = 1;
   ldb->call_depth = 0;
   ldb->state = state;
+  ldb->reload = reload;
 
   lua_pushstring(state, lua_tag);
   lua_pushlightuserdata(state, ldb);
@@ -1059,4 +1069,14 @@ delete_handler(lua_State *state, ldb_t *ldb,
     free(ldb->bkpoints[bk].func);
   }
   return -1;
+}
+
+static int
+reload_handler(lua_State *state, ldb_t *ldb,
+               lua_Debug *ar, input_t *input) {
+  if (ldb->reload) {
+    ldb->reload(state);
+  }
+
+  return 0;
 }

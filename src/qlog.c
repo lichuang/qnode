@@ -92,7 +92,7 @@ qlog(int level, const char* file, int line, const char *format, ...) {
   n  = snprintf(log->buff, QMAX_LOG_SIZE,
                      "%s", logger->time_buff);
   n += snprintf(log->buff + n, QMAX_LOG_SIZE - n,
-                     " %s:%d] ", file, line);
+                     " %s:%d ", file, line);
   n += vsnprintf(log->buff + n, QMAX_LOG_SIZE - n,
                       format, args);
   log->buff[n++] = '\n';

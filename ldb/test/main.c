@@ -9,6 +9,10 @@ c_break(lua_State *state) {
   return 0;
 }
 
+void reload(lua_State *state) {
+  printf("in reload\n");
+}
+
 int main() {
   int i;
   const char *file = "my.lua";
@@ -18,7 +22,7 @@ int main() {
 
   lua_register(L, "c_break", c_break);
 
-  ldb = ldb_new(L);
+  ldb = ldb_new(L, reload);
   luaL_dofile(L, file);
 
   ldb_free(ldb);

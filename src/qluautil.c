@@ -349,22 +349,19 @@ qlua_init_path(lua_State *state) {
   const char *cur_path;
   qstring_t   full_path;
 
-  full_path = qstring_new("");
+  lua_getglobal(state, "package");
+  lua_getfield(state, -1, "path");
+  cur_path = lua_tostring(state, -1);
+  full_path = qstring_new(cur_path);
   if (full_path == NULL) {
     return QERROR;
   }
 
-  lua_getglobal(state, "package");
-  lua_getfield(state, -1, "path");
-  cur_path = lua_tostring(state, -1);
-  full_path = qstring_assign(full_path, cur_path);
-  if (full_path == NULL) {
-    return QERROR;
-  }
   full_path = qstring_append(full_path, ";../script/?.lua");
   if (full_path == NULL) {
     return QERROR;
   }
+
   lua_pop(state, 1);
   lua_pushstring(state, full_path);
   lua_setfield(state, -2, "path");

@@ -26,6 +26,9 @@ static void* worker_alloc(void *ud, void *ptr,
                           size_t osize, size_t nsize);
 static void  recycle_actors(void *data);
 static void  free_actors(qworker_t *worker);
+#ifdef DEBUG
+static void  reload(lua_State *state);
+#endif
 
 static int
 worker_msg_handler(qmsg_t *msg, void *reader) {
@@ -91,7 +94,7 @@ qworker_new(qid_t tid) {
                  worker_main, worker);
 
 #ifdef DEBUG
-  worker->ldb = ldb_new(worker->state);
+  worker->ldb = ldb_new(worker->state, reload);
 #else
   worker->ldb = NULL;
 #endif
@@ -213,3 +216,9 @@ free_actors(qworker_t *worker) {
   qfree(worker->actors);
   qmutex_destroy(&(worker->mutex));
 }
+
+#ifdef DEBUG
+static void  reload(lua_State *state) {
+  qlua_reload(state);
+}
+#endif
