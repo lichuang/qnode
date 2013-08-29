@@ -10,6 +10,10 @@ function accept(_listen)
   accept(_listen)
 end
 
+server.test_timer = function ()
+  print("test_timer")
+end
+
 function main_loop(_args)
   local socket        = _args["sock"]
   -- recv data from the socket
@@ -57,6 +61,12 @@ server.start = function()
   -- accept connection
   local socket, ret = qltcp_listen(22881);
   if socket then
+    local idx, err = qltimer_add(1000, 1000, "server", "test_timer", {})
+    if idx then
+      qllog("timer id: %d", idx)
+    else
+      qlerror(err)
+    end
     accept(socket)
   else
     qerror(ret)

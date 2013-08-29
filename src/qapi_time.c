@@ -7,29 +7,36 @@
 #include "qcore.h"
 #include "qdict.h"
 #include "qengine.h"
+#include "qlog.h"
 #include "qluautil.h"
 
 typedef struct qltimer_t {
+  lua_State *state;
   qdict_t *args;
-  int      idx;
+  qstring_t mod;
+  qstring_t func;
 } qltimer_t;
 
-static qltimer_t* new_timer(int idx, qdict_t *args);
-static void       free_timer(void *data);
+static qltimer_t* new_timer(qdict_t *args,
+                            const char *mod,
+                            const char *func);
+static void free_timer(void *data);
 
 static void timer_handler(void *data);
 
 static int qltimer_add(lua_State *state);
 static int qltimer_del(lua_State *state);
 
-luaL_Reg time_apis[] = {
+luaL_Reg timer_apis[] = {
   {"qltimer_add",   qltimer_add},
   {"qltimer_del",   qltimer_del},
+  {NULL,            NULL},
 };
 
 static int
 qltimer_add(lua_State *state) {
-  int         timeout, cycle, idx;
+  int         timeout, cycle;
+  const char *mod, *func;
   qactor_t   *actor;
   qdict_t    *args;
   qengine_t  *engine;
@@ -38,8 +45,9 @@ qltimer_add(lua_State *state) {
 
   timeout = (int)lua_tonumber(state, 1);
   cycle   = (int)lua_tonumber(state, 2);
-  idx     = (int)lua_tonumber(state, 3);
-  if (timeout < 0 || cycle < 0 || idx < 0) {
+  mod     = lua_tostring(state, 3);
+  func    = lua_tostring(state, 4);
+  if (timeout < 0 || cycle < 0 || mod == NULL || func == NULL) {
     lua_pushnil(state);
     lua_pushliteral(state, "wrong param");
     return 2;
@@ -59,13 +67,14 @@ qltimer_add(lua_State *state) {
     return 2;
   }
 
-  timer = new_timer(idx, args);
+  timer = new_timer(args, mod, func);
   if (timer == NULL) {
     qdict_destroy(args);
     lua_pushnil(state);
     lua_pushliteral(state, "create timer error");
     return 2;
   }
+  timer->state = state;
 
   actor = qlua_get_actor(state);
   engine = qactor_get_engine(actor->aid);
@@ -100,12 +109,27 @@ qltimer_del(lua_State *state) {
 static void
 timer_handler(void *data) {
   qltimer_t *timer;
+  lua_State *state;
 
+  qdebug("in timer_handler");
   timer = (qltimer_t*)data;
+  state = timer->state;
+  lua_getglobal(state, timer->mod);
+  if (!lua_istable(state, -1)) {
+    qerror("mod %s is not exist", timer->mod);
+    return;
+  }
+
+  lua_getfield(state, -1, timer->func);
+  if (!lua_isfunction(state, -1)) {
+    qerror("%s.%s is not lua function", timer->mod, timer->func);
+    return;
+  }
+  lua_pcall(state, 0, LUA_MULTRET, 0);
 }
 
 static qltimer_t*
-new_timer(int idx, qdict_t *args) {
+new_timer(qdict_t *args, const char *mod, const char *func) {
   qltimer_t *timer;
 
   timer = (qltimer_t*)qalloc(sizeof(qltimer_t));
@@ -113,9 +137,24 @@ new_timer(int idx, qdict_t *args) {
     return NULL;
   }
   timer->args = args;
-  timer->idx  = idx;
+  timer->mod  = qstring_new(mod);
+  timer->func = qstring_new(func);
+  if (timer->mod == NULL || timer->func == NULL) {
+    goto error;
+  }
 
   return timer;
+
+error:
+  if (timer->mod) {
+    qstring_destroy(timer->mod);
+  }
+  if (timer->func) {
+    qstring_destroy(timer->func);
+  }
+  qfree(timer);
+
+  return NULL;
 }
 
 static void
@@ -124,5 +163,7 @@ free_timer(void *data) {
 
   timer = (qltimer_t*)data;
   qdict_destroy(timer->args);
+  qstring_destroy(timer->mod);
+  qstring_destroy(timer->func);
   qfree(timer);
 }
