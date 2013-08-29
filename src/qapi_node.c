@@ -126,7 +126,7 @@ qlnode_send(lua_State *state) {
   qmsg_t   *msg;
 
   actor = qlua_get_actor(state);
-  id = (qid_t)lua_tonumber(state, 1);
+  id    = (qid_t)lua_tonumber(state, 1);
   aid   = decode_id(id);
 
   if (aid >= MAX_ID) {

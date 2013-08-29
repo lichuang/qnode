@@ -78,7 +78,7 @@ qworker_new(qid_t tid) {
     return NULL;
   }
   qengine_add_timer(worker->engine, config.recycle_internal * 1000,
-                    recycle,
+                    recycle, NULL,
                     config.recycle_internal * 1000, worker);
   qmailbox_init(&(worker->box), worker_msg_handler,
                 worker->engine, worker);

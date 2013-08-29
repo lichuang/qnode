@@ -359,7 +359,7 @@ qlua_init_path(lua_State *state) {
     return QERROR;
   }
 
-  full_path = qstring_catvprintf(full_path, ";%s/script/?.lua",
+  full_path = qstring_catvprintf(full_path, ";%s/lib/?.lua",
                                  config.cwd);
   if (full_path == NULL) {
     return QERROR;

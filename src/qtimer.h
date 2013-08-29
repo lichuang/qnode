@@ -13,13 +13,14 @@
 #include "qtype.h"
 
 typedef void (qtimer_pt)(void *data);
+typedef void (qtimer_destroy_pt)(void *data);
 
 typedef struct qtimer_t {
   /* heap index in the minheap */
   int             heap_index;
 
   /* client data */
-  void           *arg;
+  void           *data;
 
   /* timeout(in ms) */
   uint64_t        timeout;
@@ -34,7 +35,10 @@ typedef struct qtimer_t {
   qlist_t         entry;
 
   /* timer handler */
-  qtimer_pt      *handler;      /* timer handler */
+  qtimer_pt      *handler;
+
+  /* timer destroy handler */
+  qtimer_destroy_pt *destroy;
 } qtimer_t;
 
 typedef struct qtimer_manager_t {
@@ -49,7 +53,8 @@ typedef struct qtimer_manager_t {
 void  qtimer_manager_init(qtimer_manager_t *mng, qengine_t *engine);
 void  qtimer_manager_free(qtimer_manager_t *mng);
 qid_t qtimer_add(qtimer_manager_t *mng, uint32_t timeout,
-                 qtimer_pt *func, uint32_t cycle, void *arg);
+                 qtimer_pt *func, qtimer_destroy_pt destroy,
+                 uint32_t cycle, void *data);
 int   qtimer_del(qtimer_manager_t *mng, qid_t id);
 int   qtimer_next(qtimer_manager_t *mng);
 void  qtimer_process(qtimer_manager_t *mng);

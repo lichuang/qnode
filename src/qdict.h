@@ -29,14 +29,15 @@ typedef struct qdict_iter_t {
   qdict_node_t   *node;
 } qdict_iter_t;
 
-qdict_t*        qdict_new(int hashsize);
-void            qdict_destroy(qdict_t *dict);
+qdict_t*  qdict_new(int hashsize);
+void      qdict_destroy(qdict_t *dict);
 
-qvalue_t*       qdict_setnum(qdict_t *dict, const char *key, qnumber_t num);
-qvalue_t*       qdict_setstr(qdict_t *dict, const char *key, const char* str);
-qvalue_t*       qdict_get(qdict_t *dict, const char *key);
+qvalue_t* qdict_setnum(qdict_t *dict, const char *key, qnumber_t num);
+qvalue_t* qdict_setstr(qdict_t *dict, const char *key, const char* str);
+qvalue_t* qdict_setdata(qdict_t *dict, const char *key, void* data);
+qvalue_t* qdict_get(qdict_t *dict, const char *key);
 
-#define         qdict_iter(dict)  { .dict = (dict), .hash = 0, .node = NULL }
+#define   qdict_iter(dict)  { .dict = (dict), .hash = 0, .node = NULL }
 
 qdict_node_t*   qdict_next(qdict_iter_t *iter);
 

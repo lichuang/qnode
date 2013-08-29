@@ -150,6 +150,13 @@ qdict_setstr(qdict_t *dict, const char *key, const char* str) {
 }
 
 qvalue_t*
+qdict_setdata(qdict_t *dict, const char *key, void* data) {
+  qvalue_t value = qvalue_data(data);
+
+  return set(dict, key, &value);
+}
+
+qvalue_t*
 qdict_get(qdict_t *dict, const char *key) {
   qdict_node_t *node;
 
