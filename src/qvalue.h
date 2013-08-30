@@ -35,4 +35,7 @@ struct qvalue_t {
 void  qvalue_destroy(qvalue_t *value);
 void  qvalue_clone(qvalue_t *value1, qvalue_t *value2);
 
+void  qvalue_newstr(qvalue_t *value, const char *str);
+void  qvalue_newnum(qvalue_t *value, qnumber_t num);
+
 #endif  /* __QVALUE_H__ */

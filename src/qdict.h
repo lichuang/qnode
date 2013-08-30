@@ -12,7 +12,7 @@
 
 typedef struct qdict_node_t {
   unsigned int    hash;
-  qstring_t       key;
+  qvalue_t        key;
   qvalue_t        value;
   qlist_t         entry;
 } qdict_node_t;
@@ -32,13 +32,18 @@ typedef struct qdict_iter_t {
 qdict_t*  qdict_new(int hashsize);
 void      qdict_destroy(qdict_t *dict);
 
-qvalue_t* qdict_setnum(qdict_t *dict, const char *key, qnumber_t num);
-qvalue_t* qdict_setstr(qdict_t *dict, const char *key, const char* str);
-qvalue_t* qdict_setdata(qdict_t *dict, const char *key, void* data);
-qvalue_t* qdict_get(qdict_t *dict, const char *key);
+qvalue_t* qdict_set_strnum(qdict_t *dict, const char *key, qnumber_t num);
+qvalue_t* qdict_set_strstr(qdict_t *dict, const char *key, const char* str);
+qvalue_t* qdict_set_strdata(qdict_t *dict, const char *key, void* data);
+
+qvalue_t* qdict_set_numdata(qdict_t *dict, qnumber_t key, void* data);
+
+void      qdict_del_num(qdict_t *dict, qnumber_t key);
+
+qvalue_t* qdict_get_str(qdict_t *dict, const char *key);
 
 #define   qdict_iter(dict)  { .dict = (dict), .hash = 0, .node = NULL }
 
 qdict_node_t*   qdict_next(qdict_iter_t *iter);
 
-#endif  /* __QDICT_H__ */
+#endif /* __QDICT_H__ */

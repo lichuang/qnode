@@ -257,11 +257,11 @@ qlua_copy_table(lua_State *state, int table_idx,
       key = lua_tolstring(state, key_idx, &len);
 
       if (str_val) {
-        if (qdict_setstr(dict, key, str_val) == NULL) {
+        if (qdict_set_strstr(dict, key, str_val) == NULL) {
           return QERROR;
         }
       } else {
-        if (qdict_setnum(dict, key, num_val) == NULL) {
+        if (qdict_set_strnum(dict, key, num_val) == NULL) {
           return QERROR;
         }
       }
@@ -281,7 +281,7 @@ qlua_dump_dict(lua_State *state, qdict_t *dict) {
   qdict_node_t *node;
 
   while ((node = qdict_next(&iter)) != NULL) {
-    key = node->key;
+    key = node->key.data.str;
     val = &(node->value);
 
     lua_pushstring(state, key);

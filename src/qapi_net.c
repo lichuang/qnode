@@ -51,7 +51,7 @@ static void
 init_tcp_listen_params(qactor_t *actor) {
   actor->listen_params = qdict_new(5);
 
-  qdict_setnum(actor->listen_params, "packet", 0);
+  qdict_set_strnum(actor->listen_params, "packet", 0);
 }
 
 static int
