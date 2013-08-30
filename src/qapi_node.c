@@ -163,7 +163,7 @@ qlnode_recv(lua_State *state) {
   qlist_del_init(&(msg->entry));
   lua_newtable(state);
   qlua_dump_dict(state, msg->arg_dict);
-  qdict_destroy(msg->arg_dict);
+  qdict_free(msg->arg_dict);
 
   return 1;
 }

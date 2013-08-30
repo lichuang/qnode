@@ -29,6 +29,11 @@ qactor_new(qid_t aid) {
   if (actor == NULL) {
     return NULL;
   }
+  actor->timers = qdict_new(10);
+  if (actor->timers == NULL) {
+    qfree(actor);
+    return NULL;
+  }
 
   actor->state = NULL;
   actor->listen_params = NULL;
@@ -68,9 +73,10 @@ qactor_destroy(qactor_t *actor) {
     pos  = next;
   }
   if (actor->listen_params != NULL) {
-    qdict_destroy(actor->listen_params);
+    qdict_free(actor->listen_params);
   }
   qworker_delete(actor->aid);
+  qdict_free(actor->timers);
   qfree(actor);
 }
 

@@ -18,7 +18,9 @@ set_timer_heap_index(void *data, int index) {
   qtimer_t *timer;
 
   timer = (qtimer_t*)data;
-  timer->heap_index = index;
+  if (timer) {
+    timer->heap_index = index;
+  }
 }
 
 static inline int

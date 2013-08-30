@@ -29,12 +29,16 @@ typedef struct qltimer_t {
 
   /* function name */
   qstring_t   func;
+
+  /* free flag */
+  int         flag:1;
 } qltimer_t;
 
 static qltimer_t* new_timer(qdict_t *args,
                             const char *mod,
                             const char *func);
 static void free_timer(void *data);
+static void engine_free_timer(void *data);
 
 static void timer_handler(void *data);
 
@@ -92,7 +96,7 @@ qltimer_add(lua_State *state) {
   }
 
   if (qlua_copy_table(state, 4, args) != QOK) {
-    qdict_destroy(args);
+    qdict_free(args);
     lua_pushnil(state);
     lua_pushliteral(state, "copy args table error");
     return 2;
@@ -100,7 +104,7 @@ qltimer_add(lua_State *state) {
 
   timer = new_timer(args, mod, func);
   if (timer == NULL) {
-    qdict_destroy(args);
+    qdict_free(args);
     lua_pushnil(state);
     lua_pushliteral(state, "create timer error");
     return 2;
@@ -114,6 +118,7 @@ qltimer_add(lua_State *state) {
   timer->aid   = actor->aid;
   timer->id = id;
   timer->engine = engine;
+  qdict_set_numdata(actor->timers, id, timer, engine_free_timer);
 
   lua_pushnumber(state, id);
 
@@ -135,7 +140,9 @@ qltimer_del(lua_State *state) {
 
   actor = qlua_get_actor(state);
   engine = qactor_get_engine(actor->aid);
-  // TODO: if the timer id belongs to the actor
+  if (qdict_get_num(actor->timers, id) == NULL) {
+    return 0;
+  }
   qengine_del_timer(engine, id);
 
   return 0;
@@ -198,8 +205,17 @@ free_timer(void *data) {
   qltimer_t *timer;
 
   timer = (qltimer_t*)data;
-  qdict_destroy(timer->args);
+  timer->flag = 1;
+  qdict_free(timer->args);
   qstring_destroy(timer->mod);
   qstring_destroy(timer->func);
   qfree(timer);
+}
+
+static void
+engine_free_timer(void *data) {
+  qltimer_t *timer;
+
+  timer = (qltimer_t*)data;
+  qengine_del_timer(timer->engine, timer->id);
 }

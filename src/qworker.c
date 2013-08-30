@@ -48,8 +48,8 @@ worker_main(void *arg) {
   qengine_loop(worker->engine);
 
   qmailbox_free(&(worker->box));
-  qengine_destroy(worker->engine);
   free_actors(worker);
+  qengine_destroy(worker->engine);
 #ifdef DEBUG
   ldb_free(worker->ldb);
 #endif

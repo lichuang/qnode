@@ -53,12 +53,14 @@ struct qactor_t {
   qlist_t         actor_entry;
 
   qdict_t        *listen_params;
+
+  /* lua add timer id dict */
+  qdict_t        *timers;
 };
 
 qactor_t*   qactor_new(qid_t aid);
 void        qactor_attach(qactor_t *actor, lua_State *state);
 void        qactor_destroy(qactor_t *actor);
-void        qactor_free(qactor_t *actor);
 
 /* spawn an actor as child, return the actor ID */
 qid_t       qactor_spawn(qactor_t *actor, lua_State *state);

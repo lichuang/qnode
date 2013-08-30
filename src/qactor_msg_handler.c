@@ -36,7 +36,7 @@ actor_msg_handler(qamsg_header_t *header, qactor_t *actor) {
     actor->waiting_msg = 0;
     lua_newtable(state);
     qlua_dump_dict(state, actor_msg->arg_dict);
-    qdict_destroy(actor_msg->arg_dict);
+    qdict_free(actor_msg->arg_dict);
     qlua_resume(state, 1);
   } else {
     /* else add the msg to the actor msg list */

@@ -14,13 +14,18 @@
 
 typedef qid_t qnumber_t;
 
+typedef void (qvalue_free_pt)(void *data);
+
 struct qvalue_t {
   unsigned short  type;
 
   union {
     qstring_t str;
     qnumber_t num;
-    void*     data;
+    struct {
+      void           *data;
+      qvalue_free_pt *free; 
+    } data;
   } data;
 };
 
@@ -30,9 +35,9 @@ struct qvalue_t {
 
 #define qvalue_number(n) { .type = QNUMBER_TYPE, {.num = (n)} }
 #define qvalue_string(s) { .type = QSTRING_TYPE, {.str = (char*)(s)} }
-#define qvalue_data(d)   { .type = QDATA_TYPE,   {.data = (void*)(d)} }
+#define qvalue_data(d, f)   { .type = QDATA_TYPE,{.data.data = (void*)(d), .data.free = f} }
 
-void  qvalue_destroy(qvalue_t *value);
+void  qvalue_free(qvalue_t *value);
 void  qvalue_clone(qvalue_t *value1, qvalue_t *value2);
 
 void  qvalue_newstr(qvalue_t *value, const char *str);

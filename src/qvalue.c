@@ -7,9 +7,13 @@
 #include "qvalue.h"
 
 void
-qvalue_destroy(qvalue_t *value) {
-  if (value->type == QSTRING_TYPE) {
+qvalue_free(qvalue_t *value) {
+  if (qvalue_isstring(value)) {
     qstring_destroy(value->data.str);
+    return;
+  }
+  if (qvalue_isdata(value) && value->data.data.free) {
+    value->data.data.free(value->data.data.data);
   }
 }
 
