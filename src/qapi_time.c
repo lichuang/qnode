@@ -11,10 +11,24 @@
 #include "qluautil.h"
 
 typedef struct qltimer_t {
-  lua_State *state;
-  qdict_t *args;
-  qstring_t mod;
-  qstring_t func;
+  lua_State  *state;
+
+  /* actor id */
+  qid_t       aid;
+
+  /* timer id */
+  qid_t       id;
+
+  qengine_t  *engine;
+
+  /* callback arg table */
+  qdict_t    *args;
+
+  /* mod name */
+  qstring_t   mod;
+
+  /* function name */
+  qstring_t   func;
 } qltimer_t;
 
 static qltimer_t* new_timer(qdict_t *args,
@@ -53,6 +67,23 @@ qltimer_add(lua_State *state) {
     return 2;
   }
 
+  /* if there exist mod.fun? */
+  lua_getglobal(state, mod);
+  if (!lua_istable(state, -1)) {
+    lua_pushnil(state);
+    lua_pushfstring(state, "mod %s not exist", mod);
+    return 2;
+  }
+
+  lua_getfield(state, -1, func);
+  if (!lua_isfunction(state, -1)) {
+    lua_pushnil(state);
+    lua_pushfstring(state, "%s.%s is not lua function", mod, func);
+    return 2;
+  }
+  /* pop the result */
+  lua_pop(state, -1);
+
   args = qdict_new(5);
   if (args == NULL) {
     lua_pushnil(state);
@@ -74,12 +105,15 @@ qltimer_add(lua_State *state) {
     lua_pushliteral(state, "create timer error");
     return 2;
   }
-  timer->state = state;
 
   actor = qlua_get_actor(state);
   engine = qactor_get_engine(actor->aid);
   id = qengine_add_timer(engine, timeout, timer_handler,
                          free_timer, cycle, timer);
+  timer->state = state;
+  timer->aid   = actor->aid;
+  timer->id = id;
+  timer->engine = engine;
 
   lua_pushnumber(state, id);
 
@@ -88,8 +122,8 @@ qltimer_add(lua_State *state) {
 
 static int
 qltimer_del(lua_State *state) {
-  qengine_t  *engine;
   qid_t       id;
+  qengine_t  *engine;
   qactor_t   *actor;
 
   id = (qid_t)lua_tonumber(state, 1);
@@ -101,6 +135,7 @@ qltimer_del(lua_State *state) {
 
   actor = qlua_get_actor(state);
   engine = qactor_get_engine(actor->aid);
+  // TODO: if the timer id belongs to the actor
   qengine_del_timer(engine, id);
 
   return 0;
@@ -111,18 +146,19 @@ timer_handler(void *data) {
   qltimer_t *timer;
   lua_State *state;
 
-  qdebug("in timer_handler");
   timer = (qltimer_t*)data;
   state = timer->state;
   lua_getglobal(state, timer->mod);
   if (!lua_istable(state, -1)) {
     qerror("mod %s is not exist", timer->mod);
+    qengine_del_timer(timer->engine, timer->id);
     return;
   }
 
   lua_getfield(state, -1, timer->func);
   if (!lua_isfunction(state, -1)) {
     qerror("%s.%s is not lua function", timer->mod, timer->func);
+    qengine_del_timer(timer->engine, timer->id);
     return;
   }
   lua_pcall(state, 0, LUA_MULTRET, 0);
