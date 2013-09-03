@@ -24,7 +24,7 @@ typedef struct ldb_breakpoint_t {
 #define MAX_FILE_BUCKET 20
 #define MAX_BREAKPOINT  60
 
-typedef void (*ldb_reload_pt)(lua_State *state);
+typedef void (*ldb_reload_pt)(lua_State *state, const char *file);
 
 struct ldb_t {
   lua_State        *state;

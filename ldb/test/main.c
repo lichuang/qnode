@@ -9,8 +9,8 @@ c_break(lua_State *state) {
   return 0;
 }
 
-void reload(lua_State *state) {
-  printf("in reload\n");
+void reload(lua_State *state, const char *file) {
+  printf("reload: %s\n", file);
 }
 
 int main() {

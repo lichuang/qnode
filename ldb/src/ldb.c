@@ -1075,8 +1075,10 @@ static int
 reload_handler(lua_State *state, ldb_t *ldb,
                lua_Debug *ar, input_t *input) {
   if (ldb->reload) {
-    ldb->reload(state);
+    ldb->reload(state, input->buffer[1]);
   }
+
+  continue_handler(state, ldb, ar, input);
 
   return 0;
 }
