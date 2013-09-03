@@ -8,7 +8,7 @@ function qerror(...)
 end
 
 function require_ex(name)
-  qlog( string.format("require_ex = %s", name))
+  qlog(string.format("require_ex = %s", name))
   if package.loaded[name] then
     qlog(string.format("require_ex module[%s] reload", name))
   end 

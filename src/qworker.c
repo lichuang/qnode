@@ -27,7 +27,7 @@ static void* worker_alloc(void *ud, void *ptr,
 static void  recycle(void *data);
 static void  free_actors(qworker_t *worker);
 #ifdef DEBUG
-static void  reload(lua_State *state);
+static void  reload(lua_State *state, const char *file);
 #endif
 
 static int
@@ -222,7 +222,7 @@ free_actors(qworker_t *worker) {
 
 #ifdef DEBUG
 static void
-reload(lua_State *state) {
-  qlua_reload(state);
+reload(lua_State *state, const char *file) {
+  qlua_reload(state, file);
 }
 #endif

@@ -68,12 +68,23 @@ qlua_new_state(lua_Alloc fun, void *ud) {
 }
 
 int
-qlua_reload(lua_State *state) {
-  if(luaL_dofile(state, config.main)) {
-    qerror("reload main script %s error\n", config.main);
-    qlua_fail(state);
+qlua_reload(lua_State *state, const char *file) {
+  if (file == NULL) {
+    if(luaL_dofile(state, config.main)) {
+      qerror("reload main script %s error", config.main);
+      qlua_fail(state);
+      return QERROR;
+    }
+    return QOK;
+  }
+
+  lua_getglobal(state, "require_ex");
+  if (!lua_isfunction(state, -1)) {
+    qerror("require_ex is not a Lua function");
     return QERROR;
   }
+  lua_pushstring(state, file);
+  lua_pcall(state, 1, LUA_MULTRET, 0);
 
   return QOK;
 }

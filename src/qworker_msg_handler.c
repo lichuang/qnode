@@ -119,7 +119,7 @@ worker_signal_handler(qmsg_t *msg, void *reader) {
       worker->engine->quit = 1;
       break;
     case SIGUSR1:
-      qlua_reload(worker->state);
+      qlua_reload(worker->state, NULL);
       break;
     default:
       break;
