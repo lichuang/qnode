@@ -13,9 +13,6 @@
 typedef struct qltimer_t {
   lua_State  *state;
 
-  /* actor id */
-  qid_t       aid;
-
   /* timer id */
   qid_t       id;
 
@@ -29,9 +26,6 @@ typedef struct qltimer_t {
 
   /* function name */
   qstring_t   func;
-
-  /* free flag */
-  int         flag:1;
 } qltimer_t;
 
 static qltimer_t* new_timer(qdict_t *args,
@@ -115,7 +109,6 @@ qltimer_add(lua_State *state) {
   id = qengine_add_timer(engine, timeout, timer_handler,
                          free_timer, cycle, timer);
   timer->state = state;
-  timer->aid   = actor->aid;
   timer->id = id;
   timer->engine = engine;
   qdict_set_numdata(actor->timers, id, timer, engine_free_timer);
@@ -205,7 +198,6 @@ free_timer(void *data) {
   qltimer_t *timer;
 
   timer = (qltimer_t*)data;
-  timer->flag = 1;
   qdict_free(timer->args);
   qstring_destroy(timer->mod);
   qstring_destroy(timer->func);

@@ -75,7 +75,7 @@ qactor_destroy(qactor_t *actor) {
   if (actor->listen_params != NULL) {
     qdict_free(actor->listen_params);
   }
-  qworker_delete(actor->aid);
+  qworker_delete(actor);
   qdict_free(actor->timers);
   qfree(actor);
 }

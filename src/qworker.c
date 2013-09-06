@@ -159,14 +159,16 @@ qworker_add(qid_t aid, qactor_t *actor) {
 }
 
 void
-qworker_delete(qid_t aid) {
+qworker_delete(qactor_t *actor) {
   qworker_t *worker;
-  qid_t id;
+  qid_t id, aid;
 
+  aid = actor->aid;
   worker = workers[decode_pid(aid)];
   id = decode_id(aid);
   qmutex_lock(&(worker->mutex));
   //worker->actors[id]->active = 0;
+  qlist_del(&(actor->actor_entry));
   worker->actors[id] = NULL;
   qmutex_unlock(&(worker->mutex));
 }

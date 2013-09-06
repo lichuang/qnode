@@ -90,7 +90,7 @@ void        qworker_destroy(qworker_t *thread);
 void        qworker_send(qmsg_t *msg);
 qid_t       qworker_new_aid(qworker_t *worker);
 void        qworker_add(qid_t aid, qactor_t *actor);
-void        qworker_delete(qid_t aid);
+void        qworker_delete(qactor_t *actor);
 qactor_t*   qworket_get_actor(qworker_t *worker, qid_t id);
 
 extern qworker_t* workers[QMAX_WORKER];
