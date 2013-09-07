@@ -125,4 +125,5 @@ qconfig_free() {
   qstring_destroy(config.script_path);
   qstring_destroy(config.log_path);
   qstring_destroy(config.log_level);
+  qstring_destroy(config.main);
 }
