@@ -34,7 +34,7 @@ static int
 worker_start_handler(qmsg_t *msg, void *reader) {
   qwmsg_start_t  *start;
   qworker_t      *worker;
-  int             ret;
+  int             ret, ref;
   qid_t           aid;
   qactor_t       *actor;
   lua_State      *state;
@@ -50,8 +50,9 @@ worker_start_handler(qmsg_t *msg, void *reader) {
     return QERROR;
   }
   qassert(actor->state == NULL);
-  qactor_attach(actor, qlua_new_thread(worker));
+  qactor_attach(actor, qlua_new_thread(worker, &ref));
   actor->tid = worker->tid;
+  actor->ref = ref;
 
   if (qlua_threadloadfile(actor, actor->state, config.main) != 0) {
     qerror("load server start script %s error", config.main);
@@ -94,6 +95,8 @@ worker_spawn_handler(qmsg_t *msg, void *reader) {
   actor->state = spawn->state;
   actor->tid = worker->tid;
   lua_State *state = actor->state;
+  qstdout("111 type: %d\n", lua_type(state, 1));
+  qlua_dump_table(state, 1);
   if (qlua_call(state, 1, 0) == 0) {
     ret = (int)lua_tonumber(state, -1);
     lua_pop(state, 1 );

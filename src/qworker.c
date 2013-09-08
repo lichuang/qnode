@@ -91,6 +91,15 @@ qworker_new(qid_t tid) {
   if (worker->state == NULL) {
     return NULL;
   }
+
+  /*
+   * register a table to anchor lua coroutines reliably:
+   * {([int]ref) = [cort]}
+   */
+  lua_pushlightuserdata(worker->state, &worker->coroutines_key);
+  lua_newtable(worker->state);
+  lua_rawset(worker->state, LUA_REGISTRYINDEX);
+
   worker->running = 0;
   qlist_entry_init(&(worker->actor_list));
   pthread_create(&worker->id, NULL,

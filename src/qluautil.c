@@ -90,15 +90,32 @@ qlua_reload(lua_State *state, const char *file) {
 }
 
 lua_State*
-qlua_new_thread(qworker_t *worker) {
-  lua_State *state;
-  
-  state = lua_newthread(worker->state);
-  if (state == NULL) {
+qlua_new_thread(qworker_t *worker, int *ref) {
+  int        base;
+  lua_State *coroutine, *state;
+
+  state = worker->state;
+
+  /* save stack index */
+  base = lua_gettop(state);
+
+  /* get worker coroutine table */
+  lua_pushlightuserdata(state, &worker->coroutines_key);
+  lua_rawget(state, LUA_REGISTRYINDEX);
+
+  /* create lua coroutine */
+  coroutine = lua_newthread(state);
+
+  /* get ref */
+  *ref = luaL_ref(state, -2);
+  if (*ref == LUA_NOREF) {
+    lua_settop(state, base);  /* restore main thread stack */
     return NULL;
   }
 
-  return state;
+  lua_settop(state, base);  /* restore main thread stack */
+
+  return coroutine;
 }
 
 static int
@@ -183,6 +200,53 @@ qlua_get_table_number(lua_State *state, const char *key, int *number) {
   return 0;
 } 
 
+void
+qlua_dump_table(lua_State *state, int idx) {
+  return;
+  int         type;
+  int         val_idx;
+  int         key_idx;
+  size_t      len;
+  double      num_val;
+  const char *key;
+  const char *str_val;
+  void       *user_data;
+
+  if (lua_istable(state, idx)) {
+    lua_pushnil(state);
+    str_val = NULL;
+    num_val = 0;
+    user_data = NULL;
+    while (lua_next(state, idx)) {
+      val_idx = lua_gettop(state);
+      key_idx = val_idx - 1;
+      type = lua_type(state, val_idx);
+      if (type == LUA_TSTRING) {
+        str_val = lua_tolstring(state, val_idx, &len);
+      } else if (type == LUA_TNUMBER) {
+        num_val = lua_tonumber(state, val_idx);
+      } else if (type == LUA_TLIGHTUSERDATA) {
+        user_data = lua_touserdata(state, val_idx);
+      } else {
+        qerror("error type: %s", lua_typename(state, val_idx));
+        //qlua_dump_table(state, val_idx);
+        return;
+      }
+
+      key = lua_tolstring(state, key_idx, &len);
+
+      if (str_val) {
+        qstdout("%s -> %s\n", key, str_val);
+      } else if (user_data) {
+        qstdout("%s -> %p\n", key, user_data);
+      } else {
+        qstdout("%s -> %d\n", key, (int)num_val);
+      }
+      lua_pop(state, 1);
+    }
+  }
+}
+
 int
 qlua_copy_state_table(lua_State *src, lua_State *dst,
                       int table_idx) {
@@ -195,43 +259,46 @@ qlua_copy_state_table(lua_State *src, lua_State *dst,
   const char *str_val;
   void       *user_data;
 
+  qerror("222type: %s, is_table: %d", lua_typename(src, lua_type(src, table_idx)), lua_type(src, table_idx));
+  if (!lua_istable(src, table_idx)) {
+    qerror("type: %s", lua_typename(src, table_idx));
+    return QOK;
+  }
   lua_newtable(dst);
   lua_pushvalue(dst, 1);
-  if (lua_istable(src, table_idx)) {
-    lua_pushnil(src);
-    str_val = NULL;
-    num_val = 0;
-    user_data = NULL;
-    while (lua_next(src, table_idx)) {
-      val_idx = lua_gettop(src);
-      key_idx = val_idx - 1;
-      type = lua_type(src, val_idx);
-      if (type == LUA_TSTRING) {
-        str_val = lua_tolstring(src, val_idx, &len);
-      } else if (type == LUA_TNUMBER) {
-        num_val = lua_tonumber(src, val_idx);
-      } else if (type == LUA_TLIGHTUSERDATA) {
-        user_data = lua_touserdata(src, val_idx);
-      } else {
-        qerror("error type: %d", type);
-        return QERROR;
-      }
-
-      key = lua_tolstring(src, key_idx, &len);
-
-      lua_pushstring(dst, key);
-      if (str_val) {
-        lua_pushstring(dst, str_val);
-        str_val = NULL;
-      } else if (user_data) {
-        lua_pushlightuserdata(dst, user_data);
-        user_data = NULL;
-      } else {
-        lua_pushnumber(dst, num_val);
-      }
-      lua_rawset(dst, -3);
-      lua_pop(src, 1);
+  lua_pushnil(src);
+  str_val = NULL;
+  num_val = 0;
+  user_data = NULL;
+  while (lua_next(src, table_idx)) {
+    val_idx = lua_gettop(src);
+    key_idx = val_idx - 1;
+    type = lua_type(src, val_idx);
+    if (type == LUA_TSTRING) {
+      str_val = lua_tolstring(src, val_idx, &len);
+    } else if (type == LUA_TNUMBER) {
+      num_val = lua_tonumber(src, val_idx);
+    } else if (type == LUA_TLIGHTUSERDATA) {
+      user_data = lua_touserdata(src, val_idx);
+    } else {
+      qerror("error type: %d", type);
+      return QERROR;
     }
+
+    key = lua_tolstring(src, key_idx, &len);
+
+    lua_pushstring(dst, key);
+    if (str_val) {
+      lua_pushstring(dst, str_val);
+      str_val = NULL;
+    } else if (user_data) {
+      lua_pushlightuserdata(dst, user_data);
+      user_data = NULL;
+    } else {
+      lua_pushnumber(dst, num_val);
+    }
+    lua_rawset(dst, -3);
+    lua_pop(src, 1);
   }
 
   return QOK;
@@ -326,16 +393,10 @@ int
 qlua_threadloadfile(qactor_t *actor, lua_State *state,
                     const char *filename) {
   int       ret;
-  qstring_t full_name;
 
   UNUSED(actor);
 
-  /* TODO: check the state is a lua thread */
-  full_name = (qstring_t)filename;
-  if (full_name == NULL) {
-    return -1;
-  }
-  ret = luaL_loadfile(state, full_name);
+  ret = luaL_loadfile(state, filename);
   /* start the coroutine */
   qlua_resume(state, 0);
 

@@ -45,6 +45,7 @@ qactor_new(qid_t aid) {
   actor->waiting_netio = 0;
   actor->waiting_msg   = 0;
   actor->active        = 1;
+  actor->ref           = -1;
   qspinlock_init(&(actor->sock_list_lock));
   qworker_add(aid, actor);
 
@@ -90,7 +91,7 @@ qactor_attach(qactor_t *actor, lua_State *state) {
 }
 
 qid_t
-qactor_spawn(qactor_t *actor, lua_State *state) {
+qactor_spawn(qactor_t *actor, lua_State *state, int ref) {
   qid_t            worker_id;
   qid_t            aid;
   qmsg_t          *msg;
@@ -105,6 +106,7 @@ qactor_spawn(qactor_t *actor, lua_State *state) {
   if (new_actor == NULL) {
     return QINVALID_ID;
   }
+  new_actor->ref = ref;
 
   msg = qwmsg_spawn_new(new_actor, actor, state,
                         actor->tid, worker_id);

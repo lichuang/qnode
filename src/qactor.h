@@ -16,8 +16,11 @@
 #include "qmutex.h"
 
 struct qactor_t {
-  /* lua thread */
+  /* lua coroutine */
   lua_State     *state;
+
+  /* lua coroutine ref */
+  int            ref;
 
   /*
    * lua thread YIELD reason
@@ -63,7 +66,7 @@ void        qactor_attach(qactor_t *actor, lua_State *state);
 void        qactor_destroy(qactor_t *actor);
 
 /* spawn an actor as child, return the actor ID */
-qid_t       qactor_spawn(qactor_t *actor, lua_State *state);
+qid_t       qactor_spawn(qactor_t *actor, lua_State *state, int ref);
 
 qactor_t*   qactor_get(qid_t aid);
 qengine_t*  qactor_get_engine(qid_t aid);

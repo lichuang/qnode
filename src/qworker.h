@@ -79,6 +79,9 @@ struct qworker_t {
   /* thread running flag */
   volatile int          running:1;
 
+  /* key for coroutine table */
+  char                  coroutines_key;
+
   /* lua debugger */
 #ifdef DEBUG
   ldb_t                *ldb;

@@ -37,7 +37,7 @@ luaL_Reg node_apis[] = {
 /* spawn an actor, return the actor ID */
 static int
 qlnode_spawn(lua_State *state) {
-  int         id, type;
+  int         id, type, ref;
   const char *mod, *fun;
   qactor_t   *actor;
   qworker_t  *worker;
@@ -48,7 +48,6 @@ qlnode_spawn(lua_State *state) {
   mod = lua_tostring(state, 1);
   fun = lua_tostring(state, 2);
   worker = workers[actor->tid];
-  new_state = qlua_new_thread(worker);
 
   if (!mod) {
     lua_pushnil(state);
@@ -62,6 +61,7 @@ qlnode_spawn(lua_State *state) {
     return 2;
   }
 
+  new_state = qlua_new_thread(worker, &ref);
   if (!new_state) {
     lua_pushnil(state);
     lua_pushliteral(state, "create lua thread error");
@@ -107,7 +107,7 @@ qlnode_spawn(lua_State *state) {
 
   /* push the args table */
   lua_pushvalue(new_state, 1);
-  id = qactor_spawn(actor, new_state);
+  id = qactor_spawn(actor, new_state, ref);
   if (id == -1) {
     lua_pushnil(state);
     lua_pushliteral(state, "new actor id error");

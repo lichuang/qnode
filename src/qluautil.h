@@ -16,7 +16,7 @@ struct qactor_msg_t;
 struct qworker_t;
 
 lua_State* qlua_new_state(lua_Alloc fun, void *ud);
-lua_State* qlua_new_thread(qworker_t *worker);
+lua_State* qlua_new_thread(qworker_t *worker, int *ref);
 
 int  qlua_reload(lua_State *state, const char *file);
 #define qlua_get_global_table(state, key) qlua_get_table(state, LUA_GLOBALSINDEX, key)
@@ -38,6 +38,8 @@ int  qlua_threadloadfile(qactor_t *actor, lua_State *state,
                          const char *filename);
 int  qlua_dofile(lua_State *state, const char *filename);
 int  qlua_init_path(lua_State *state);
+
+void qlua_dump_table(lua_State *state, int idx);
 
 int  qlua_doresume(lua_State *state, int nargs,
                    const char *file, int line);
