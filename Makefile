@@ -8,6 +8,7 @@ DEPS_DIR=$(DIR)/deps
 PROGRAM=$(BIN_DIR)/qserver
 LUA_DIR=./lua-5.1.4
 LDB_DIR=./ldb
+TEST_DIR=./test
 LUA=$(BIN_DIR)/lua
 LDB=$(LIB_DIR)/libldb.a
 
@@ -37,6 +38,9 @@ $(LDB):
 
 $(OBJ_DIR)/%.o:$(SRC_DIR)/%.$(EXTENSION) 
 	$(CC) $< -o $@ -c $(CFLAGS) $(INCLUDE) 
+
+test:all
+	cd $(TEST_DIR) && make all
 
 rebuild:
 	make clean

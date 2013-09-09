@@ -5,8 +5,12 @@
 extern "C" {
 #endif
 
+#include <stdio.h>
+#include <stdlib.h>
+
 typedef void (*ctest_pt_t)(void);
 typedef void (*ctest_free_pt)(void);
+typedef void (*ctest_new_pt)(void);
 
 typedef struct ctest_t ctest_t;
 
@@ -21,7 +25,7 @@ typedef struct ctest_reg_t {
   ctest_pt_t   func;
 } ctest_reg_t;
 
-void ctest_init(ctest_free_pt free);
+void ctest_init(ctest_new_pt setup, ctest_free_pt teardown);
 void ctest_add(ctest_reg_t *reg);
 void ctest_run();
 

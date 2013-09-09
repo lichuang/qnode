@@ -19,6 +19,9 @@ typedef void (*qitem_destroy_pt)(void *);
 
 /* not thread-safe, if use in multithread MUST lock outside */
 typedef struct qfreelist_t { 
+  /* alloc item list */
+  qlist_t           alloc;
+
   /* free item list */
   qlist_t           free;
 
@@ -46,6 +49,7 @@ void* qfreelist_alloc(qfreelist_t *flist);
 
 static inline void
 qfreelist_free(qfreelist_t *flist, qfree_item_t *item) {
+  qlist_del_init(&item->fentry);
   qlist_add_tail(&(item->fentry), &(flist->free));
 }
 

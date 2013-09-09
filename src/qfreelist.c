@@ -14,6 +14,7 @@ qfreelist_init(qfreelist_t *flist, const char *name,
                int size, int num,
                qitem_init_pt init, qitem_destroy_pt destroy) {
   qlist_entry_init(&(flist->free));
+  qlist_entry_init(&(flist->alloc));
   flist->size     = size;
   flist->name     = name;
   flist->initnum  = num;
@@ -77,6 +78,7 @@ qfreelist_alloc(qfreelist_t *flist) {
   pos = flist->free.next;
   item = qlist_entry(pos, qfree_item_t, fentry);    
   qlist_del_init(&item->fentry);
+  qlist_add_tail(&item->fentry, &flist->alloc);
 
   return item;
 }

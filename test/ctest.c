@@ -1,5 +1,4 @@
 #include <math.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "ctest.h"
@@ -9,16 +8,18 @@
 
 typedef struct ctest_base_t {
   ctest_t       *head;
-  ctest_free_pt  free;
+  ctest_free_pt  teardown;
+  ctest_new_pt   setup;
   int            passed;
   int            error;
 } ctest_base_t;
 
 static ctest_base_t base = {
-  .head = NULL,
-  .free = NULL,
-  .passed = 0,
-  .error = 0
+  .head     = NULL,
+  .setup    = NULL,
+  .teardown = NULL,
+  .passed   = 0,
+  .error    = 0
 };
 
 static void close_test();
@@ -135,10 +136,16 @@ ctest_false(int condition, const char *file,
   }
 }
 
-void ctest_run() {
+void
+ctest_run() {
   ctest_t *test;
 
+  if (base.setup) {
+    base.setup();
+  }
+
   for (test = base.head; test; test = test->next) {
+    printf("==== Test %s\n", test->name);
     test->func();
   }
 
@@ -161,12 +168,13 @@ void close_test() {
   printf("test unit: %d, test cases: %d\n", num, base.passed + base.error);
   printf("passed: %d, fail: %d\n", base.passed, base.error);
 
-  if (base.free) {
-    base.free();
+  if (base.teardown) {
+    base.teardown();
   }
 }
 
 void
-ctest_init(ctest_free_pt free) {
-  base.free = free;
+ctest_init(ctest_new_pt setup, ctest_free_pt teardown) {
+  base.teardown = teardown;
+  base.setup = setup;
 }
