@@ -4,7 +4,8 @@
 
 #define DATA_FREE_NUM 5
 static qfreelist_t data_freelist;
-static int         num = 0;
+static int         alloc_num = 0;
+static int         free_num  = 0;
 
 typedef struct testdata_t {
   qfree_item_fields;
@@ -23,8 +24,6 @@ setup() {
 
 static void
 teardown() {
-  CTEST_NUM_EQ(num, 0);
-  qfreelist_destroy(&data_freelist);
 }
 
 static void
@@ -39,14 +38,21 @@ freelist_test() {
   for (i = 0; i < DATA_FREE_NUM; ++i) {
     data = qfreelist_alloc(&data_freelist);
   }
+  /* after alloc DATA_FREE_NUM items, free list empty */
   CTEST_TRUE(qlist_empty(&(data_freelist.free)));
 
   qfreelist_free(&data_freelist, (qfree_item_t*)data);
+  /* after free an item, free list is not empty */
   CTEST_FALSE(qlist_empty(&(data_freelist.free)));
 
   qfreelist_alloc(&data_freelist);
+  /* after alloc an item, free list is empty */
   CTEST_TRUE(qlist_empty(&(data_freelist.free)));
 
+  /*
+   * after alloc an item, freelist will prealloc more items,
+   * free list is not empty
+   */
   qfreelist_alloc(&data_freelist);
   CTEST_FALSE(qlist_empty(&(data_freelist.free)));
 
@@ -54,7 +60,12 @@ freelist_test() {
     CTEST_FALSE(qlist_empty(&(data_freelist.free)));
     qfreelist_alloc(&data_freelist);
   }
+  /* after alloc DATA_FREE_NUM - 1 items, free list empty */
   CTEST_TRUE(qlist_empty(&(data_freelist.free)));
+
+  CTEST_NUM_EQ(2 * DATA_FREE_NUM, alloc_num);
+  qfreelist_destroy(&data_freelist);
+  CTEST_NUM_EQ(alloc_num, free_num);
 }
 
 static int
@@ -64,7 +75,7 @@ data_init(void *data) {
   t = (testdata_t*)data;
   t->num = malloc(sizeof(int));
   *(t->num) = 1;
-  num++;
+  alloc_num++;
 
   return QOK;
 }
@@ -75,7 +86,7 @@ data_destroy(void *data) {
 
   t = (testdata_t*)data;
   free(t->num);
-  --num;
+  free_num++;
 }
 
 ctest_reg_t reg[] = {

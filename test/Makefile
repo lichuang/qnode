@@ -12,5 +12,5 @@ OBJS = ../obj/qfreelist.o \
 all:$(TESTS)
 	#for t in $(TESTS); do echo "***** Running $$t"; ./$$t || exit 1; done
 
-freelist_test:freelist_test.c ctest.c
+freelist_test:freelist_test.c ctest.c ../obj/qfreelist.o
 	$(CC) freelist_test.c ctest.c $(OBJS) $(LDFLAGS) $(CFLAGS) -o freelist_test -I../src
