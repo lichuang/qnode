@@ -34,20 +34,24 @@ freelist_test() {
   CTEST_NUM_EQ(DATA_FREE_NUM, data_freelist.initnum);
 
   CTEST_FALSE(qlist_empty(&(data_freelist.free)));
+  CTEST_NUM_EQ(0, alloc_num);
 
   for (i = 0; i < DATA_FREE_NUM; ++i) {
     data = qfreelist_alloc(&data_freelist);
   }
+  CTEST_NUM_EQ(DATA_FREE_NUM, alloc_num);
   /* after alloc DATA_FREE_NUM items, free list empty */
   CTEST_TRUE(qlist_empty(&(data_freelist.free)));
 
   qfreelist_free(&data_freelist, (qfree_item_t*)data);
   /* after free an item, free list is not empty */
   CTEST_FALSE(qlist_empty(&(data_freelist.free)));
+  CTEST_NUM_EQ(1, free_num);
 
   qfreelist_alloc(&data_freelist);
   /* after alloc an item, free list is empty */
   CTEST_TRUE(qlist_empty(&(data_freelist.free)));
+  CTEST_NUM_EQ(DATA_FREE_NUM + 1, alloc_num);
 
   /*
    * after alloc an item, freelist will prealloc more items,
@@ -55,6 +59,7 @@ freelist_test() {
    */
   qfreelist_alloc(&data_freelist);
   CTEST_FALSE(qlist_empty(&(data_freelist.free)));
+  CTEST_NUM_EQ(DATA_FREE_NUM + 2, alloc_num);
 
   for (i = 1; i < DATA_FREE_NUM; ++i) {
     CTEST_FALSE(qlist_empty(&(data_freelist.free)));
@@ -63,9 +68,9 @@ freelist_test() {
   /* after alloc DATA_FREE_NUM - 1 items, free list empty */
   CTEST_TRUE(qlist_empty(&(data_freelist.free)));
 
-  CTEST_NUM_EQ(2 * DATA_FREE_NUM, alloc_num);
+  CTEST_NUM_EQ(DATA_FREE_NUM + 2 + DATA_FREE_NUM - 1, alloc_num);
+
   qfreelist_destroy(&data_freelist);
-  CTEST_NUM_EQ(alloc_num, free_num);
 }
 
 static int
@@ -89,7 +94,7 @@ data_destroy(void *data) {
   free_num++;
 }
 
-ctest_reg_t reg[] = {
+static ctest_reg_t reg[] = {
   {"freelist_test", &freelist_test},
   {NULL,            NULL},
 };

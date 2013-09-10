@@ -14,8 +14,8 @@ typedef struct qfree_item_t {
   qfree_item_fields;
 } qfree_item_t;
 
-typedef int  (*qitem_init_pt)(void *);
-typedef void (*qitem_destroy_pt)(void *);
+typedef int  (*qitem_ctor_pt)(void *);
+typedef void (*qitem_dtor_pt)(void *);
 
 /* not thread-safe, if use in multithread MUST lock outside */
 typedef struct qfreelist_t { 
@@ -34,23 +34,18 @@ typedef struct qfreelist_t {
   /* free list init num */
   int               initnum;
 
-  /* called when item first allocate */
-  qitem_init_pt     init;
+  /* called when item allocate */
+  qitem_ctor_pt     ctor;
 
-  /* called when item destroy */
-  qitem_destroy_pt  destroy;
+  /* called when item free */
+  qitem_dtor_pt     dtor;
 } qfreelist_t;
 
 int   qfreelist_init(qfreelist_t *flist, const char *name,
                      int size, int num,
-                     qitem_init_pt init, qitem_destroy_pt destroy);
+                     qitem_ctor_pt ctor, qitem_dtor_pt dtor);
 void  qfreelist_destroy(qfreelist_t *flist);
 void* qfreelist_alloc(qfreelist_t *flist);
-
-static inline void
-qfreelist_free(qfreelist_t *flist, qfree_item_t *item) {
-  qlist_del_init(&item->fentry);
-  qlist_add_tail(&(item->fentry), &(flist->free));
-}
+void  qfreelist_free(qfreelist_t *flist, qfree_item_t *item);
 
 #endif  /* __QFREELIST_H__ */
