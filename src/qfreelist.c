@@ -75,13 +75,11 @@ qfreelist_new(qfreelist_t *flist) {
   }
   pos = flist->free.next;
   item = qlist_entry(pos, qfreeitem_t, fentry);    
-  qlist_del_init(&item->fentry);
-  qlist_add_tail(&item->fentry, &flist->alloc);
   if (flist->ctor && flist->ctor(item) != QOK) {
-    qlist_del_init(&item->fentry);
-    qlist_add_tail(&(item->fentry), &(flist->free));
     return NULL;
   }
+  qlist_del_init(&item->fentry);
+  qlist_add_tail(&item->fentry, &flist->alloc);
 
   return item;
 }
