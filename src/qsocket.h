@@ -34,7 +34,7 @@
 #define QINET_STATE_MULTI_ACCEPTING (QINET_STATE_ACCEPTING | QINET_F_MULTI_CLIENT)
 
 struct qsocket_t {
-  qfree_item_fields;
+  qfreeitem_fields;
 
   /* in buffer */
   qbuffer_t       *in;

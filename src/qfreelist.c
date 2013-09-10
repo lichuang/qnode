@@ -11,16 +11,14 @@ static int  prealloc(qfreelist_t *flist);
 static void destroy(qlist_t *list);
 
 int
-qfreelist_init(qfreelist_t *flist, const char *name,
-               int size, int num,
-               qitem_ctor_pt ctor, qitem_dtor_pt dtor) {
+qfreelist_init(qfreelist_t *flist, qfreelist_conf_t *conf) {
   qlist_entry_init(&(flist->free));
   qlist_entry_init(&(flist->alloc));
-  flist->size     = size;
-  flist->name     = name;
-  flist->initnum  = num;
-  flist->ctor     = ctor;
-  flist->dtor     = dtor;
+  flist->size     = conf->size;
+  flist->name     = conf->name;
+  flist->initnum  = conf->num;
+  flist->ctor     = conf->ctor;
+  flist->dtor     = conf->dtor;
 
   return prealloc(flist);
 }
@@ -29,13 +27,13 @@ static int
 prealloc(qfreelist_t *flist) {
   int           i;
   int           num, size;
-  qfree_item_t *item;
+  qfreeitem_t *item;
 
   qassert(qlist_empty(&(flist->free)));
   num  = flist->initnum;
   size = flist->size;
   for (i = num; i > 0; --i) {
-    item = (qfree_item_t*)qcalloc(size);
+    item = (qfreeitem_t*)qcalloc(size);
     if (item == NULL) {
       return QERROR;
     }
@@ -47,11 +45,11 @@ prealloc(qfreelist_t *flist) {
 
 static void
 destroy(qlist_t *list) {
-  qfree_item_t *item;
+  qfreeitem_t *item;
   qlist_t      *pos;
 
   for (pos = list->next; pos != list; ) {
-    item = qlist_entry(pos, qfree_item_t, fentry);
+    item = qlist_entry(pos, qfreeitem_t, fentry);
     pos = pos->next;
     qlist_del(&(item->fentry));
     qfree(item);
@@ -65,8 +63,8 @@ qfreelist_destroy(qfreelist_t *flist) {
 }
 
 void*
-qfreelist_alloc(qfreelist_t *flist) {
-  qfree_item_t *item;
+qfreelist_new(qfreelist_t *flist) {
+  qfreeitem_t *item;
   qlist_t      *pos;
 
   if (qlist_empty(&(flist->free))) {
@@ -76,18 +74,20 @@ qfreelist_alloc(qfreelist_t *flist) {
     }
   }
   pos = flist->free.next;
-  item = qlist_entry(pos, qfree_item_t, fentry);    
+  item = qlist_entry(pos, qfreeitem_t, fentry);    
   qlist_del_init(&item->fentry);
   qlist_add_tail(&item->fentry, &flist->alloc);
-  if (flist->ctor) {
-    flist->ctor(item);
+  if (flist->ctor && flist->ctor(item) != QOK) {
+    qlist_del_init(&item->fentry);
+    qlist_add_tail(&(item->fentry), &(flist->free));
+    return NULL;
   }
 
   return item;
 }
 
 void
-qfreelist_free(qfreelist_t *flist, qfree_item_t *item) {
+qfreelist_free(qfreelist_t *flist, qfreeitem_t *item) {
   if (flist->dtor) {
     flist->dtor(item);
   }

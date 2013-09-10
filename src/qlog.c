@@ -37,10 +37,13 @@ level_str(int level) {
 
 void
 qlog_init_free_list() {
+  qfreelist_conf_t conf = QFREELIST_CONF("log free list",
+                                         sizeof(qlog_t),
+                                         FREE_LOG_LIST_NUM,
+                                         NULL,
+                                         NULL);
   qmutex_init(&free_log_list_lock);
-  qfreelist_init(&free_log_list, "log free list",
-                 sizeof(qlog_t), FREE_LOG_LIST_NUM,
-                 NULL, NULL);
+  qfreelist_init(&free_log_list, &conf);
 }
 
 void
@@ -63,7 +66,7 @@ qlog_new() {
   qlog_t *log;
 
   qmutex_lock(&free_log_list_lock);
-  log = (qlog_t*)qfreelist_alloc(&free_log_list);
+  log = (qlog_t*)qfreelist_new(&free_log_list);
   qmutex_unlock(&free_log_list_lock);
 
   return log;

@@ -19,10 +19,13 @@ static void destroy_socket(void *data);
 
 void
 qsocket_init_free_list() {
+  qfreelist_conf_t conf = QFREELIST_CONF("socket free list",
+                                         sizeof(qsocket_t),
+                                         FREE_SOCKET_LIST_NUM,
+                                         init_socket,
+                                         destroy_socket);
   qmutex_init(&free_socket_list_lock);
-  qfreelist_init(&free_socket_list, "socket free list",
-                 sizeof(qsocket_t), FREE_SOCKET_LIST_NUM,
-                 init_socket, destroy_socket);
+  qfreelist_init(&free_socket_list, &conf);
 }
 
 void
@@ -38,7 +41,7 @@ qsocket_new(int fd, qactor_t *actor) {
   qsocket_t *socket;
 
   qmutex_lock(&free_socket_list_lock);
-  socket = (qsocket_t*)qfreelist_alloc(&free_socket_list);
+  socket = (qsocket_t*)qfreelist_new(&free_socket_list);
   qmutex_unlock(&free_socket_list_lock);
 
   if (!socket) {
@@ -54,7 +57,7 @@ void
 qsocket_free(qsocket_t *socket) {
   qmutex_lock(&free_socket_list_lock);
   qfreelist_free(&free_socket_list,
-                 (qfree_item_t*)socket);
+                 (qfreeitem_t*)socket);
   qmutex_unlock(&free_socket_list_lock);
   qbuffer_reinit(socket->in);
   qbuffer_reinit(socket->out);

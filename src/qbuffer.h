@@ -10,7 +10,7 @@
 #include "qfreelist.h"
 
 typedef struct qbuffer_t {
-  qfree_item_fields;
+  qfreeitem_fields;
   char *data;
   int   size;
   int   start;

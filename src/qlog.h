@@ -24,7 +24,7 @@
 #define QLOG_DEBUG       8
 
 struct qlog_t {
-  qfree_item_fields;
+  qfreeitem_fields;
   char    buff[QMAX_LOG_SIZE + 2];
   int     size;
   int     idx;
