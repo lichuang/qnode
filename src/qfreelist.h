@@ -8,7 +8,9 @@
 #include "qlist.h"
 
 #define qfreeitem_fields \
-  qlist_t fentry
+  qlist_t   fentry;      \
+  unsigned  flag:1;    \
+  unsigned  active:1    
 
 typedef struct qfreeitem_t {
   qfreeitem_fields;
@@ -16,6 +18,7 @@ typedef struct qfreeitem_t {
 
 typedef int  (*qfreeitem_ctor_pt)(void *);
 typedef void (*qfreeitem_dtor_pt)(void *);
+typedef void (*qfreeitem_final_pt)(void *);
 
 typedef struct qfreelist_conf_t {
   const char         *name;
@@ -23,10 +26,11 @@ typedef struct qfreelist_conf_t {
   int                 num;
   qfreeitem_ctor_pt   ctor;
   qfreeitem_dtor_pt   dtor;
+  qfreeitem_final_pt  final;
 } qfreelist_conf_t;
 
-#define QFREELIST_CONF(str, s, n, c, d) \
-  {.name = (str), .size = (s), .num = (n), .ctor = (c), .dtor = (d)}
+#define QFREELIST_CONF(str, s, n, c, d, f) \
+  {.name = (str), .size = (s), .num = (n), .ctor = (c), .dtor = (d), .final = (f)}
 
 /* not thread-safe, if use in multithread MUST lock outside */
 typedef struct qfreelist_t { 
@@ -50,6 +54,9 @@ typedef struct qfreelist_t {
 
   /* called when item free */
   qfreeitem_dtor_pt   dtor;
+
+  /* called when freelist destroy */
+  qfreeitem_final_pt  final;
 } qfreelist_t;
 
 int   qfreelist_init(qfreelist_t *flist, qfreelist_conf_t *conf);

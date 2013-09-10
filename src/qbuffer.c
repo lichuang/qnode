@@ -13,19 +13,25 @@
 static qfreelist_t free_buffer_list;
 static qmutex_t    free_buffer_list_lock;
 
-static int  buffer_init(void *data);
-static void buffer_destroy(void *data);
+static int  buffer_new(void *data);
+static void buffer_final(void *data);
 
 int
 qbuffer_init_freelist() {
   qfreelist_conf_t conf = QFREELIST_CONF("buffer free list",
                                          sizeof(qbuffer_t),
                                          QBUFFER_FREE_NUM,
-                                         buffer_init,
-                                         buffer_destroy);
+                                         buffer_new, NULL,
+                                         buffer_final);
 
   qmutex_init(&free_buffer_list_lock);
   return qfreelist_init(&free_buffer_list, &conf);
+}
+
+void
+qbuffer_destroy_freelist() {
+  qmutex_destroy(&free_buffer_list_lock);
+  qfreelist_destroy(&free_buffer_list);
 }
 
 qbuffer_t*
@@ -91,13 +97,15 @@ qbuffer_write(qbuffer_t *buffer, const char *data, int size) {
 }
 
 static int
-buffer_init(void *data) {
+buffer_new(void *data) {
   qbuffer_t *buffer;
 
   buffer = (qbuffer_t*)data;
-  buffer->data = qalloc(sizeof(char) * QBUFFER_SIZE);
-  if (buffer->data == NULL) {
-    return QERROR;
+  if (buffer->flag == 0) {
+    buffer->data = qalloc(sizeof(char) * QBUFFER_SIZE);
+    if (buffer->data == NULL) {
+      return QERROR;
+    }
   }
   buffer->start  = buffer->end = 0;
   buffer->size = QBUFFER_SIZE;
@@ -106,7 +114,7 @@ buffer_init(void *data) {
 }
 
 static void
-buffer_destroy(void *data) {
+buffer_final(void *data) {
   qbuffer_t *buffer;
 
   buffer = (qbuffer_t*)data;

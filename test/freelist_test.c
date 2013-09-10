@@ -35,7 +35,7 @@ freelist_test_fail() {
                                          sizeof(testdata_t),
                                          DATA_FREE_NUM,
                                          data_init_fail,
-                                         data_destroy);
+                                         data_destroy, NULL);
   qfreelist_init(&data_freelist, &conf);
   CTEST_NUM_EQ(DATA_FREE_NUM, data_freelist.initnum);
   for (i = 0; i < DATA_FREE_NUM; ++i) {
@@ -58,7 +58,7 @@ freelist_test() {
                                          sizeof(testdata_t),
                                          DATA_FREE_NUM,
                                          data_init,
-                                         data_destroy);
+                                         data_destroy, NULL);
   qfreelist_init(&data_freelist, &conf);
   CTEST_NUM_EQ(DATA_FREE_NUM, data_freelist.initnum);
 

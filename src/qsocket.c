@@ -23,7 +23,7 @@ qsocket_init_free_list() {
                                          sizeof(qsocket_t),
                                          FREE_SOCKET_LIST_NUM,
                                          init_socket,
-                                         destroy_socket);
+                                         destroy_socket, NULL);
   qmutex_init(&free_socket_list_lock);
   qfreelist_init(&free_socket_list, &conf);
 }
