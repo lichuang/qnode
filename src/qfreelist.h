@@ -9,7 +9,7 @@
 
 #define qfreeitem_fields \
   qlist_t   fentry;      \
-  unsigned  flag:1;    \
+  unsigned  flag:1;      \
   unsigned  active:1    
 
 typedef struct qfreeitem_t {

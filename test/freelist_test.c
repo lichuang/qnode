@@ -45,6 +45,8 @@ freelist_test_fail() {
   CTEST_NUM_EQ(DATA_FREE_NUM, alloc_num);
   /* after alloc DATA_FREE_NUM items fail, free list not empty */
   CTEST_FALSE(qlist_empty(&(data_freelist.free)));
+
+  qfreelist_destroy(&data_freelist);
 }
 
 static void
@@ -67,12 +69,15 @@ freelist_test() {
 
   for (i = 0; i < DATA_FREE_NUM; ++i) {
     data = qfreelist_new(&data_freelist);
+    CTEST_NUM_EQ(1, data->active);
+    CTEST_NUM_EQ(1, data->flag);
   }
   CTEST_NUM_EQ(DATA_FREE_NUM, alloc_num);
   /* after alloc DATA_FREE_NUM items, free list empty */
   CTEST_TRUE(qlist_empty(&(data_freelist.free)));
 
   qfreelist_free(&data_freelist, (qfreeitem_t*)data);
+  CTEST_NUM_EQ(0, data->active);
   /* after free an item, free list is not empty */
   CTEST_FALSE(qlist_empty(&(data_freelist.free)));
   CTEST_NUM_EQ(1, free_num);
