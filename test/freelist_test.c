@@ -63,6 +63,8 @@ freelist_test() {
                                          data_destroy, NULL);
   qfreelist_init(&data_freelist, &conf);
   CTEST_NUM_EQ(DATA_FREE_NUM, data_freelist.initnum);
+  CTEST_TRUE(!qlist_empty(&(data_freelist.free)));
+  CTEST_TRUE(qlist_empty(&(data_freelist.alloc)));
 
   CTEST_FALSE(qlist_empty(&(data_freelist.free)));
   CTEST_NUM_EQ(0, alloc_num);
@@ -72,6 +74,8 @@ freelist_test() {
     CTEST_NUM_EQ(1, data->active);
     CTEST_NUM_EQ(1, data->flag);
   }
+  CTEST_TRUE(qlist_empty(&(data_freelist.free)));
+  CTEST_TRUE(!qlist_empty(&(data_freelist.alloc)));
   CTEST_NUM_EQ(DATA_FREE_NUM, alloc_num);
   /* after alloc DATA_FREE_NUM items, free list empty */
   CTEST_TRUE(qlist_empty(&(data_freelist.free)));
@@ -105,6 +109,9 @@ freelist_test() {
   CTEST_NUM_EQ(DATA_FREE_NUM + 2 + DATA_FREE_NUM - 1, alloc_num);
 
   qfreelist_destroy(&data_freelist);
+
+  CTEST_TRUE(qlist_empty(&(data_freelist.free)));
+  CTEST_TRUE(qlist_empty(&(data_freelist.alloc)));
 }
 
 static int

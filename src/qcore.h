@@ -22,4 +22,7 @@ typedef struct qworker_t      qworker_t;
 #define  QNONBLOCKING  -2
 
 #define  QINVALID_ID  0
+
+extern int test_flag;
+
 #endif  /* __QCORE_H__ */

@@ -104,12 +104,14 @@ log_time_handler(void *data) {
 static void
 logger_handle_msglist_done(void *reader) {
   qlogger_t *logger;
+  qlist_t   *list;
 
   logger = (qlogger_t*)reader;
 
-  if (logger->free_list.next != &(logger->free_list)) {
-    qlog_free(&(logger->free_list));
-    qlist_entry_init(&(logger->free_list));
+  if (!qlist_empty(&(logger->free_list))) {
+    list = logger->free_list.next;
+    qlist_del_init(&(logger->free_list));
+    qlog_free(list);
   }
 }
 

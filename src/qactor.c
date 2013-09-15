@@ -47,8 +47,9 @@ qactor_new(qid_t aid) {
   actor->active        = 1;
   actor->ref           = -1;
   qspinlock_init(&(actor->sock_list_lock));
-  qworker_add(aid, actor);
-
+  if (!test_flag) {
+    qworker_add(aid, actor);
+  }
   return actor;
 }
 

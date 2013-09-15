@@ -32,6 +32,8 @@
 #include "qwmsg.h"
 #include "qworker.h"
 
+int test_flag = 0;
+
 extern qmsg_pt* server_msg_handlers[];
 
 static qengine_t *engine;

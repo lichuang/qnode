@@ -47,4 +47,4 @@ rebuild:
 	make
 
 clean:
-	rm -rf $(OBJS) $(BIN_DIR)/*
+	rm -rf  $(OBJ_DIR)/* $(BIN_DIR)/*

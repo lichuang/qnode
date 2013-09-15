@@ -64,6 +64,7 @@ struct qsocket_t {
 
 void       qsocket_init_free_list();
 void       qsocket_destroy_free_list();
+
 qsocket_t* qsocket_new(int fd, qactor_t *actor);
 void       qsocket_free(qsocket_t *socket);
 

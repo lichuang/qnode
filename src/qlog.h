@@ -35,6 +35,8 @@ void qlog(int level, const char* file, int line, const char *format, ...);
 
 void qlog_init_free_list();
 void qlog_destroy_free_list();
+
+qlog_t* qlog_new();
 void qlog_free(qlist_t *free_list);
 void qlog_freelist_print();
 

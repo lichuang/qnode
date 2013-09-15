@@ -56,17 +56,21 @@ qlog_destroy_free_list() {
 void
 qlog_free(qlist_t *free_list) {
   qmutex_lock(&free_log_list_lock);
-  qlist_splice_tail(free_list, &(free_log_list.free));
+  qlist_add_tail(free_list, &(free_log_list.free));
   qmutex_unlock(&free_log_list_lock);
 }
 
-static qlog_t*
+qlog_t*
 qlog_new() {
   qlog_t *log;
 
   qmutex_lock(&free_log_list_lock);
   log = (qlog_t*)qfreelist_new(&free_log_list);
   qmutex_unlock(&free_log_list_lock);
+  if (log != NULL) {
+    /* del it from freelist alloc list */
+    qlist_del_init(&log->fentry);
+  }
 
   return log;
 }

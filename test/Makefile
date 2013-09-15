@@ -1,11 +1,11 @@
 INCLUDE = -I../src
 CC=gcc
 LDFLAGS= -L ../lib -lpthread -rdynamic -llua -ldl -lm -lldb -lreadline
-CFLAGS=-Wall -Werror -g -DDEBUG
+CFLAGS=-Wall -Werror -g -DDEBUG -DTEST
 
 OBJS =  ../obj/q*.o
 
-TESTS = freelist_test  buffer_test socket_test
+TESTS = freelist_test  buffer_test socket_test log_test
 
 all:$(TESTS)
 	for t in $(TESTS); do echo "\n***** Running $$t"; ./$$t || exit 1; done
@@ -18,3 +18,6 @@ buffer_test:buffer_test.c ctest.c ../obj/qbuffer.o
 
 socket_test:socket_test.c ctest.c ../obj/qsocket.o ../obj/qactor.o
 	$(CC) socket_test.c ctest.c $(OBJS) $(LDFLAGS) $(CFLAGS) -o socket_test $(INCLUDE)
+
+log_test:log_test.c ctest.c ../obj/qlog.o
+	$(CC) log_test.c ctest.c $(OBJS) $(LDFLAGS) $(CFLAGS) -o log_test $(INCLUDE)

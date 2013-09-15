@@ -62,10 +62,6 @@ qsocket_free(qsocket_t *socket) {
   qfreelist_free(&free_socket_list,
                  (qfreeitem_t*)socket);
   qmutex_unlock(&free_socket_list_lock);
-  qbuffer_reinit(socket->in);
-  qbuffer_reinit(socket->out);
-
-  reset_socket(socket);
 }
 
 static void
@@ -107,6 +103,11 @@ destroy_socket(void *data) {
   qsocket_t *socket;
 
   socket = (qsocket_t*)data;
+
   qbuffer_free(socket->in);
+  socket->in = NULL;
   qbuffer_free(socket->out);
+  socket->out = NULL;
+
+  qlist_del_init(&(socket->entry));
 }
