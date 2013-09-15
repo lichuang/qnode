@@ -33,6 +33,7 @@ static void*  logger_main(void *arg);
 static void   log_key_destroy(void *value);
 static void   log_time_handler(void *data);
 static void   logger_handle_msglist_done(void *reader);
+static void   destroy_logs();
 
 static int
 logger_msg_handler(qmsg_t *msg, void *reader) {
@@ -78,6 +79,7 @@ logger_main(void *arg) {
 
   qmailbox_free(&logger->box);
   qengine_destroy(logger->engine);
+  destroy_logs();
   qlog_destroy_free_list();
 
   return NULL;
@@ -102,17 +104,20 @@ log_time_handler(void *data) {
 }
 
 static void
-logger_handle_msglist_done(void *reader) {
-  qlogger_t *logger;
+destroy_logs() {
   qlist_t   *list;
-
-  logger = (qlogger_t*)reader;
 
   if (!qlist_empty(&(logger->free_list))) {
     list = logger->free_list.next;
     qlist_del_init(&(logger->free_list));
     qlog_free(list);
   }
+}
+
+static void
+logger_handle_msglist_done(void *reader) {
+  UNUSED(reader);
+  destroy_logs();
 }
 
 int
