@@ -6,6 +6,7 @@
 #include "qactor.h"
 #include "qlog.h"
 #include "qmutex.h"
+#include "qnet.h"
 #include "qsocket.h"
 
 static qfreelist_t free_socket_list;
@@ -108,6 +109,6 @@ destroy_socket(void *data) {
   socket->in = NULL;
   qbuffer_free(socket->out);
   socket->out = NULL;
-
+  //qnet_close(socket->fd);
   qlist_del_init(&(socket->entry));
 }

@@ -259,7 +259,6 @@ qlua_copy_state_table(lua_State *src, lua_State *dst,
   const char *str_val;
   void       *user_data;
 
-  qerror("222type: %s, is_table: %d", lua_typename(src, lua_type(src, table_idx)), lua_type(src, table_idx));
   if (!lua_istable(src, table_idx)) {
     qerror("type: %s", lua_typename(src, table_idx));
     return QOK;

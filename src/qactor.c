@@ -54,7 +54,7 @@ qactor_new(qid_t aid) {
 }
 
 void
-qactor_destroy(qactor_t *actor) {
+qactor_free(qactor_t *actor) {
   qlist_t   *pos, *next;
   qmsg_t    *msg;
   qsocket_t *socket;
@@ -112,7 +112,7 @@ qactor_spawn(qactor_t *actor, lua_State *state, int ref) {
   msg = qwmsg_spawn_new(new_actor, actor, state,
                         actor->tid, worker_id);
   if (msg == NULL) {
-    qactor_destroy(new_actor);
+    qactor_free(new_actor);
     return QINVALID_ID;
   }
   qworker_send(msg);

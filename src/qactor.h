@@ -63,7 +63,7 @@ struct qactor_t {
 
 qactor_t*   qactor_new(qid_t aid);
 void        qactor_attach(qactor_t *actor, lua_State *state);
-void        qactor_destroy(qactor_t *actor);
+void        qactor_free(qactor_t *actor);
 
 /* spawn an actor as child, return the actor ID */
 qid_t       qactor_spawn(qactor_t *actor, lua_State *state, int ref);

@@ -8,6 +8,7 @@
 typedef struct qactor_t       qactor_t; 
 typedef struct qconfig_t      qconfig_t; 
 typedef struct qengine_t      qengine_t; 
+typedef struct qevent_t       qevent_t; 
 typedef struct qlog_t         qlog_t;
 typedef struct qmailbox_t     qmailbox_t;
 typedef struct qmsg_t         qmsg_t;

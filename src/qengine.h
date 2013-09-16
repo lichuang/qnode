@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <sys/time.h>
 #include "qcore.h"
+#include "qevent.h"
 #include "qtimer.h"
 
 #define QMAX_EVENTS  (1024 * 10)
@@ -21,16 +22,6 @@
 struct qengine_t;
 struct qevent_t;
 struct qdispatcher_t;
-
-typedef void (qevent_pt)(int fd, int flags, void *data);
-
-typedef struct qevent_t {
-  int            fd;
-  int            flags;
-  qevent_pt     *read;
-  qevent_pt     *write;
-  void          *data;
-} qevent_t;
 
 typedef struct qdispatcher_t {
   const char *name;

@@ -225,7 +225,7 @@ free_actors(qworker_t *worker) {
     if (!actor) {
       continue;
     }
-    qactor_destroy(actor);
+    qactor_free(actor);
   }
   qfree(worker->actors);
   qmutex_destroy(&(worker->mutex));
