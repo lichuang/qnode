@@ -57,6 +57,8 @@ struct qsocket_t {
   /* owner actor id */
   qid_t            aid;
 
+  qengine_t       *engine;
+
   qevent_t         event;
 
   struct sockaddr  remote;

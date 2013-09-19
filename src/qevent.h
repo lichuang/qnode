@@ -20,6 +20,8 @@ struct qevent_t {
   /* active events flags */
   int            flags;
 
+  qengine_t     *engine;
+
   unsigned       error:1;
   qevent_pt     *read;
   qevent_pt     *write;
@@ -31,7 +33,7 @@ void qevent_init(qevent_t *event, int fd,
                  void *data);
 
 int  qevent_add(qengine_t* engine, qevent_t *event, int flags);
-int  qevent_del(qengine_t* engine, qevent_t *event, int flags);
+int  qevent_del(qevent_t *event, int flags);
 
 
 #endif  /* __QEVENT_H__ */

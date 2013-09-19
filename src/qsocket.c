@@ -110,6 +110,7 @@ destroy_socket(void *data) {
   socket->in = NULL;
   qbuffer_free(socket->out);
   socket->out = NULL;
-  //qnet_close(socket->fd);
+  qevent_del(&socket->event, socket->event.events);
+  qnet_close(socket->fd);
   qlist_del_init(&(socket->entry));
 }

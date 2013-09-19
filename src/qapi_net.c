@@ -160,7 +160,7 @@ socket_accept(int fd, int flags, void *data) {
 
   /* restore the listen fd state */
   engine = qactor_get_engine(actor->aid);
-  qevent_del(engine, &socket->event, QEVENT_READ);
+  qevent_del(&socket->event, QEVENT_READ);
   socket->state = QINET_STATE_LISTENING;
   
   socket = new_tcp_socket(sock, state, actor, &remote);
@@ -271,11 +271,10 @@ socket_connect(int fd, int flags, void *data) {
   len = sizeof(error);
   getsockopt(fd, SOL_SOCKET, SO_ERROR, (char*)&error, &len);
   if (error == -1) {
-    qevent_del(engine, &socket->event, socket->event.events);
+    qevent_del(&socket->event, socket->event.events);
     qnet_close(fd);
   } else if (error == 0) {
-    qevent_del(engine, &socket->event, QEVENT_WRITE);
-    //engine_->Add(this, kEventRead);
+    qevent_del(&socket->event, QEVENT_WRITE);
   }   
   
   lua_pushlightuserdata(state, socket);
@@ -377,7 +376,7 @@ socket_recv(int fd, int flags, void *data) {
     return;
   }
   engine = qactor_get_engine(actor->aid);
-  qevent_del(engine, &socket->event, QEVENT_READ);
+  qevent_del(&socket->event, QEVENT_READ);
   lua_pushnumber(state, nret);
   qlua_resume(state, 1);
 }
@@ -460,7 +459,7 @@ socket_send(int fd, int flags, void *data) {
   }
 
   engine = qactor_get_engine(actor->aid);
-  qevent_del(engine, &socket->event, QEVENT_WRITE);
+  qevent_del(&socket->event, QEVENT_WRITE);
   socket->in->end = 0;
   lua_pushnumber(state, nret);
   qlua_resume(state, 1);

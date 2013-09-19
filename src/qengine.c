@@ -95,7 +95,7 @@ qengine_loop(qengine_t* engine) {
         event->write(fd, flags, event->data);
       }
       if (event->error || (flags & QEVENT_ERROR)) {
-        qevent_del(engine, event, event->events);
+        qevent_del(event, event->events);
         close(fd);
       }
     }
