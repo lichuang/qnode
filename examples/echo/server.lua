@@ -3,11 +3,11 @@ require("util")
 local server = {}
 
 function accept(_listen)
-  local socket = qltcp_accept(_listen)
-  -- spawn a child to handle the request
-  local aid = qlnode_spawn("server", "child", {sock = socket});
-
-  accept(_listen)
+  while true do
+    local socket = qltcp_accept(_listen)
+    -- spawn a child to handle the request
+    local aid = qlnode_spawn("server", "child", {sock = socket});
+  end
 end
 
 server.test_timer = function ()
@@ -59,7 +59,7 @@ server.start = function()
   qlog("echo server start");
 
   -- accept connection
-  local socket, ret = qltcp_listen(22881);
+  local socket, ret = qltcp_listen(3333);
   if socket then
     local idx, err = qltimer_add(1000, 1000, "server", "test_timer", {})
     if idx then
