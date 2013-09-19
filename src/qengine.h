@@ -12,7 +12,7 @@
 #include "qlist.h"
 #include "qtimer.h"
 
-#define QMAX_EVENTS  (1024 * 10)
+#define QINIT_EVENTS   1024
 
 /* for events */
 #define QEVENT_NONE    0
@@ -30,6 +30,7 @@ typedef struct qdispatcher_t {
   int  (*add)(qengine_t *engine, int fd, int flags);
   int  (*del)(qengine_t *engine, int fd, int flags);
   int  (*poll)(qengine_t *, int timeout_ms);
+  int  (*expand)(qengine_t *);
   void (*destroy)(qengine_t *);
 } qdispatcher_t;
 
@@ -45,11 +46,9 @@ struct qengine_t {
 };
 
 qengine_t* qengine_new();
+qengine_t* qengine_expand(qengine_t *engine);
 int        qengine_loop(qengine_t* engine);
 void       qengine_destroy(qengine_t *engine);
-
-int        qevent_add(qengine_t* engine, qevent_t *event, int flags);
-int        qevent_del(qengine_t* engine, qevent_t *event, int flags);
 
 qid_t      qengine_add_timer(qengine_t* engine, uint32_t timeout_ms,
                              qtimer_pt *func, qtimer_destroy_pt *destroy,

@@ -95,7 +95,6 @@ worker_spawn_handler(qmsg_t *msg, void *reader) {
   actor->state = spawn->state;
   actor->tid = worker->tid;
   lua_State *state = actor->state;
-  qstdout("111 type: %d\n", lua_type(state, 1));
   qlua_dump_table(state, 1);
   if (qlua_call(state, 1, 0) == 0) {
     ret = (int)lua_tonumber(state, -1);

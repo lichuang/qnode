@@ -27,15 +27,16 @@ qengine_new() {
     goto error;
   }
   engine->max_fd = 0;
+  engine->events = qalloc(sizeof(qevent_t*) * QINIT_EVENTS);
+  if (engine->events == NULL) {
+    goto error;
+  }
+  engine->size = QINIT_EVENTS;
   engine->dispatcher = &(epoll_dispatcher);
   if (engine->dispatcher->init(engine) != QOK) {
     goto error;
   }
-  engine->events = qalloc(sizeof(qevent_t*) * QMAX_EVENTS);
-  if (engine->events == NULL) {
-    goto error;
-  }
-  for (i = 0; i < QMAX_EVENTS; ++i) {
+  for (i = 0; i < QINIT_EVENTS; ++i) {
     engine->events[i] = NULL;
   }
   qtimer_manager_init(&engine->timer_mng, engine);
@@ -48,60 +49,20 @@ error:
   return NULL;
 }
 
-int
-qevent_add(qengine_t* engine, qevent_t *event, int flags) {
-  /*
-  if (fd > QMAX_EVENTS) {
-    qerror("extends max fd");
-    return QERROR;
-  }
-  */
-  if (engine->dispatcher->add(engine, event->fd, flags) < 0) {
-    qerror("add event error");
-    return QERROR;
-  }
-  event->events |= flags;
-  engine->events[event->fd] = event;
-  if (event->fd > engine->max_fd) {
-    engine->max_fd = event->fd;
-  }
+qengine_t*
+qengine_expand(qengine_t *engine) {
+  void *data;
 
-  return QOK;
-}
-
-int
-qevent_del(qengine_t* engine, qevent_t *event, int flags) {
-  int       i;
-
-  /*
-  if (fd > QMAX_EVENTS) {
-    qerror("extends max fd");
-    return QERROR;
+  engine->size += QINIT_EVENTS;
+  data = qrealloc(engine->events, sizeof(qevent_t*) * engine->size);
+  if (data == NULL) {
+    return NULL;
   }
-  */
-  if (engine->events[event->fd] == NULL) {
-    return QOK;
+  engine->events = data;
+  if (engine->dispatcher->expand(engine) != QOK) {
+    return NULL;
   }
-  if (flags == QEVENT_NONE) {
-    return QERROR;
-  }
-  if (event->fd == engine->max_fd && event->flags == QEVENT_NONE) {
-    for (i = engine->max_fd - 1; i > 0; --i) {
-      if (engine->events[i]->events != 0) {
-        engine->max_fd = i;
-        break;
-      }
-    }
-  }
-  if (engine->dispatcher->del(engine, event->fd, flags) < 0) {
-    return QERROR;
-  }
-  event->events = event->events & (~flags);
-  if (event->events == 0) {
-    engine->events[event->fd] = NULL;
-  }
-
-  return QOK;
+  return engine;
 }
 
 int
