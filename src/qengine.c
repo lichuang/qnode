@@ -17,21 +17,10 @@ static const int QRETIRED_FD = -1;
 
 extern const qdispatcher_t epoll_dispatcher;
 
-static void init_event(qevent_t *event);
-
-static void
-init_event(qevent_t *event) {
-  event->fd = QRETIRED_FD;
-  event->flags = 0;
-  event->read = event->write = NULL;
-  event->data = NULL;
-}
-
 qengine_t*
 qengine_new() {
   int         i;
   qengine_t  *engine;
-  qevent_t   *event;
 
   engine = qcalloc(sizeof(qengine_t));
   if (engine == NULL) {
@@ -42,22 +31,16 @@ qengine_new() {
   if (engine->dispatcher->init(engine) != QOK) {
     goto error;
   }
-  engine->events = qalloc(sizeof(qevent_t) * QMAX_EVENTS);
+  engine->events = qalloc(sizeof(qevent_t*) * QMAX_EVENTS);
   if (engine->events == NULL) {
     goto error;
   }
-  engine->active_events = qalloc(sizeof(qevent_t) * QMAX_EVENTS);
-  if (engine->active_events == NULL) {
-    goto error;
-  }
   for (i = 0; i < QMAX_EVENTS; ++i) {
-    event = &(engine->events[i]);
-    init_event(event);
-    event = &(engine->active_events[i]);
-    init_event(event);
+    engine->events[i] = NULL;
   }
   qtimer_manager_init(&engine->timer_mng, engine);
   engine->quit = 0;
+  qlist_entry_init(&(engine->active));
 
   return engine;
 
@@ -66,59 +49,56 @@ error:
 }
 
 int
-qengine_add_event(qengine_t *engine, int fd, int flags,
-                  qevent_pt *callback, void *data) {
-  qevent_t *event;
-
+qevent_add(qengine_t* engine, qevent_t *event, int flags) {
+  /*
   if (fd > QMAX_EVENTS) {
     qerror("extends max fd");
     return QERROR;
   }
-  event = &(engine->events[fd]);
-  if (engine->dispatcher->add(engine, fd, flags) < 0) {
+  */
+  if (engine->dispatcher->add(engine, event->fd, flags) < 0) {
     qerror("add event error");
     return QERROR;
   }
-  event->fd = fd;
-  event->flags |= flags;
-  event->data = data;
-  if (flags & QEVENT_READ) {
-    event->read = callback;
-  }
-  if (flags & QEVENT_WRITE) {
-    event->write = callback;
-  }
-  if (fd > engine->max_fd) {
-    engine->max_fd = fd;
+  event->events |= flags;
+  engine->events[event->fd] = event;
+  if (event->fd > engine->max_fd) {
+    engine->max_fd = event->fd;
   }
 
   return QOK;
 }
 
 int
-qengine_del_event(qengine_t* engine, int fd, int flags) {
+qevent_del(qengine_t* engine, qevent_t *event, int flags) {
   int       i;
-  qevent_t *event;
 
+  /*
   if (fd > QMAX_EVENTS) {
     qerror("extends max fd");
     return QERROR;
   }
+  */
+  if (engine->events[event->fd] == NULL) {
+    return QOK;
+  }
   if (flags == QEVENT_NONE) {
     return QERROR;
   }
-  event = &(engine->events[fd]);
-  event->flags = event->flags & (~flags);
-  if (fd == engine->max_fd && event->flags == QEVENT_NONE) {
+  if (event->fd == engine->max_fd && event->flags == QEVENT_NONE) {
     for (i = engine->max_fd - 1; i > 0; --i) {
-      if (engine->events[i].flags != QEVENT_NONE) {
+      if (engine->events[i]->events != 0) {
         engine->max_fd = i;
         break;
       }
     }
   }
-  if (engine->dispatcher->del(engine, fd, flags) < 0) {
+  if (engine->dispatcher->del(engine, event->fd, flags) < 0) {
     return QERROR;
+  }
+  event->events = event->events & (~flags);
+  if (event->events == 0) {
+    engine->events[event->fd] = NULL;
   }
 
   return QOK;
@@ -126,41 +106,36 @@ qengine_del_event(qengine_t* engine, int fd, int flags) {
 
 int
 qengine_loop(qengine_t* engine) {
-  int       num, i;
-  int       next;
+  int       nexttime;
   int       flags;
   int       fd;
-  int       read;
   qevent_t *event;
+  qlist_t  *pos, *next;
 
   while (1) {
     if (engine->quit) {
       break;
     }
-    next = qtimer_next(&engine->timer_mng);
-    num  = engine->dispatcher->poll(engine, next);
-    for (i = 0; i < num; i++) {
-      event = &(engine->events[engine->active_events[i].fd]);
-      flags = engine->active_events[i].flags;
-      fd = engine->active_events[i].fd;
-      read = 0;
+    nexttime = qtimer_next(&engine->timer_mng);
+    engine->dispatcher->poll(engine, nexttime);
 
-      if (event->flags & flags & QEVENT_READ) {
-        read = 1;
-        if (event->read) {
-          event->read(fd, flags, event->data);
-        }
+    for (pos = engine->active.next; pos != &engine->active; pos = next) {
+      event = qlist_entry(pos, qevent_t, active_entry);
+      next  = pos->next;
+      qlist_del_init(&(event->active_entry));
+      flags = event->flags;
+      event->flags = 0;
+      fd = event->fd;
+
+      if (flags & QEVENT_READ) {
+        event->read(fd, flags, event->data);
       }
-      if (event->flags & flags & QEVENT_WRITE) {
-        if ((!read || event->write != event->read) &&
-            event->write != NULL) {
-          event->write(fd, flags, event->data);
-        }
+      if (flags & QEVENT_WRITE) {
+        event->write(fd, flags, event->data);
       }
-      if (event->flags & flags & QEVENT_ERROR) {
-        qengine_del_event(engine, fd, event->flags);
+      if (event->error || (flags & QEVENT_ERROR)) {
+        qevent_del(engine, event, event->events);
         close(fd);
-        init_event(event);
       }
     }
     qtimer_process(&(engine->timer_mng));
@@ -174,7 +149,6 @@ qengine_destroy(qengine_t *engine) {
   qtimer_manager_free(&(engine->timer_mng));
   engine->dispatcher->destroy(engine);
   qfree(engine->events);
-  qfree(engine->active_events);
   qfree(engine);
 }
 

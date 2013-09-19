@@ -38,6 +38,7 @@ extern qmsg_pt* server_msg_handlers[];
 
 static qengine_t *engine;
 static qmailbox_t box;
+static qevent_t   event;
 
 static void server_accept(int fd, int flags, void *data);
 static int  init_server_event();
@@ -70,8 +71,8 @@ init_server_event() {
     return -1;
   }
 
-  if (qengine_add_event(engine, fd, QEVENT_READ,
-                        server_accept, NULL) < 0) {
+  qevent_init(&event, fd, server_accept, NULL, NULL);
+  if (qevent_add(engine, &event, QEVENT_READ) < 0) {
     return -1;
   }
   return 0;

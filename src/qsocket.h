@@ -8,8 +8,9 @@
 #include <ifaddrs.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
-#include "qcore.h"
 #include "qbuffer.h"
+#include "qcore.h"
+#include "qevent.h"
 #include "qfreelist.h"
 #include "qlist.h"
 #include "qtype.h"
@@ -55,6 +56,8 @@ struct qsocket_t {
 
   /* owner actor id */
   qid_t            aid;
+
+  qevent_t         event;
 
   struct sockaddr  remote;
   char             addr[15];

@@ -7,11 +7,13 @@
 
 #include "qatomic.h"
 #include "qcore.h"
+#include "qevent.h"
 
 struct qsignal_t {
   int         rfd;
   int         wfd;
   qatomic_t   active;
+  qevent_t    event;
   qmailbox_t *box;
 };
 

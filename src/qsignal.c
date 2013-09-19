@@ -39,8 +39,10 @@ qsignal_init(qsignal_t *signal, qmailbox_t *box, qengine_t *engine) {
   qassert(result == 0);
   signal->wfd = fds[0];
   signal->rfd = fds[1];
-  qengine_add_event(engine, signal->rfd,
-                    QEVENT_READ, signal_handle, signal);
+
+  qevent_init(&signal->event, signal->rfd,
+              signal_handle, NULL, signal);
+  qevent_add(engine, &signal->event, QEVENT_READ);
 }
 
 void

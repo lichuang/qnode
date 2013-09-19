@@ -160,7 +160,7 @@ socket_accept(int fd, int flags, void *data) {
 
   /* restore the listen fd state */
   engine = qactor_get_engine(actor->aid);
-  qengine_del_event(engine, socket->fd, QEVENT_READ);
+  qevent_del(engine, &socket->event, QEVENT_READ);
   socket->state = QINET_STATE_LISTENING;
   
   socket = new_tcp_socket(sock, state, actor, &remote);
@@ -184,6 +184,7 @@ qltcp_accept(lua_State *state) {
   socklen_t           n;
   qactor_t           *actor;
   qsocket_t          *socket;
+  qengine_t          *engine;
 
   socket = (qsocket_t*)lua_touserdata(state, 1);
   n = sizeof(remote);
@@ -218,10 +219,10 @@ qltcp_accept(lua_State *state) {
     return 2;
   }
   if (fd == 0) {
-    qengine_t *engine = qactor_get_engine(actor->aid);
-    qengine_add_event(engine, socket->fd, QEVENT_READ,
-                      socket_accept, socket);
+    engine = qactor_get_engine(actor->aid);
     socket->state = QINET_STATE_ACCEPTING;
+    socket->event.read = socket_accept;
+    qevent_add(engine, &socket->event, QEVENT_READ);
     actor->waiting_netio = 1;
     return lua_yield(state, 0); 
   }
@@ -256,17 +257,6 @@ socket_connect(int fd, int flags, void *data) {
   state = actor->state;
   engine = qactor_get_engine(actor->aid);
 
-  error = 0;
-  len = sizeof(error);
-  getsockopt(fd, SOL_SOCKET, SO_ERROR, (char*)&error, &len);
-  if (error == -1) {
-    qengine_del_event(engine, fd, QEVENT_WRITE);
-    qnet_close(fd);
-  } else if (error == 0) {
-    qengine_del_event(engine, fd, QEVENT_WRITE);
-    //engine_->Add(this, kEventRead);
-  }   
-  
   socket = new_tcp_socket(fd, state, actor, &remote);
   if (!socket) {
     qnet_close(fd);
@@ -277,6 +267,17 @@ socket_connect(int fd, int flags, void *data) {
   }
   socket->state = QINET_STATE_CONNECTED;
 
+  error = 0;
+  len = sizeof(error);
+  getsockopt(fd, SOL_SOCKET, SO_ERROR, (char*)&error, &len);
+  if (error == -1) {
+    qevent_del(engine, &socket->event, socket->event.events);
+    qnet_close(fd);
+  } else if (error == 0) {
+    qevent_del(engine, &socket->event, QEVENT_WRITE);
+    //engine_->Add(this, kEventRead);
+  }   
+  
   lua_pushlightuserdata(state, socket);
   qlua_resume(state, 1);
   return;
@@ -315,14 +316,6 @@ qltcp_connect(lua_State *state) {
     return 2;
   }
 
-  if (ret == QNONBLOCKING) {
-    engine = qactor_get_engine(actor->aid);
-    qengine_add_event(engine, fd, QEVENT_WRITE,
-                      socket_connect, actor);
-    actor->waiting_netio = 1;
-    return lua_yield(state, 0); 
-  }
-
   socket = qsocket_new(fd, actor);
   if (!socket) {
     qnet_close(fd);
@@ -331,6 +324,15 @@ qltcp_connect(lua_State *state) {
     return 2;
   }
   socket->state = QINET_STATE_CONNECTED;
+
+  if (ret == QNONBLOCKING) {
+    engine = qactor_get_engine(actor->aid);
+    socket->event.write = socket_connect;
+    qevent_add(engine, &socket->event, QEVENT_WRITE);
+    actor->waiting_netio = 1;
+    return lua_yield(state, 0); 
+  }
+
   lua_pushlightuserdata(state, socket);
 
   return 1;
@@ -375,7 +377,7 @@ socket_recv(int fd, int flags, void *data) {
     return;
   }
   engine = qactor_get_engine(actor->aid);
-  qengine_del_event(engine, socket->fd, QEVENT_READ);
+  qevent_del(engine, &socket->event, QEVENT_READ);
   lua_pushnumber(state, nret);
   qlua_resume(state, 1);
 }
@@ -409,8 +411,8 @@ qltcp_recv(lua_State *state) {
   if (nret == 0) {
     actor = qlua_get_actor(state);
     engine = qactor_get_engine(actor->aid);
-    qengine_add_event(engine, socket->fd,
-                      QEVENT_READ, socket_recv, socket);
+    socket->event.read = socket_recv;
+    qevent_add(engine, &socket->event, QEVENT_READ);
     actor->waiting_netio = 1;
     return lua_yield(state, 0); 
   }
@@ -458,7 +460,7 @@ socket_send(int fd, int flags, void *data) {
   }
 
   engine = qactor_get_engine(actor->aid);
-  qengine_del_event(engine, socket->fd, QEVENT_WRITE);
+  qevent_del(engine, &socket->event, QEVENT_WRITE);
   socket->in->end = 0;
   lua_pushnumber(state, nret);
   qlua_resume(state, 1);
@@ -488,8 +490,8 @@ qltcp_send(lua_State *state) {
   if (nret == 0) {
     actor = qlua_get_actor(state);
     engine = qactor_get_engine(actor->aid);
-    qengine_add_event(engine, socket->fd, QEVENT_WRITE,
-                      socket_send, socket);
+    socket->event.write = socket_send;
+    qevent_add(engine, &socket->event, QEVENT_WRITE);
     actor->waiting_netio = 1;
     return lua_yield(state, 0); 
   }

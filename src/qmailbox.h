@@ -16,8 +16,6 @@
 typedef void (qmsg_done_pt)(void *reader);
 
 struct qmailbox_t {
-  const char       *name;
-
   /* one for read, one for write */
   qlist_t           lists[2];
 

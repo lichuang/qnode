@@ -50,6 +50,7 @@ qsocket_new(int fd, qactor_t *actor) {
   }
   socket->fd = fd;
   socket->aid = actor->aid;
+  qevent_init(&socket->event, fd, NULL, NULL, socket);
   qspinlock_lock(&(actor->sock_list_lock));
   qlist_add_tail(&socket->entry, &actor->sock_list);
   qspinlock_unlock(&(actor->sock_list_lock));

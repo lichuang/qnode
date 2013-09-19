@@ -62,10 +62,12 @@ epoll_add(qengine_t *engine, int fd, int flags) {
   epoll = (epoll_t*)engine->data;
   memset(&event, 0, sizeof(struct epoll_event));
 
-  op = engine->events[fd].flags == QEVENT_NONE ?
-        EPOLL_CTL_ADD : EPOLL_CTL_MOD;
+  if (engine->events[fd] == NULL) {
+    op = EPOLL_CTL_ADD;
+  } else {
+    op = EPOLL_CTL_MOD;
+  }
 
-  flags |= engine->events[fd].flags;
   events = 0;
   if (flags & QEVENT_READ) {
     events |= EPOLLIN;
@@ -74,7 +76,7 @@ epoll_add(qengine_t *engine, int fd, int flags) {
     events |= EPOLLOUT;
   }
 
-  events |= EPOLLET;
+  //events |= EPOLLET;
   event.events = events;
   event.data.fd = fd;
   if (epoll_ctl(epoll->fd, op, fd, &event) == -1) {
@@ -92,7 +94,7 @@ epoll_del(qengine_t *engine, int fd, int delflags) {
   int                 flags, events;
 
   epoll  = engine->data;
-  flags = engine->events[fd].flags & (~delflags);
+  flags = engine->events[fd]->events & (~delflags);
   events = 0;
   if (flags & QEVENT_READ) {
     events |= EPOLLIN;
@@ -100,10 +102,10 @@ epoll_del(qengine_t *engine, int fd, int delflags) {
   if (flags & QEVENT_WRITE) {
     events |= EPOLLOUT;
   }
-  events |= EPOLLET;
+  //events |= EPOLLET;
   event.data.fd = fd;
   event.events = events;
-  if (flags != QEVENT_NONE) {
+  if (flags != 0) {
     return epoll_ctl(epoll->fd, EPOLL_CTL_MOD, fd, &event);
   } else {
     return epoll_ctl(epoll->fd, EPOLL_CTL_DEL, fd, &event);
@@ -117,9 +119,10 @@ static int
 epoll_poll(qengine_t *engine, int timeout_ms) {
   int                 num;
   int                 flags;
-  int                 i;
+  int                 i, fd;
   epoll_t            *epoll;
   struct epoll_event *event;
+  qevent_t           *ev;
 
   epoll = (epoll_t*)engine->data;
   num = epoll_wait(epoll->fd, &(epoll->events[0]), QMAX_EVENTS, timeout_ms);
@@ -127,7 +130,9 @@ epoll_poll(qengine_t *engine, int timeout_ms) {
   if (num > 0) {
     for (i = 0; i < num; i++) {
       event = epoll->events + i;
+      fd    = event->data.fd;
 
+      ev = engine->events[fd];
       if (event->events & EPOLLIN) {
         flags |= QEVENT_READ;
       }
@@ -135,10 +140,11 @@ epoll_poll(qengine_t *engine, int timeout_ms) {
         flags |= QEVENT_WRITE;
       }
       if (event->events & (EPOLLERR | EPOLLHUP)) {
-        flags |= QEVENT_ERROR;
+        flags = QEVENT_ERROR;
+        ev->error = 1;
       }
-      engine->active_events[i].fd = event->data.fd;
-      engine->active_events[i].flags = flags;
+      ev->flags = flags;
+      qlist_add_tail(&ev->active_entry, &engine->active);
     }
   }
 
