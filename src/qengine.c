@@ -112,16 +112,3 @@ qengine_destroy(qengine_t *engine) {
   qfree(engine->events);
   qfree(engine);
 }
-
-qid_t
-qengine_add_timer(qengine_t* engine, uint32_t timeout_ms,
-                  qtimer_pt *func, qtimer_destroy_pt *destroy,
-                  int cycle, void *data) {
-  return qtimer_add(&engine->timer_mng, timeout_ms, func,
-                    destroy, cycle, data);
-}
-
-int
-qengine_del_timer(qengine_t* engine, qid_t id) {
-  return qtimer_del(&engine->timer_mng, id);
-}

@@ -77,7 +77,7 @@ qworker_new(qid_t tid) {
     printf("create worker actors error\n");
     return NULL;
   }
-  qengine_add_timer(worker->engine, config.recycle_internal * 1000,
+  qtimer_add(worker->engine, config.recycle_internal * 1000,
                     recycle, NULL,
                     config.recycle_internal * 1000, worker);
   qmailbox_init(&(worker->box), worker_msg_handler,

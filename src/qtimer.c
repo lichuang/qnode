@@ -67,11 +67,14 @@ qtimer_manager_free(qtimer_manager_t *mng) {
 }
 
 qid_t
-qtimer_add(qtimer_manager_t *mng, uint32_t timeout,
+qtimer_add(qengine_t *engine, uint32_t timeout,
            qtimer_pt *func, qtimer_destroy_pt *destroy,
            uint32_t cycle, void *data) {
-  qtimer_t *timer;
-  qlist_t  *pos;
+  qtimer_t         *timer;
+  qtimer_manager_t *mng;
+  qlist_t          *pos;
+
+  mng = &engine->timer_mng;
 
   if (qlist_empty(&(mng->free_list))) {
     timer = qalloc(sizeof(qtimer_t));
@@ -130,16 +133,18 @@ qtimer_process(qtimer_manager_t *mng) {
       timer->timeout = now + timer->cycle;
       qminheap_push(&(mng->min_heap), timer);
     } else {
-      qtimer_del(mng, timer->id);
+      qtimer_del(mng->engine, timer->id);
     }
     timer = (qtimer_t*)qminheap_top(&(mng->min_heap));
   }
 }
 
 int
-qtimer_del(qtimer_manager_t *mng, qid_t id) {
+qtimer_del(qengine_t *engine, qid_t id) {
   qtimer_t *timer;
+  qtimer_manager_t *mng;
 
+  mng = &engine->timer_mng;
   timer = (qtimer_t*)mng->id_map.data[id];
   if (timer->destroy) {
     timer->destroy(timer->data);

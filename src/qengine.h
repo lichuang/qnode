@@ -50,9 +50,4 @@ qengine_t* qengine_expand(qengine_t *engine);
 int        qengine_loop(qengine_t* engine);
 void       qengine_destroy(qengine_t *engine);
 
-qid_t      qengine_add_timer(qengine_t* engine, uint32_t timeout_ms,
-                             qtimer_pt *func, qtimer_destroy_pt *destroy,
-                             int cycle, void *data);
-int        qengine_del_timer(qengine_t* engine, qid_t id);
-
 #endif  /* __QENGINE_H__ */

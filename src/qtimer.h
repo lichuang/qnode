@@ -52,10 +52,12 @@ typedef struct qtimer_manager_t {
 
 void  qtimer_manager_init(qtimer_manager_t *mng, qengine_t *engine);
 void  qtimer_manager_free(qtimer_manager_t *mng);
-qid_t qtimer_add(qtimer_manager_t *mng, uint32_t timeout,
-                 qtimer_pt *func, qtimer_destroy_pt destroy,
+
+qid_t qtimer_add(qengine_t *engine, uint32_t timeout,
+                 qtimer_pt *func, qtimer_destroy_pt *destroy,
                  uint32_t cycle, void *data);
-int   qtimer_del(qtimer_manager_t *mng, qid_t id);
+int   qtimer_del(qengine_t *engine, qid_t id);
+
 int   qtimer_next(qtimer_manager_t *mng);
 void  qtimer_process(qtimer_manager_t *mng);
 

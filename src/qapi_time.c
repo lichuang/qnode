@@ -106,8 +106,8 @@ qltimer_add(lua_State *state) {
 
   actor = qlua_get_actor(state);
   engine = qactor_get_engine(actor->aid);
-  id = qengine_add_timer(engine, timeout, timer_handler,
-                         free_timer, cycle, timer);
+  id = qtimer_add(engine, timeout, timer_handler,
+                  free_timer, cycle, timer);
   timer->state = state;
   timer->id = id;
   timer->engine = engine;
@@ -136,7 +136,7 @@ qltimer_del(lua_State *state) {
   if (qdict_get_num(actor->timers, id) == NULL) {
     return 0;
   }
-  qengine_del_timer(engine, id);
+  qtimer_del(engine, id);
 
   return 0;
 }
@@ -151,14 +151,14 @@ timer_handler(void *data) {
   lua_getglobal(state, timer->mod);
   if (!lua_istable(state, -1)) {
     qerror("mod %s is not exist", timer->mod);
-    qengine_del_timer(timer->engine, timer->id);
+    qtimer_del(timer->engine, timer->id);
     return;
   }
 
   lua_getfield(state, -1, timer->func);
   if (!lua_isfunction(state, -1)) {
     qerror("%s.%s is not lua function", timer->mod, timer->func);
-    qengine_del_timer(timer->engine, timer->id);
+    qtimer_del(timer->engine, timer->id);
     return;
   }
   lua_pcall(state, 0, LUA_MULTRET, 0);
@@ -209,5 +209,5 @@ engine_free_timer(void *data) {
   qltimer_t *timer;
 
   timer = (qltimer_t*)data;
-  qengine_del_timer(timer->engine, timer->id);
+  qtimer_del(timer->engine, timer->id);
 }
