@@ -45,7 +45,7 @@ qactor_new(qid_t aid) {
   actor->waiting_netio = 0;
   actor->waiting_msg   = 0;
   actor->active        = 1;
-  actor->ref           = -1;
+  actor->ref           = LUA_NOREF;
   qspinlock_init(&(actor->sock_list_lock));
   if (!test_flag) {
     qworker_add(aid, actor);
@@ -58,7 +58,9 @@ qactor_free(qactor_t *actor) {
   qlist_t   *pos, *next;
   qmsg_t    *msg;
   qsocket_t *socket;
+  qworker_t *worker;
 
+  worker = workers[actor->tid];
   qspinlock_lock(&(actor->sock_list_lock));
   for (pos = actor->sock_list.next; pos != &(actor->sock_list); ) {
     socket = qlist_entry(pos, qsocket_t, entry);
@@ -77,6 +79,18 @@ qactor_free(qactor_t *actor) {
   if (actor->listen_params != NULL) {
     qdict_free(actor->listen_params);
   }
+
+  /* detach actor from state */
+  lua_pushlightuserdata(actor->state, actor->state);
+  lua_pushlightuserdata(actor->state, NULL);
+  lua_settable(actor->state, LUA_REGISTRYINDEX);
+
+  /* detach coroutine from register table */
+  lua_pushlightuserdata(worker->state, &worker->coroutines_key);
+  lua_rawget(worker->state, LUA_REGISTRYINDEX);
+  luaL_unref(worker->state, -1, actor->ref);
+  lua_pop(worker->state, 1);
+
   qworker_delete(actor);
   qdict_free(actor->timers);
   qfree(actor);
@@ -108,6 +122,7 @@ qactor_spawn(qactor_t *actor, lua_State *state, int ref) {
     return QINVALID_ID;
   }
   new_actor->ref = ref;
+  new_actor->parent = actor->aid;
 
   msg = qwmsg_spawn_new(new_actor, actor, state,
                         actor->tid, worker_id);

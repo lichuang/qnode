@@ -34,7 +34,7 @@ static int
 worker_start_handler(qmsg_t *msg, void *reader) {
   qwmsg_start_t  *start;
   qworker_t      *worker;
-  int             ret, ref;
+  int             ret;
   qid_t           aid;
   qactor_t       *actor;
   lua_State      *state;
@@ -50,9 +50,8 @@ worker_start_handler(qmsg_t *msg, void *reader) {
     return QERROR;
   }
   qassert(actor->state == NULL);
-  qactor_attach(actor, qlua_new_thread(worker, &ref));
+  qactor_attach(actor, qlua_new_thread(worker, &actor->ref));
   actor->tid = worker->tid;
-  actor->ref = ref;
 
   if (qlua_threadloadfile(actor, actor->state, config.main) != 0) {
     qerror("load server start script %s error", config.main);
