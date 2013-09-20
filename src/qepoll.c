@@ -174,5 +174,6 @@ epoll_destroy(qengine_t *engine) {
 
   epoll = (epoll_t*)engine->data;
   close(epoll->fd);
+  qfree(epoll->events);
   qfree(epoll);
 }

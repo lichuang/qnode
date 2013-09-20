@@ -49,7 +49,6 @@ static void signal_handler(int sig);
 static void setup_signal();
 static int  init_server();
 static void destroy_threads();
-static void destroy_server();
 static void make_daemon();
 static void save_pid();
 static int  set_core_size();
@@ -273,19 +272,16 @@ destroy_threads() {
   qlogger_destroy();
 }
 
-static void
-destroy_server() {
-  destroy_threads();
-  qconfig_free();
-}
-
 int
 qserver_run() {
   if (init_server() != QOK) {
     return QERROR;
   }
   qengine_loop(engine);
-  destroy_server();
+  destroy_threads();
+  qconfig_free();
+  qsocket_destroy_free_list();
+  qbuffer_destroy_freelist();
   return QOK;
 }
 

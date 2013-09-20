@@ -5,6 +5,7 @@
 #include "qalloc.h"
 #include "qassert.h"
 #include "qcore.h"
+#include "qlog.h"
 #include "qfreelist.h"
 
 static int  prealloc(qfreelist_t *flist);
@@ -58,6 +59,7 @@ destroy(qlist_t *list, qfreeitem_final_pt final) {
     }
     qfree(item);
   }
+  qassert(qlist_empty(list));
 }
 
 void

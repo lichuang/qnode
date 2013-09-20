@@ -56,7 +56,7 @@ qlog_destroy_free_list() {
 void
 qlog_free(qlist_t *free_list) {
   qmutex_lock(&free_log_list_lock);
-  qlist_add_tail(free_list, &(free_log_list.free));
+  qlist_splice_tail(free_list, &(free_log_list.free));
   qmutex_unlock(&free_log_list_lock);
 }
 

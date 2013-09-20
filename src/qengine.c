@@ -91,14 +91,17 @@ qengine_loop(qengine_t* engine) {
       if (flags & QEVENT_READ) {
         event->read(fd, flags, event->data);
       }
+
       if (flags & QEVENT_WRITE) {
         event->write(fd, flags, event->data);
       }
+
       if (event->error || (flags & QEVENT_ERROR)) {
         qevent_del(event, event->events);
         close(fd);
       }
     }
+    qassert(qlist_empty(&engine->active));
     qtimer_process(&(engine->timer_mng));
   }
 

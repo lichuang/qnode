@@ -24,7 +24,7 @@ static int   worker_msg_handler(qmsg_t *msg, void *reader);
 static void* worker_main(void *arg);
 static void* worker_alloc(void *ud, void *ptr,
                           size_t osize, size_t nsize);
-static void  recycle(void *data);
+//static void  recycle(void *data);
 static void  free_actors(qworker_t *worker);
 #ifdef DEBUG
 static void  reload(lua_State *state, const char *file);
@@ -77,9 +77,11 @@ qworker_new(qid_t tid) {
     printf("create worker actors error\n");
     return NULL;
   }
+  /*
   qtimer_add(worker->engine, config.recycle_internal * 1000,
                     recycle, NULL,
                     config.recycle_internal * 1000, worker);
+  */                    
   qmailbox_init(&(worker->box), worker_msg_handler,
                 worker->engine, worker);
   worker->tid = tid;
@@ -206,6 +208,7 @@ worker_alloc(void *ud, void *ptr, size_t osize, size_t nsize) {
   }
 }
 
+/*
 static void
 recycle(void *data) {
   qworker_t *worker;
@@ -214,6 +217,7 @@ recycle(void *data) {
   UNUSED(worker);
   UNUSED(data);
 }
+*/
 
 static void
 free_actors(qworker_t *worker) {

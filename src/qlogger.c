@@ -105,13 +105,11 @@ log_time_handler(void *data) {
 
 static void
 destroy_logs() {
-  qlist_t   *list;
-
   if (!qlist_empty(&(logger->free_list))) {
-    list = logger->free_list.next;
-    qlist_del_init(&(logger->free_list));
-    qlog_free(list);
+    qlog_free(&(logger->free_list));
+    qlist_entry_init(&(logger->free_list));
   }
+  qassert(qlist_empty(&logger->free_list));
 }
 
 static void

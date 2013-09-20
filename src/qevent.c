@@ -53,7 +53,8 @@ qevent_del(qevent_t *event, int flags) {
   if (engine->events[event->fd] == NULL) {
     return QOK;
   }
-  if (event->fd == engine->max_fd && event->flags == QEVENT_NONE) {
+  /* fix max fd */
+  if (event->fd == engine->max_fd && event->flags == 0) {
     for (i = engine->max_fd - 1; i > 0; --i) {
       if (engine->events[i] == NULL) {
         continue;
