@@ -79,7 +79,6 @@ init_server_event() {
 
 static int
 server_msg_handler(qmsg_t *msg, void *reader) {
-  qinfo("main handle %d msg", msg->type);
   return (*server_msg_handlers[msg->type])(msg, reader);
 }
 

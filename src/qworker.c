@@ -17,6 +17,10 @@
 #include "qworker.h"
 #include "qthread_log.h"
 
+#include "lua.h"
+#include "lstate.h"
+#include "lgc.h"
+
 extern qmsg_pt* worker_msg_handlers[];
 qworker_t*      workers[QMAX_WORKER] = {NULL};
 
@@ -24,7 +28,7 @@ static int   worker_msg_handler(qmsg_t *msg, void *reader);
 static void* worker_main(void *arg);
 static void* worker_alloc(void *ud, void *ptr,
                           size_t osize, size_t nsize);
-//static void  recycle(void *data);
+static void  recycle(void *data);
 static void  free_actors(qworker_t *worker);
 #ifdef DEBUG
 static void  reload(lua_State *state, const char *file);
@@ -35,7 +39,7 @@ worker_msg_handler(qmsg_t *msg, void *reader) {
   qworker_t *worker;
 
   worker = (qworker_t*)reader;
-  qinfo("worker %d handle %d msg", worker->tid, msg->type);
+  //qinfo("worker %d handle %d msg", worker->tid, msg->type);
   return (*worker_msg_handlers[msg->type])(msg, reader);
 }
 
@@ -77,11 +81,9 @@ qworker_new(qid_t tid) {
     printf("create worker actors error\n");
     return NULL;
   }
-  /*
   qtimer_add(worker->engine, config.recycle_internal * 1000,
                     recycle, NULL,
                     config.recycle_internal * 1000, worker);
-  */                    
   qmailbox_init(&(worker->box), worker_msg_handler,
                 worker->engine, worker);
   worker->tid = tid;
@@ -200,6 +202,7 @@ worker_alloc(void *ud, void *ptr, size_t osize, size_t nsize) {
 
   worker = (qworker_t*)ud;
   worker->alloc += nsize - osize;
+  //qstdout("worker %d, alloc: %d\n", worker->tid, worker->alloc);
   if (nsize == 0) {
     qfree(ptr);
     return NULL;
@@ -208,16 +211,16 @@ worker_alloc(void *ud, void *ptr, size_t osize, size_t nsize) {
   }
 }
 
-/*
 static void
 recycle(void *data) {
   qworker_t *worker;
 
   worker = (qworker_t*)data;
-  UNUSED(worker);
-  UNUSED(data);
+  //luaC_checkGC(worker->state);
+  int oldsize = worker->alloc;
+  luaC_fullgc(worker->state);
+  qstdout("after recycle: worker %d old alloc: %d, alloc %d\n", worker->tid, oldsize, worker->alloc);
 }
-*/
 
 static void
 free_actors(qworker_t *worker) {

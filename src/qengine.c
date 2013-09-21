@@ -80,6 +80,7 @@ qengine_loop(qengine_t* engine) {
     nexttime = qtimer_next(&engine->timer_mng);
     engine->dispatcher->poll(engine, nexttime);
 
+    flags = 0;
     for (pos = engine->active.next; pos != &engine->active; pos = next) {
       event = qlist_entry(pos, qevent_t, active_entry);
       next  = pos->next;

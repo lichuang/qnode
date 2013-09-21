@@ -26,16 +26,12 @@ qmsg_new(qid_t sender, qid_t recver, int size, int type) {
   msg->recver   = recver;
   msg->type     = type;
   msg->size     = size;
-  msg->destroy  = NULL;
 
   return msg;
 }
 
 void
 qmsg_destroy(qmsg_t *msg) {
-  if (msg->destroy) {
-    (*msg->destroy)(msg);
-  }
   qfree(msg);
 }
 

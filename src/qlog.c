@@ -23,7 +23,7 @@ static const char* log_levels[] = {
   "debug"
 };
 
-static int FREE_LOG_LIST_NUM = 10;
+static int FREE_LOG_LIST_NUM = 100;
 
 static int log_level = QLOG_DEBUG;
 
