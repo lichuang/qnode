@@ -272,7 +272,7 @@ socket_connect(int fd, int flags, void *data) {
   getsockopt(fd, SOL_SOCKET, SO_ERROR, (char*)&error, &len);
   if (error == -1) {
     qevent_del(&socket->event, socket->event.events);
-    qnet_close(fd);
+    qnet_close(socket->event.fd);
   } else if (error == 0) {
     qevent_del(&socket->event, QEVENT_WRITE);
   }   
@@ -403,7 +403,7 @@ qltcp_recv(lua_State *state) {
   nret = qnet_tcp_recv(socket, &error);
   if (nret < 0) {
     qevent_del(&socket->event, socket->event.events);
-    qnet_close(fd);
+    qnet_close(socket->event.fd);
     lua_pushnil(state);
     lua_pushfstring(state, "recv from %s error:%s",
                     socket->peer, strerror(error));
@@ -484,7 +484,7 @@ qltcp_send(lua_State *state) {
   nret = qnet_tcp_send(socket, &error);
   if (nret < 0) {
     qevent_del(&socket->event, socket->event.events);
-    qnet_close(fd);
+    qnet_close(socket->event.fd);
     lua_pushnil(state);
     lua_pushfstring(state, "send to %s error:%s",
                     socket->peer, strerror(error));
