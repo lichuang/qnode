@@ -31,7 +31,6 @@ logger_log_handler(qmsg_t *msg, void *reader) {
   logger = (qlogger_t*)reader;
   lmsg = (qlmsg_log_t*)msg;
   log = lmsg->log;
-  qlist_add_tail(&(log->fentry), &(logger->free_list));
 
   if (config.daemon) {
     logger->log_size += log->size;
@@ -46,6 +45,10 @@ logger_log_handler(qmsg_t *msg, void *reader) {
       printf(RED"%s"NONE, log->buff);
     }
   }
+
+  /* seems freelist no effect, so free directly */
+  //qlist_add_tail(&(log->fentry), &(logger->free_list));
+  qfree(log);
 
   return QOK;
 }

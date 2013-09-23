@@ -23,7 +23,7 @@ static const char* log_levels[] = {
   "debug"
 };
 
-static int FREE_LOG_LIST_NUM = 100;
+static int FREE_LOG_LIST_NUM = 1;
 
 static int log_level = QLOG_DEBUG;
 
@@ -56,12 +56,17 @@ qlog_destroy_free_list() {
 void
 qlog_free(qlist_t *free_list) {
   qmutex_lock(&free_log_list_lock);
+
   qlist_splice_tail(free_list, &(free_log_list.free));
+
   qmutex_unlock(&free_log_list_lock);
 }
 
 qlog_t*
 qlog_new() {
+  /* seems freelist no effect, so alloc directly */
+  return qcalloc(sizeof(qlog_t));
+
   qlog_t *log;
 
   qmutex_lock(&free_log_list_lock);

@@ -49,6 +49,9 @@ typedef struct qfreelist_t {
   /* free list init num */
   int                 initnum;
 
+  /* free list total items num */
+  int                 num;
+
   /* called when item allocate */
   qfreeitem_ctor_pt   ctor;
 

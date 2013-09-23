@@ -9,7 +9,7 @@
 #include "qfreelist.h"
 
 static int  prealloc(qfreelist_t *flist);
-static void destroy(qlist_t *list, qfreeitem_final_pt final);
+static void destroy(qfreelist_t *flist, qlist_t *list);
 
 int
 qfreelist_init(qfreelist_t *flist, qfreelist_conf_t *conf) {
@@ -17,6 +17,7 @@ qfreelist_init(qfreelist_t *flist, qfreelist_conf_t *conf) {
   qlist_entry_init(&(flist->alloc));
   flist->size     = conf->size;
   flist->name     = conf->name;
+  flist->num      = 0;
   flist->initnum  = conf->num;
   flist->ctor     = conf->ctor;
   flist->dtor     = conf->dtor;
@@ -33,6 +34,7 @@ prealloc(qfreelist_t *flist) {
 
   qassert(qlist_empty(&(flist->free)));
   num  = flist->initnum;
+  flist->num += num;
   size = flist->size;
   for (i = num; i > 0; --i) {
     item = (qfreeitem_t*)qcalloc(size);
@@ -46,10 +48,12 @@ prealloc(qfreelist_t *flist) {
 }
 
 static void
-destroy(qlist_t *list, qfreeitem_final_pt final) {
-  qfreeitem_t *item;
-  qlist_t      *pos;
+destroy(qfreelist_t *flist, qlist_t *list) {
+  qfreeitem_t        *item;
+  qlist_t            *pos;
+  qfreeitem_final_pt  final;
 
+  final = flist->final;
   for (pos = list->next; pos != list; ) {
     item = qlist_entry(pos, qfreeitem_t, fentry);
     pos = pos->next;
@@ -58,14 +62,16 @@ destroy(qlist_t *list, qfreeitem_final_pt final) {
       final(item);
     }
     qfree(item);
+    flist->num -= 1;
   }
   qassert(qlist_empty(list));
 }
 
 void
 qfreelist_destroy(qfreelist_t *flist) {
-  destroy(&(flist->free),  flist->final);
-  destroy(&(flist->alloc), flist->final);
+  destroy(flist, &(flist->free));
+  destroy(flist, &(flist->alloc));
+  qassert(flist->num == 0);
 }
 
 void*

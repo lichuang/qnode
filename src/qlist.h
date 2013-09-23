@@ -100,6 +100,17 @@ qlist_splice_tail(qlist_t *list, qlist_t *head) {
   }
 }
 
+static inline int
+qlist_size(qlist_t *head) {
+  qlist_t *pos;
+  int      size;
+
+  for (pos = head->next, size = 0; pos != head; pos = pos->next) {
+    ++size;
+  }
+  return 0;
+}
+
 #define qlist_entry(ptr, type, member) \
   ((type *)((char *)(ptr) - ((unsigned long)(&((type*)1)->member) - 1)))
 
