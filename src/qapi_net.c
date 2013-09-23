@@ -402,6 +402,8 @@ qltcp_recv(lua_State *state) {
 
   nret = qnet_tcp_recv(socket, &error);
   if (nret < 0) {
+    qevent_del(&socket->event, socket->event.events);
+    qnet_close(fd);
     lua_pushnil(state);
     lua_pushfstring(state, "recv from %s error:%s",
                     socket->peer, strerror(error));
@@ -481,6 +483,8 @@ qltcp_send(lua_State *state) {
 
   nret = qnet_tcp_send(socket, &error);
   if (nret < 0) {
+    qevent_del(&socket->event, socket->event.events);
+    qnet_close(fd);
     lua_pushnil(state);
     lua_pushfstring(state, "send to %s error:%s",
                     socket->peer, strerror(error));
