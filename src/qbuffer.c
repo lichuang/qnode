@@ -48,7 +48,7 @@ qbuffer_new() {
 void
 qbuffer_free(qbuffer_t *buffer) {
   qmutex_lock(&free_buffer_list_lock);
-  qfreelist_free(&free_buffer_list, (qfreeitem_t*)buffer);
+  qfreelist_free(&free_buffer_list, buffer);
   qmutex_unlock(&free_buffer_list_lock);
   if (buffer->size > QBUFFER_SIZE) {
     buffer->data = qrealloc(buffer->data, QBUFFER_SIZE);

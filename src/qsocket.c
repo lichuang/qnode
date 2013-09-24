@@ -61,8 +61,7 @@ qsocket_new(int fd, qactor_t *actor) {
 void
 qsocket_free(qsocket_t *socket) {
   qmutex_lock(&free_socket_list_lock);
-  qfreelist_free(&free_socket_list,
-                 (qfreeitem_t*)socket);
+  qfreelist_free(&free_socket_list, socket);
   qmutex_unlock(&free_socket_list_lock);
 }
 

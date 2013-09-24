@@ -80,7 +80,7 @@ freelist_test() {
   /* after alloc DATA_FREE_NUM items, free list empty */
   CTEST_TRUE(qlist_empty(&(data_freelist.free)));
 
-  qfreelist_free(&data_freelist, (qfreeitem_t*)data);
+  qfreelist_free(&data_freelist, data);
   CTEST_NUM_EQ(0, data->active);
   /* after free an item, free list is not empty */
   CTEST_FALSE(qlist_empty(&(data_freelist.free)));

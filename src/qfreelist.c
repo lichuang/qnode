@@ -101,7 +101,10 @@ qfreelist_new(qfreelist_t *flist) {
 }
 
 void
-qfreelist_free(qfreelist_t *flist, qfreeitem_t *item) {
+qfreelist_free(qfreelist_t *flist, void *data) {
+  qfreeitem_t *item;
+
+  item = (qfreeitem_t*)data;
   if (flist->dtor) {
     flist->dtor(item);
   }

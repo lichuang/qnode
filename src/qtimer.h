@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 #include "qcore.h"
+#include "qfreelist.h"
 #include "qidmap.h"
 #include "qminheap.h"
 #include "qlist.h"
@@ -16,6 +17,7 @@ typedef void (qtimer_pt)(void *data);
 typedef void (qtimer_destroy_pt)(void *data);
 
 typedef struct qtimer_t {
+  qfreeitem_fields;
   /* heap index in the minheap */
   int             heap_index;
 
@@ -45,7 +47,7 @@ typedef struct qtimer_manager_t {
   uint64_t        now;
   uint64_t        now_ms;
   qidmap_t        id_map;
-  qlist_t         free_list;    /* free timer list */
+  qfreelist_t     free_list;    /* free timer list */
   qminheap_t      min_heap;
   qengine_t      *engine;
 } qtimer_manager_t;

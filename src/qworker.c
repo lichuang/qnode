@@ -2,6 +2,9 @@
  * See Copyright Notice in qnode.h
  */
 
+#include <lua.h>
+#include <lstate.h>
+#include <lgc.h>
 #include <unistd.h>
 #include <stdio.h>
 #include "qalloc.h"
@@ -16,10 +19,6 @@
 #include "qserver.h"
 #include "qworker.h"
 #include "qthread_log.h"
-
-#include "lua.h"
-#include "lstate.h"
-#include "lgc.h"
 
 extern qmsg_pt* worker_msg_handlers[];
 qworker_t*      workers[QMAX_WORKER] = {NULL};
@@ -82,8 +81,8 @@ qworker_new(qid_t tid) {
     return NULL;
   }
   qtimer_add(worker->engine, config.recycle_internal * 1000,
-                    recycle, NULL,
-                    config.recycle_internal * 1000, worker);
+             recycle, NULL,
+             config.recycle_internal * 1000, worker);
   qmailbox_init(&(worker->box), worker_msg_handler,
                 worker->engine, worker);
   worker->tid = tid;

@@ -66,6 +66,6 @@ int   qfreelist_init(qfreelist_t *flist, qfreelist_conf_t *conf);
 void  qfreelist_destroy(qfreelist_t *flist);
 
 void* qfreelist_new(qfreelist_t *flist);
-void  qfreelist_free(qfreelist_t *flist, qfreeitem_t *item);
+void  qfreelist_free(qfreelist_t *flist, void *data);
 
 #endif  /* __QFREELIST_H__ */

@@ -146,8 +146,8 @@ qlogger_new(int thread_num) {
   logger->thread_num = thread_num;
   qlist_entry_init(&(logger->free_list));
   log_time_handler(NULL);
-  qtimer_add(logger->engine, 1000, log_time_handler, NULL,
-                    1000, NULL);
+  qtimer_add(logger->engine, 1000, log_time_handler,
+             NULL, 1000, NULL);
   logger->running = 0;
   pthread_create(&logger->id, NULL,
                  logger_main, logger);
