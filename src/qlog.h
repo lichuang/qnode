@@ -31,6 +31,8 @@ struct qlog_t {
   int     level;
 };
 
+void qlog_set_level(const char* level);
+
 void qlog(int level, const char* file, int line, const char *format, ...);
 
 void qlog_init_free_list();
@@ -40,9 +42,11 @@ qlog_t* qlog_new();
 void qlog_free(qlist_t *free_list);
 void qlog_freelist_print();
 
-#define qerror(args...) qlog(QLOG_ERR,   __FILE__, __LINE__, args)
-#define qinfo(args...)  qlog(QLOG_INFO,  __FILE__, __LINE__, args)
-#define qdebug(args...) qlog(QLOG_DEBUG, __FILE__, __LINE__, args)
+#define qerror(args...) if (log_level > QLOG_ERR) qlog(QLOG_ERR,   __FILE__, __LINE__, args)
+#define qinfo(args...)  if (log_level > QLOG_INFO) qlog(QLOG_INFO,  __FILE__, __LINE__, args)
+#define qdebug(args...) if (log_level > QLOG_DEBUG) qlog(QLOG_DEBUG, __FILE__, __LINE__, args)
 #define qstdout         printf
+
+extern int log_level;
 
 #endif  /* __QLOG_H__ */

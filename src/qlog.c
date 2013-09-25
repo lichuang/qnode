@@ -20,12 +20,13 @@ static const char* log_levels[] = {
   "warn",
   "notice",
   "info",
-  "debug"
+  "debug",
+  NULL
 };
 
 static int FREE_LOG_LIST_NUM = 1;
 
-static int log_level = QLOG_DEBUG;
+int log_level = QLOG_DEBUG;
 
 static qfreelist_t free_log_list;
 static qmutex_t    free_log_list_lock;
@@ -33,6 +34,18 @@ static qmutex_t    free_log_list_lock;
 const char *
 level_str(int level) {
   return log_levels[level];
+}
+
+void
+qlog_set_level(const char* level) {
+  int i;
+
+  for (i = 0; log_levels[i]; ++i) {
+    if (!strcmp(level, log_levels[i])) {
+      log_level = i;
+      return;
+    }
+  }
 }
 
 void
@@ -88,9 +101,7 @@ qlog(int level, const char* file, int line, const char *format, ...) {
   if (logger == NULL) {
     return;
   }
-  if (log_level < level) {
-    return;
-  }
+
   qlog_t *log = qlog_new();
   if (log == NULL) {
     return;

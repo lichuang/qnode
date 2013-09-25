@@ -226,6 +226,7 @@ init_server() {
     goto error;
   }
 
+  qlog_set_level(config.log_level);
   if (qlogger_new(config.worker + 1) < 0) {
     goto error;
   }
