@@ -18,7 +18,6 @@
 #include "qluautil.h"
 #include "qserver.h"
 #include "qworker.h"
-#include "qthread_log.h"
 
 extern qmsg_pt* worker_msg_handlers[];
 qworker_t*      workers[QMAX_WORKER] = {NULL};

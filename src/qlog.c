@@ -9,7 +9,6 @@
 #include "qlog.h"
 #include "qlogger.h"
 #include "qworker.h"
-#include "qthread_log.h"
 
 static const char* log_levels[] = {
   "",

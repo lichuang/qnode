@@ -11,7 +11,6 @@
 #include "qdefines.h"
 #include "qengine.h"
 #include "qlog.h"
-#include "qthread_log.h"
 
 static const int QRETIRED_FD = -1;
 

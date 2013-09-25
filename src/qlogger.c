@@ -21,7 +21,6 @@
 #include "qmsg.h"
 #include "qserver.h"
 #include "qsignal.h"
-#include "qthread_log.h"
 
 extern qmsg_pt* logger_msg_handlers[];
 

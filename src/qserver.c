@@ -28,7 +28,6 @@
 #include "qserver.h"
 #include "qsignal.h"
 #include "qsocket.h"
-#include "qthread_log.h"
 #include "qwmsg.h"
 #include "qworker.h"
 
