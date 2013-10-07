@@ -82,13 +82,14 @@ struct qworker_t {
   /* key for coroutine table */
   char                  coroutines_key;
 
+  qthread_start_pt      done;
   /* lua debugger */
 #ifdef DEBUG
   ldb_t                *ldb;
 #endif
 };
 
-qworker_t*  qworker_new(qid_t tid);
+qworker_t*  qworker_new(qid_t tid, qthread_start_pt done);
 void        qworker_destroy(qworker_t *thread);
 void        qworker_send(qmsg_t *msg);
 qid_t       qworker_new_aid(qworker_t *worker);

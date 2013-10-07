@@ -74,6 +74,7 @@ logger_main(void *arg) {
 
   thread = (qlogger_t*)arg;
   thread->running = 1;
+  (*thread->done)();
   qengine_loop(thread->engine);
 
   qmailbox_free(&logger->box);
@@ -118,7 +119,7 @@ logger_handle_msglist_done(void *reader) {
 }
 
 int
-qlogger_new(int thread_num) {
+qlogger_new(int thread_num, qthread_start_pt done) {
   qlog_init_free_list();
   logger = qcalloc(sizeof(qlogger_t));
   if (logger == NULL) {
@@ -148,11 +149,9 @@ qlogger_new(int thread_num) {
   qtimer_add(logger->engine, 1000, log_time_handler,
              NULL, 1000, NULL);
   logger->running = 0;
+  logger->done = done;
   pthread_create(&logger->id, NULL,
                  logger_main, logger);
-  while (!logger->running) {
-    usleep(100);
-  }
 
   return QOK;
 }

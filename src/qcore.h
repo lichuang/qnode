@@ -24,6 +24,8 @@ typedef struct qworker_t      qworker_t;
 
 #define  QINVALID_ID  0
 
+typedef void (*qthread_start_pt)(void);
+
 extern int test_flag;
 
 #endif  /* __QCORE_H__ */

@@ -16,6 +16,7 @@
 #include "qlist.h"
 #include "qlog.h"
 #include "qluautil.h"
+#include "qmutex.h"
 #include "qserver.h"
 #include "qworker.h"
 
@@ -47,6 +48,7 @@ worker_main(void *arg) {
 
   worker = (qworker_t*)arg;
   worker->running = 1;
+  (*worker->done)();
   qengine_loop(worker->engine);
 
   qmailbox_free(&(worker->box));
@@ -61,7 +63,7 @@ worker_main(void *arg) {
 }
 
 qworker_t*
-qworker_new(qid_t tid) {
+qworker_new(qid_t tid, qthread_start_pt done) {
   qworker_t *worker;
 
   worker = qcalloc(sizeof(qworker_t));
@@ -103,6 +105,7 @@ qworker_new(qid_t tid) {
   lua_rawset(worker->state, LUA_REGISTRYINDEX);
 
   worker->running = 0;
+  worker->done = done;
   qlist_entry_init(&(worker->actor_list));
   pthread_create(&worker->id, NULL,
                  worker_main, worker);
@@ -112,9 +115,11 @@ qworker_new(qid_t tid) {
 #else
   worker->ldb = NULL;
 #endif
+  /*
   while (!worker->running) {
     usleep(100);
   }
+  */
   return worker;
 }
 

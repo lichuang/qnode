@@ -11,18 +11,19 @@
 #include "qmailbox.h"
 
 typedef struct qlogger_t {
-  qmailbox_t    box;
-  pthread_t     id;
-  int           thread_num;
-  qengine_t    *engine;
-  char          time_buff[20];
-  int           fd;
-  int           log_size;
-  qlist_t       free_list;
-  volatile int  running:1;
+  qmailbox_t       box;
+  pthread_t        id;
+  int              thread_num;
+  qengine_t       *engine;
+  char             time_buff[20];
+  int              fd;
+  int              log_size;
+  qlist_t          free_list;
+  volatile int     running:1;
+  qthread_start_pt done;
 } qlogger_t;
 
-int  qlogger_new(int thread_num);
+int  qlogger_new(int thread_num, qthread_start_pt done);
 void qlogger_destroy();
 void qlogger_add(qlog_t *log);
 void qlogger_send(qmsg_t *msg);

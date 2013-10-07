@@ -24,6 +24,7 @@
 #include "qmailbox.h"
 #include "qmsg.h"
 #include "qmmsg.h"
+#include "qmutex.h"
 #include "qnet.h"
 #include "qserver.h"
 #include "qsignal.h"
@@ -39,6 +40,10 @@ static qengine_t *engine;
 static qmailbox_t box;
 static qevent_t   event;
 
+static qcond_t    cond;
+static qmutex_t   lock;
+static int        flag;
+
 static void server_accept(int fd, int flags, void *data);
 static int  init_server_event();
 static int  server_msg_handler(qmsg_t *msg, void *reader);
@@ -51,6 +56,7 @@ static void destroy_threads();
 static void make_daemon();
 static void save_pid();
 static int  set_core_size();
+static void start_done();
 
 static void
 server_accept(int fd, int flags, void *data) {
@@ -102,6 +108,14 @@ server_start() {
   qworker_send(msg);
 }
 
+static void
+start_done() {
+  qmutex_lock(&lock);
+  flag = 1;
+  qcond_signal(&cond);
+  qmutex_unlock(&lock);
+}
+
 static int
 init_workers() {
   int           i;
@@ -112,7 +126,13 @@ init_workers() {
 
   /* create worker threads */
   for (i = 1; i < worker; ++i) {
-    workers[i] = qworker_new(i); 
+    flag = 0;
+    qmutex_lock(&lock);
+    workers[i] = qworker_new(i, &start_done);
+    while (!flag) {
+      qcond_wait(&cond, &lock);
+    }
+    qmutex_unlock(&lock);
     if (workers[i] == NULL) {
       goto error;
     }
@@ -225,10 +245,19 @@ init_server() {
     goto error;
   }
 
+  qcond_init(&cond);
+  qmutex_init(&lock);
+
   qlog_set_level(config.log_level);
-  if (qlogger_new(config.worker + 1) < 0) {
+  flag = 0;
+  if (qlogger_new(config.worker + 1, start_done) < 0) {
     goto error;
   }
+  qmutex_lock(&lock);
+  while (!flag) {
+    qcond_wait(&cond, &lock);
+  }
+  qmutex_unlock(&lock);
 
   if (qbuffer_init_freelist() < 0) {
     goto error;
@@ -251,6 +280,9 @@ init_server() {
   if (init_workers() < 0) {
     goto error;
   }
+  qmutex_destroy(&lock);
+  qcond_destroy(&cond);
+
   setup_signal();
 
   server_start();
