@@ -5,10 +5,8 @@ local cache = {}
 require("util")
 
 server.storage = function (_args)
-  qlog("in storage")
   while true do
     local arg = qlnode_recv()
-    qlog("after storage")
     for k, v in pairs(arg) do
       qlog("k: " .. k .. ", v: " .. v)
     end
@@ -21,7 +19,6 @@ server.storage = function (_args)
 
     if cmd == "set" then
       cache[key] = arg.value
-      qlog("set " .. key .. ":" .. arg.value)
       local data = {}
       data.response = "STORED\r\n"
       qlnode_send(arg.__src, data)
@@ -30,22 +27,17 @@ server.storage = function (_args)
       data.val = cache[key]
       data.response = ""
       if data.val then
-	qlog("111before send")
 	data.response = "VALUE " .. key .. " 0 " .. tostring(string.len(data.val)) .. "\r\n"
-	qlog("222before send")
 	qlog(data.val)
 	data.response = data.response .. data.val .. "\r\n"
-	qlog("333before send")
       end
       data.response = data.response .. "END\r\n"
-      qlog("before send:" .. arg.__src)
       qlnode_send(arg.__src, data)
     end
   end
 end
 
 function accept(_listen, _storage_id)
-  qlog("in accept");
   local socket = qltcp_accept(_listen)
   -- spawn a child to handle the request
   local aid = qlnode_spawn("child", "child", {sock = socket, storage_id = _storage_id});

@@ -22,11 +22,9 @@ function tokenize_command(_buffer)
   local left = 0
 
   length = qlbuffer_rlen(_buffer)
-  qlog("get length:" .. length)
 
   while pos < length do
     c = qlbuffer_get(_buffer, pos, 1)
-    qlog("get c:" .. c)
 
     if c == " " then
       if start ~= pos then
@@ -60,7 +58,6 @@ function tokenize_command(_buffer)
     table.insert(tokens, data)
   end
 
-  qlog("left " .. left)
   return tokens, left, pos + 2
 end
 
@@ -89,7 +86,6 @@ function process_update_command(_buffer, _tokens, _ntokens,
   data.vlen     = vlen
 
   if _left == vlen + 2 then
-    qlog("vlen: " .. vlen)
     length = qlbuffer_rlen(_buffer)
 
     start = _pos
@@ -98,7 +94,6 @@ function process_update_command(_buffer, _tokens, _ntokens,
       if c == "\r" then
         qlbuffer_set(_buffer, _pos, "\0")
         local str = qlbuffer_get(_buffer, start, _pos - start)
-        qlog("value: " .. str)
         data.value = str
         return data
       end
@@ -130,13 +125,6 @@ end
 function process_command(_buffer, _tokens, _left, _pos)
   local ntokens = #_tokens
 
-  --[[
-  for i, data in ipairs(_tokens) do
-    qlog(i .. " : ".. data.value .. ", len: " .. data.length)
-  end
-  ]]
-
-  qlog("command: " .. _tokens[COMMAND_TOKEN].value)
   local cmd = _tokens[COMMAND_TOKEN].value
   if cmd == "set" then
     return process_update_command(_buffer, _tokens, ntokens,
@@ -192,10 +180,10 @@ function main_loop(_args)
       qlbuffer_write_string(out, arg.response);
       local nret, reason = qltcp_send(socket)
       if not nret then
-	      qlog("qtcp_send error: " .. reason)
+	qlog("qtcp_send error: " .. reason)
         qlnode_exit()
       else
-	      qlog("qtcp_send: " .. tostring(nret))
+	qlog("qtcp_send: " .. tostring(nret))
       end
     end
   end
