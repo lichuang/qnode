@@ -191,6 +191,13 @@ ldb_new(lua_State *state, ldb_reload_pt reload) {
   int    i;
   ldb_t *ldb;
 
+  lua_gettable(state, LUA_REGISTRYINDEX);
+  ldb = (ldb_t*)lua_touserdata(state, -1);
+  /* already exist? */
+  if (ldb) {
+    return ldb;
+  }
+
   ldb = (ldb_t*)malloc(sizeof(ldb_t));
   if (ldb == NULL) {
     return NULL;
