@@ -15,42 +15,42 @@ typedef int           qrbtree_key_int_t;
 typedef struct qrbtree_node_s  qrbtree_node_t;
 
 struct qrbtree_node_s {
-    qrbtree_key_t       key;
-    qrbtree_node_t     *left;
-    qrbtree_node_t     *right;
-    qrbtree_node_t     *parent;
-    unsigned char                 color;
-    unsigned char                 data;
+  qrbtree_key_t       key;
+  qrbtree_node_t     *left;
+  qrbtree_node_t     *right;
+  qrbtree_node_t     *parent;
+  unsigned char       color;
+  unsigned char       data;
 };
 
 
 typedef struct qrbtree_s  qrbtree_t;
 
 typedef void (*qrbtree_insert_pt) (qrbtree_node_t *root,
-    qrbtree_node_t *node, qrbtree_node_t *sentinel);
+  qrbtree_node_t *node, qrbtree_node_t *sentinel);
 
 struct qrbtree_s {
-    qrbtree_node_t     *root;
-    qrbtree_node_t     *sentinel;
-    qrbtree_insert_pt   insert;
+  qrbtree_node_t     *root;
+  qrbtree_node_t     *sentinel;
+  qrbtree_insert_pt   insert;
 };
 
 
 #define qrbtree_init(tree, s, i)                                           \
-    qrbtree_sentinel_init(s);                                              \
-    (tree)->root = s;                                                         \
-    (tree)->sentinel = s;                                                     \
-    (tree)->insert = i
+  qrbtree_sentinel_init(s);                                              \
+(tree)->root = s;                                                      \
+(tree)->sentinel = s;                                                  \
+(tree)->insert = i
 
 
 void qrbtree_insert( qrbtree_t *tree,
-    qrbtree_node_t *node);
+  qrbtree_node_t *node);
 void qrbtree_delete( qrbtree_t *tree,
-    qrbtree_node_t *node);
+  qrbtree_node_t *node);
 void qrbtree_insert_value(qrbtree_node_t *root, qrbtree_node_t *node,
-    qrbtree_node_t *sentinel);
+  qrbtree_node_t *sentinel);
 void qrbtree_insert_timer_value(qrbtree_node_t *root,
-    qrbtree_node_t *node, qrbtree_node_t *sentinel);
+  qrbtree_node_t *node, qrbtree_node_t *sentinel);
 
 
 #define ngx_rbt_red(node)               ((node)->color = 1)
@@ -64,15 +64,7 @@ void qrbtree_insert_timer_value(qrbtree_node_t *root,
 
 #define qrbtree_sentinel_init(node)  ngx_rbt_black(node)
 
-static qrbtree_node_t *
-qrbtree_min(qrbtree_node_t *node, qrbtree_node_t *sentinel)
-{
-    while (node->left != sentinel) {
-        node = node->left;
-    }
-
-    return node;
-}
-
+qrbtree_node_t* qrbtree_min(qrbtree_node_t *node,
+                            qrbtree_node_t *sentinel);
 
 #endif  /*  _QRBTREE_H__ */

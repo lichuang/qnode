@@ -152,10 +152,18 @@ qrbtree_insert_timer_value(qrbtree_node_t *temp, qrbtree_node_t *node,
     ngx_rbt_red(node);
 }
 
+qrbtree_node_t*
+qrbtree_min(qrbtree_node_t *node, qrbtree_node_t *sentinel)
+{
+  while (node->left != sentinel) {
+    node = node->left;
+  }
+
+  return node;
+}
 
 void
-qrbtree_delete( qrbtree_t *tree,
-    qrbtree_node_t *node)
+qrbtree_delete(qrbtree_t *tree, qrbtree_node_t *node)
 {
     unsigned int           red;
     qrbtree_node_t  **root, *sentinel, *subst, *temp, *w;

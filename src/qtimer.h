@@ -11,6 +11,7 @@
 #include "qidmap.h"
 #include "qminheap.h"
 #include "qlist.h"
+#include "qrbtree.h"
 #include "qtype.h"
 
 typedef void (qtimer_pt)(void *data);
@@ -41,6 +42,8 @@ typedef struct qtimer_t {
 
   /* timer destroy handler */
   qtimer_destroy_pt *destroy;
+
+  qrbtree_node_t  node;
 } qtimer_t;
 
 typedef struct qtimer_manager_t {
@@ -50,6 +53,10 @@ typedef struct qtimer_manager_t {
   qfreelist_t     free_list;    /* free timer list */
   qminheap_t      min_heap;
   qengine_t      *engine;
+
+  /* timer rbtree */
+  qrbtree_t       rbtree;
+  qrbtree_node_t  sentinel;
 } qtimer_manager_t;
 
 void  qtimer_manager_init(qtimer_manager_t *mng, qengine_t *engine);

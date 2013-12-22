@@ -62,13 +62,17 @@ qtimer_manager_init(qtimer_manager_t *mng, qengine_t *engine) {
   mng->engine = engine;
   qidmap_init(&(mng->id_map));
   qfreelist_init(&mng->free_list, &conf);
+  qrbtree_init(&(mng->rbtree), &(mng->sentinel), qrbtree_insert_timer_value);
+
+  /*
   qminheap_init(&(mng->min_heap), compare_timer,
                 set_timer_heap_index, get_timer_heap_index);
+                */
 }
 
 void
 qtimer_manager_free(qtimer_manager_t *mng) {
-  qminheap_destroy(&(mng->min_heap));
+  //qminheap_destroy(&(mng->min_heap));
   qfreelist_destroy(&mng->free_list);
 }
 
@@ -91,8 +95,11 @@ qtimer_add(qengine_t *engine, uint32_t timeout,
   timer->cycle    = cycle;
   timer->data     = data;
   timer->destroy  = destroy;
+  timer->node.key = timer->timeout;
   qid_attach(&(mng->id_map), timer->id, timer);
-  qminheap_push(&(mng->min_heap), timer);
+  qrbtree_insert(&(mng->rbtree), &(timer->node));
+
+  //qminheap_push(&(mng->min_heap), timer);
 
   return timer->id;
 }
@@ -100,8 +107,19 @@ qtimer_add(qengine_t *engine, uint32_t timeout,
 int
 qtimer_next(qtimer_manager_t *mng) {
   qtimer_t *timer;
+  qrbtree_node_t  *node, *root, *sentinel;
 
+  sentinel = mng->rbtree.sentinel;
+  root = mng->rbtree.root;
+  if (sentinel == root) {
+    return -1;
+  }
+
+  node = qrbtree_min(root, sentinel);
+  timer = (qtimer_t *) ((char *) node - offsetof(qtimer_t, node));
+  /*
   timer = (qtimer_t*)qminheap_top(&(mng->min_heap));
+  */
   if (timer == NULL) {
     return -1;
   }
@@ -112,6 +130,7 @@ qtimer_next(qtimer_manager_t *mng) {
   return (timer->timeout - mng->now_ms);
 }
 
+/*
 void
 qtimer_process(qtimer_manager_t *mng) {
   uint64_t  now;
@@ -137,6 +156,37 @@ qtimer_process(qtimer_manager_t *mng) {
     timer = (qtimer_t*)qminheap_top(&(mng->min_heap));
   }
 }
+*/
+
+void
+qtimer_process(qtimer_manager_t *mng) {
+  uint64_t  now;
+  qtimer_t *timer;
+  qrbtree_node_t  *node, *root, *sentinel;
+
+  update_now_time(mng);
+
+  now = mng->now_ms;
+  sentinel = mng->rbtree.sentinel;
+  while (1) {
+    root = mng->rbtree.root;
+    if (sentinel == root) {
+      return;
+    }
+
+    node = qrbtree_min(root, sentinel);
+    timer = (qtimer_t *)((char *) node - offsetof(qtimer_t, node));
+    if (timer->timeout < mng->now_ms) {
+      return;
+    }
+    if (timer->cycle > 0) {
+      timer->timeout = now + timer->cycle;
+      qrbtree_insert(&(mng->rbtree), &(timer->node));
+    } else {
+      qtimer_del(mng->engine, timer->id);
+    }
+  }
+}
 
 int
 qtimer_del(qengine_t *engine, qid_t id) {
@@ -145,10 +195,14 @@ qtimer_del(qengine_t *engine, qid_t id) {
 
   mng = &engine->timer_mng;
   timer = (qtimer_t*)mng->id_map.data[id];
+  if (timer == NULL) {
+    return -1;
+  }
   if (timer->destroy) {
     timer->destroy(timer->data);
   }
-  qminheap_erase(&(mng->min_heap), timer->heap_index);
+  qrbtree_delete(&(mng->rbtree), &(timer->node));
+  //qminheap_erase(&(mng->min_heap), timer->heap_index);
   qid_detach(&(mng->id_map), id);
   qfreelist_free(&mng->free_list, timer);
 
