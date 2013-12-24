@@ -40,12 +40,13 @@ typedef struct qtimer_t {
   /* timer destroy handler */
   qtimer_destroy_pt *destroy;
 
+  /* rbtree node */
   qrbtree_node_t  node;
 } qtimer_t;
 
 typedef struct qtimer_manager_t {
   uint64_t        now;
-  double        now_ms;
+  uint64_t        now_ms;
   qidmap_t        id_map;
   qfreelist_t     free_list;    /* free timer list */
   qengine_t      *engine;

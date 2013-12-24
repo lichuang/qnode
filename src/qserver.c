@@ -248,6 +248,7 @@ init_server() {
   qcond_init(&cond);
   qmutex_init(&lock);
 
+  /* start logger thread */
   qlog_set_level(config.log_level);
   flag = 0;
   if (qlogger_new(config.worker + 1, start_done) < 0) {
@@ -277,6 +278,7 @@ init_server() {
     qstdout("chdir %s error: %s\n", config.script_path, strerror(errno));
     goto error;
   }
+  /* start worker threads */
   if (init_workers() < 0) {
     goto error;
   }

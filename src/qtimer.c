@@ -8,7 +8,7 @@
 #include "qengine.h"
 #include "qtimer.h"
 
-static        void update_now_time(qtimer_manager_t *mng);
+static void update_now_time(qtimer_manager_t *mng);
 
 static void
 update_now_time(qtimer_manager_t *mng) {
@@ -17,7 +17,6 @@ update_now_time(qtimer_manager_t *mng) {
   gettimeofday(&tv, NULL);
   mng->now    = tv.tv_sec;
   mng->now_ms = tv.tv_usec / 1000 + tv.tv_sec * 1000;
-  //printf("sec: %u, usec: %u, ms: %f\n", (unsigned int)tv.tv_sec, (unsigned int)tv.tv_usec, mng->now_ms);
 }
 
 void

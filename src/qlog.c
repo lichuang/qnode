@@ -109,7 +109,7 @@ qlog(int level, const char* file, int line, const char *format, ...) {
   va_start(args, format);
   va_end(args);
 
-  n          = 0;
+  n  = 0;
   n  = snprintf(log->buff, QMAX_LOG_SIZE,
                      "%s", logger->time_buff);
   n += snprintf(log->buff + n, QMAX_LOG_SIZE - n,
@@ -121,7 +121,7 @@ qlog(int level, const char* file, int line, const char *format, ...) {
   log->size = n;
   log->level = level;
 
-#if 0  
+#if 1
   qlogger_add(log);
 #else
   printf("%s", log->buff);
