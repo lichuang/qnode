@@ -51,8 +51,17 @@ server.child = function (_args)
   main_loop(_args)
 end
 
+server.timer = function ()
+  print("in timer")
+end
+
 server.start = function()
   qlog("echo server start");
+
+  local id, msg = qltimer_add(1000, 1000, "server", "timer")
+  if not id then
+    qlog("create timer error: %s", msg)
+  end
 
   -- accept connection
   local socket, ret = qltcp_listen(3333);

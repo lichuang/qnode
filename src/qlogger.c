@@ -103,7 +103,6 @@ logger_main(void *arg) {
   qengine_destroy(logger->engine);
   destroy_logs();
   qlog_destroy_free_list();
-  printf("out logger\n");
 
   return NULL;
 }
