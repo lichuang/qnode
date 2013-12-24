@@ -150,6 +150,7 @@ epoll_poll(qengine_t *engine, int timeout_ms) {
 
   if (num > 0) {
     for (i = 0; i < num; i++) {
+      flags = 0;
       event = epoll->events + i;
       fd    = event->data.fd;
 

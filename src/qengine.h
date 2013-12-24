@@ -15,9 +15,9 @@
 #define QINIT_EVENTS   1024
 
 /* for events */
-#define QEVENT_READ    1 << 0
-#define QEVENT_WRITE   1 << 1
-#define QEVENT_ERROR   1 << 2
+#define QEVENT_READ   1 << 0
+#define QEVENT_WRITE  1 << 1 
+#define QEVENT_ERROR  1 << 2  
 
 struct qengine_t;
 struct qevent_t;

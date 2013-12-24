@@ -74,17 +74,36 @@ qlogger_open_file() {
 
 static void*
 logger_main(void *arg) {
-  qlogger_t *thread;
+  qlogger_t *logger;
 
-  thread = (qlogger_t*)arg;
-  thread->running = 1;
-  (*thread->done)();
-  qengine_loop(thread->engine);
+  logger = (qlogger_t*)arg;
+  logger->running = 1;
+  logger->fd = -1;
+  logger->log_size = 0;
+  if (config.daemon) {
+    qlogger_open_file();
+  }
+  logger->engine = qengine_new();
+  if (logger->engine == NULL) {
+    return NULL;
+  }
+  qmailbox_init(&(logger->box), logger_msg_handler,
+                logger->engine, logger);
+  logger->box.done = logger_handle_msglist_done;
+
+  qlist_entry_init(&(logger->free_list));
+  log_time_handler(NULL);
+  qtimer_add(logger->engine, 1000, log_time_handler,
+             NULL, 1000, NULL);
+
+  (*logger->done)();
+  qengine_loop(logger->engine);
 
   qmailbox_free(&logger->box);
   qengine_destroy(logger->engine);
   destroy_logs();
   qlog_destroy_free_list();
+  printf("out logger\n");
 
   return NULL;
 }
@@ -131,29 +150,12 @@ qlogger_new(int thread_num, qthread_start_pt done) {
   }
 
   if (pthread_key_create(&thread_log_key, log_key_destroy) < 0) {
+    qfree(logger);
     return QERROR;
   }
 
-  logger->fd = -1;
-  logger->log_size = 0;
-  if (config.daemon) {
-    qlogger_open_file();
-  }
-  logger->engine = qengine_new();
-  if (logger->engine == NULL) {
-    return QERROR;
-  }
-  qmailbox_init(&(logger->box), logger_msg_handler,
-                logger->engine, logger);
-  logger->box.done = logger_handle_msglist_done;
-
-  logger->thread_num = thread_num;
-  qlist_entry_init(&(logger->free_list));
-  log_time_handler(NULL);
-  qtimer_add(logger->engine, 1000, log_time_handler,
-             NULL, 1000, NULL);
-  logger->running = 0;
   logger->done = done;
+  logger->thread_num = thread_num;
   pthread_create(&logger->id, NULL,
                  logger_main, logger);
 

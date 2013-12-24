@@ -3,6 +3,7 @@
  */
 
 #include <errno.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -27,7 +28,7 @@ signal_handle(int fd, int flags, void *data) {
   qmailbox_handle(signal->box);
 }
 
-void
+int
 qsignal_init(qsignal_t *signal, qmailbox_t *box, qengine_t *engine) {
   int fds[2], result;
 
@@ -35,14 +36,20 @@ qsignal_init(qsignal_t *signal, qmailbox_t *box, qengine_t *engine) {
   signal->active = 0;
 
   result = socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
+  if (result != 0) {
+    return QERROR;
+  }
 
-  qassert(result == 0);
   signal->wfd = fds[0];
   signal->rfd = fds[1];
+
+  fcntl(fds[0], F_SETFL, fcntl(fds[0], F_GETFL) | O_NONBLOCK);
+  fcntl(fds[1], F_SETFL, fcntl(fds[1], F_GETFL) | O_NONBLOCK);
 
   qevent_init(&signal->event, signal->rfd,
               signal_handle, NULL, signal);
   qevent_add(engine, &signal->event, QEVENT_READ);
+  return QOK;
 }
 
 void
@@ -65,7 +72,7 @@ qsignal_send(qsignal_t *signal) {
 
   dummy = 0;
   while (1) {
-    n = send(signal->wfd, &dummy, sizeof(dummy), 0);
+    n = write(signal->wfd, &dummy, sizeof(dummy));
     if (n == -1 && errno == EINTR) {
       continue;
     }
@@ -79,7 +86,7 @@ qsignal_recv(qsignal_t *signal) {
   ssize_t n;
 
   while (1) {
-    n = recv(signal->rfd, &dummy, sizeof(dummy), 0);
+    n = read(signal->rfd, &dummy, sizeof(dummy));
     if (n == -1 && errno == EINTR) {
       continue;
     }

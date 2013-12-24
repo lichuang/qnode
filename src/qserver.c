@@ -172,6 +172,13 @@ setup_signal() {
   sigaction(SIGQUIT, &act, NULL);
   sigaction(SIGABRT, &act, NULL);
   sigaction(SIGUSR1, &act, NULL);
+
+  return;
+
+  sigemptyset(&act.sa_mask);
+  act.sa_flags = SA_NODEFER;
+  act.sa_handler = SIG_IGN;
+  sigaction(SIGPIPE, &act, NULL);
 }
 
 static void
