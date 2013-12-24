@@ -306,6 +306,7 @@ destroy_threads() {
 int
 qserver_run() {
   if (init_server() != QOK) {
+    printf("init_server error\n");
     return QERROR;
   }
   qengine_loop(engine);

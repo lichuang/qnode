@@ -35,6 +35,9 @@ none:
 	@echo "   $(PLATS)"
 	@echo "See INSTALL for complete instructions."
 
+linux:
+	$(MAKE) all MYCFLAGS=-DUSE_LINUX
+
 macosx:
 	$(MAKE) all MYCFLAGS=-DUSE_MACOSX
 

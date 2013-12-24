@@ -121,5 +121,9 @@ qlog(int level, const char* file, int line, const char *format, ...) {
   log->size = n;
   log->level = level;
 
+#if 0  
   qlogger_add(log);
+#else
+  printf("%s", log->buff);
+#endif
 }

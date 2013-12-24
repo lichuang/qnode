@@ -22,7 +22,7 @@ typedef struct qworker_t      qworker_t;
 #define  QERROR        -1
 #define  QNONBLOCKING  -2
 
-#define  QINVALID_ID  0
+#define  QINVALID_ID  -1
 
 typedef void (*qthread_start_pt)(void);
 

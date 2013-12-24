@@ -8,39 +8,7 @@
 #include "qengine.h"
 #include "qtimer.h"
 
-static inline void set_timer_heap_index(void *data, int index);
-static inline int  get_timer_heap_index(void *data);
-static inline int  compare_timer(void *data1, void *data2); 
 static        void update_now_time(qtimer_manager_t *mng);
-
-static inline void
-set_timer_heap_index(void *data, int index) {
-  qtimer_t *timer;
-
-  timer = (qtimer_t*)data;
-  if (timer) {
-    timer->heap_index = index;
-  }
-}
-
-static inline int
-get_timer_heap_index(void *data) {
-  qtimer_t *timer;
-
-  timer = (qtimer_t*)data;
-
-  return timer->heap_index;
-}
-
-static inline int
-compare_timer(void *data1, void *data2) {
-  qtimer_t *timer1, *timer2;
-
-  timer1 = (qtimer_t*)data1;
-  timer2 = (qtimer_t*)data2;
-
-  return (timer1->timeout > timer2->timeout);
-}
 
 static void
 update_now_time(qtimer_manager_t *mng) {
@@ -49,6 +17,7 @@ update_now_time(qtimer_manager_t *mng) {
   gettimeofday(&tv, NULL);
   mng->now    = tv.tv_sec;
   mng->now_ms = tv.tv_usec / 1000 + tv.tv_sec * 1000;
+  //printf("sec: %u, usec: %u, ms: %f\n", (unsigned int)tv.tv_sec, (unsigned int)tv.tv_usec, mng->now_ms);
 }
 
 void
@@ -63,16 +32,10 @@ qtimer_manager_init(qtimer_manager_t *mng, qengine_t *engine) {
   qidmap_init(&(mng->id_map));
   qfreelist_init(&mng->free_list, &conf);
   qrbtree_init(&(mng->rbtree), &(mng->sentinel), qrbtree_insert_timer_value);
-
-  /*
-  qminheap_init(&(mng->min_heap), compare_timer,
-                set_timer_heap_index, get_timer_heap_index);
-                */
 }
 
 void
 qtimer_manager_free(qtimer_manager_t *mng) {
-  //qminheap_destroy(&(mng->min_heap));
   qfreelist_destroy(&mng->free_list);
 }
 
@@ -99,8 +62,6 @@ qtimer_add(qengine_t *engine, uint32_t timeout,
   qid_attach(&(mng->id_map), timer->id, timer);
   qrbtree_insert(&(mng->rbtree), &(timer->node));
 
-  //qminheap_push(&(mng->min_heap), timer);
-
   return timer->id;
 }
 
@@ -117,9 +78,6 @@ qtimer_next(qtimer_manager_t *mng) {
 
   node = qrbtree_min(root, sentinel);
   timer = (qtimer_t *) ((char *) node - offsetof(qtimer_t, node));
-  /*
-  timer = (qtimer_t*)qminheap_top(&(mng->min_heap));
-  */
   if (timer == NULL) {
     return -1;
   }
@@ -129,34 +87,6 @@ qtimer_next(qtimer_manager_t *mng) {
 
   return (timer->timeout - mng->now_ms);
 }
-
-/*
-void
-qtimer_process(qtimer_manager_t *mng) {
-  uint64_t  now;
-  qtimer_t *timer;
-
-  if (qminheap_empty(&(mng->min_heap))) {
-    return;
-  }
-
-  update_now_time(mng);
-
-  now = mng->now_ms;
-  timer = (qtimer_t*)qminheap_top(&(mng->min_heap));
-  while (now >= timer->timeout) {
-    (timer->handler)(timer->data);
-    qminheap_pop(&(mng->min_heap));
-    if (timer->cycle > 0) {
-      timer->timeout = now + timer->cycle;
-      qminheap_push(&(mng->min_heap), timer);
-    } else {
-      qtimer_del(mng->engine, timer->id);
-    }
-    timer = (qtimer_t*)qminheap_top(&(mng->min_heap));
-  }
-}
-*/
 
 void
 qtimer_process(qtimer_manager_t *mng) {
@@ -176,12 +106,13 @@ qtimer_process(qtimer_manager_t *mng) {
 
     node = qrbtree_min(root, sentinel);
     timer = (qtimer_t *)((char *) node - offsetof(qtimer_t, node));
-    if (timer->timeout < mng->now_ms) {
+    if (timer->timeout > mng->now_ms) {
       return;
     }
+
+    (timer->handler)(timer->data);
     if (timer->cycle > 0) {
       timer->timeout = now + timer->cycle;
-      qrbtree_insert(&(mng->rbtree), &(timer->node));
     } else {
       qtimer_del(mng->engine, timer->id);
     }
@@ -202,7 +133,6 @@ qtimer_del(qengine_t *engine, qid_t id) {
     timer->destroy(timer->data);
   }
   qrbtree_delete(&(mng->rbtree), &(timer->node));
-  //qminheap_erase(&(mng->min_heap), timer->heap_index);
   qid_detach(&(mng->id_map), id);
   qfreelist_free(&mng->free_list, timer);
 
