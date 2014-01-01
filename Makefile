@@ -17,11 +17,26 @@ OBJS=$(patsubst $(SRC_DIR)/%.$(EXTENSION), $(OBJ_DIR)/%.o,$(wildcard $(SRC_DIR)/
 DEPS=$(patsubst $(OBJ_DIR)/%.o, $(DEPS_DIR)/%.d, $(OBJS))
 
 INCLUDE= -I$(INCLUDE_DIR) -I$(LUA_DIR)/src  -I$(LDB_DIR)/src
+
+# Convenience platforms targets.
+PLATS= linux macosx
 		
 CC=gcc
-CFLAGS=-Wall -Werror -g -DDEBUG
+CFLAGS=-Wall -Werror -g -DDEBUG $(MYCFLAGS)
 #LDFLAGS= -lpthread -rdynamic -llua -ldl -lm -ltcmalloc
 LDFLAGS= -L ./lib -lpthread -rdynamic -llua -ldl -lm -lldb -lreadline
+
+MYCFLAGS = 
+
+none:
+	@echo "Please do"
+	@echo "   make PLATFORM"
+	@echo "where PLATFORM is one of these:"
+	@echo "   $(PLATS)"
+	@echo "See INSTALL for complete instructions."
+
+macosx:
+	$(MAKE) all MYCFLAGS=-DUSE_MACOSX
 
 all:$(LUA) $(LDB) $(OBJS)
 	$(CC) -o $(PROGRAM) $(OBJS) $(LDFLAGS) 

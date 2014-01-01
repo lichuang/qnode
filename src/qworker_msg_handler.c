@@ -45,6 +45,7 @@ worker_start_handler(qmsg_t *msg, void *reader) {
   start  = (qwmsg_start_t*)msg;
   aid    = start->aid;
   actor  = qactor_new(aid);
+  ret    = QERROR;
   if (actor == NULL) {
     qerror("new actor: %d error", aid);
     return QERROR;
@@ -90,7 +91,8 @@ worker_spawn_handler(qmsg_t *msg, void *reader) {
 
   spawn  = (qwmsg_spawn_t*)msg;
   worker = (qworker_t*)reader;
-  actor = spawn->actor;
+  actor  = spawn->actor;
+  ret    = QERROR;
   actor->state = spawn->state;
   actor->tid = worker->tid;
   lua_State *state = actor->state;

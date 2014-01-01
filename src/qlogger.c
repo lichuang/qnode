@@ -24,7 +24,11 @@
 
 extern qmsg_pt* logger_msg_handlers[];
 
-pthread_key_t thread_log_key = PTHREAD_ONCE_INIT;
+#ifdef USE_LINUX
+  pthread_key_t thread_log_key = PTHREAD_ONCE_INIT;
+#elif defined USE_MACOSX
+  pthread_key_t thread_log_key;
+#endif
 qlogger_t    *logger         = NULL;
 
 static int    logger_msg_handler(qmsg_t *msg, void *reader);

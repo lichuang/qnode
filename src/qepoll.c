@@ -2,6 +2,8 @@
  * See Copyright Notice in qnode.h
  */
 
+#ifdef USE_LINUX
+
 #include <errno.h>
 #include <string.h>
 #include <sys/epoll.h>
@@ -177,3 +179,4 @@ epoll_destroy(qengine_t *engine) {
   qfree(epoll->events);
   qfree(epoll);
 }
+#endif

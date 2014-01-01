@@ -125,7 +125,7 @@ qltimer_del(lua_State *state) {
   qactor_t   *actor;
 
   id = (qid_t)lua_tonumber(state, 1);
-  if (id < 0) {
+  if (id == QINVALID_ID) {
     lua_pushnil(state);
     lua_pushliteral(state, "wrong param");
     return 2;

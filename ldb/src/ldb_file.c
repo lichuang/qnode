@@ -57,6 +57,8 @@ do_load_file(const char *name) {
   int line, i;
   char *p;
 
+  f = NULL;
+  file = NULL;
   f = fopen(name, "r");
   if (f == NULL) {
     ldb_output("open file %s error\n");

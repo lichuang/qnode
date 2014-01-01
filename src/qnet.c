@@ -241,7 +241,11 @@ qnet_tcp_send(qsocket_t *socket, int *error) {
   nbytes = 0;
   while(size > 0) {
     do {
+#ifdef USE_LINUX      
       n = send(fd, qbuffer_readable(buffer), size, MSG_NOSIGNAL);
+#elif defined USE_MACOSX
+      n = send(fd, qbuffer_readable(buffer), size, 0);
+#endif
       save = errno;
     } while (save == EINTR);
 
