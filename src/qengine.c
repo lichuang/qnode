@@ -14,7 +14,11 @@
 
 static const int QRETIRED_FD = -1;
 
-extern const qdispatcher_t epoll_dispatcher;
+#ifdef USE_LINUX
+  extern const qdispatcher_t epoll_dispatcher;
+#elif defined USE_MACOSX
+  extern const qdispatcher_t kqueue_dispatcher;
+#endif
 
 qengine_t*
 qengine_new() {
@@ -31,7 +35,11 @@ qengine_new() {
     goto error;
   }
   engine->size = QINIT_EVENTS;
+#ifdef USE_LINUX
   engine->dispatcher = &(epoll_dispatcher);
+#elif defined USE_MACOSX
+  engine->dispatcher = &(kqueue_dispatcher);
+#endif
   if (engine->dispatcher->init(engine) != QOK) {
     goto error;
   }

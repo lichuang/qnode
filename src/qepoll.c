@@ -29,16 +29,16 @@ const struct qdispatcher_t epoll_dispatcher = {
   epoll_destroy,
 };
 
-typedef struct epoll_t {
+typedef struct qepoll_t {
   int    fd;
   struct epoll_event *events;
-} epoll_t;
+} qepoll_t;
 
 static int
 epoll_init(qengine_t *engine) {
-  epoll_t *epoll;
+  qepoll_t *epoll;
 
-  epoll = qcalloc(sizeof(epoll_t));
+  epoll = qcalloc(sizeof(qepoll_t));
   if (epoll == NULL) {
     return QERROR;
   }
@@ -49,6 +49,8 @@ epoll_init(qengine_t *engine) {
 
   epoll->fd = epoll_create(1024);
   if (epoll->fd == -1) {
+    qfree(epoll->events);
+    qfree(epoll);
     qerror("epoll_create error: %s", strerror(errno));
     return QERROR;
   }
@@ -59,10 +61,10 @@ epoll_init(qengine_t *engine) {
 
 static int
 epoll_expand(qengine_t *engine) {
-  epoll_t *epoll;
+  qepoll_t *epoll;
   void    *data;
 
-  epoll = (epoll_t*)engine->data;
+  epoll = (qepoll_t*)engine->data;
   data  = qrealloc(epoll->events, sizeof(struct epoll_event) * engine->size);
   if (data == NULL) {
     return QERROR;
@@ -75,10 +77,10 @@ epoll_expand(qengine_t *engine) {
 static int
 epoll_add(qengine_t *engine, int fd, int flags) {
   int                 events, op;
-  epoll_t            *epoll;
+  qepoll_t            *epoll;
   struct epoll_event  event;
 
-  epoll = (epoll_t*)engine->data;
+  epoll = (qepoll_t*)engine->data;
   memset(&event, 0, sizeof(struct epoll_event));
 
   if (engine->events[fd] == NULL) {
@@ -108,7 +110,7 @@ epoll_add(qengine_t *engine, int fd, int flags) {
 
 static int
 epoll_del(qengine_t *engine, int fd, int delflags) {
-  epoll_t            *epoll;
+  qepoll_t            *epoll;
   struct epoll_event  event;
   int                 flags, events;
 
@@ -139,11 +141,11 @@ epoll_poll(qengine_t *engine, int timeout_ms) {
   int                 num;
   int                 flags;
   int                 i, fd;
-  epoll_t            *epoll;
+  qepoll_t            *epoll;
   struct epoll_event *event;
   qevent_t           *ev;
 
-  epoll = (epoll_t*)engine->data;
+  epoll = (qepoll_t*)engine->data;
   num = epoll_wait(epoll->fd, &(epoll->events[0]), engine->size, timeout_ms);
 
   if (num > 0) {
@@ -172,9 +174,9 @@ epoll_poll(qengine_t *engine, int timeout_ms) {
 
 static void
 epoll_destroy(qengine_t *engine) {
-  epoll_t *epoll;
+  qepoll_t *epoll;
 
-  epoll = (epoll_t*)engine->data;
+  epoll = (qepoll_t*)engine->data;
   close(epoll->fd);
   qfree(epoll->events);
   qfree(epoll);
