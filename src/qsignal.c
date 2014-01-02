@@ -37,6 +37,7 @@ qsignal_init(qsignal_t *signal, qmailbox_t *box, qengine_t *engine) {
 
   result = socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
   if (result != 0) {
+    printf("socketpair error\n");
     return QERROR;
   }
 

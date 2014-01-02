@@ -76,7 +76,7 @@ int
 qengine_loop(qengine_t* engine) {
   int       nexttime;
   int       flags;
-  int       fd;
+  int       fd, num;
   qevent_t *event;
   qlist_t  *pos, *next;
 
@@ -85,28 +85,29 @@ qengine_loop(qengine_t* engine) {
       break;
     }
     nexttime = qtimer_next(&engine->timer_mng);
-    engine->dispatcher->poll(engine, nexttime);
+    num = engine->dispatcher->poll(engine, nexttime);
 
-    flags = 0;
-    for (pos = engine->active.next; pos != &engine->active; pos = next) {
-      event = qlist_entry(pos, qevent_t, active_entry);
-      next  = pos->next;
-      qlist_del_init(&(event->active_entry));
-      flags = event->flags;
-      event->flags = 0;
-      fd = event->fd;
+    if (num > 0) {
+      for (pos = engine->active.next; pos != &engine->active; pos = next) {
+        event = qlist_entry(pos, qevent_t, active_entry);
+        next  = pos->next;
+        qlist_del_init(&(event->active_entry));
+        flags = event->flags;
+        event->flags = 0;
+        fd = event->fd;
 
-      if (flags & QEVENT_READ) {
-        event->read(fd, flags, event->data);
-      }
+        if ((flags & QEVENT_READ) && event->read) {
+          event->read(fd, flags, event->data);
+        }
 
-      if (flags & QEVENT_WRITE) {
-        event->write(fd, flags, event->data);
-      }
+        if ((flags & QEVENT_WRITE) && event->write) {
+          event->write(fd, flags, event->data);
+        }
 
-      if ((event->error == 1) || (flags & QEVENT_ERROR)) {
-        qevent_del(event, event->events);
-        close(fd);
+        if ((event->error == 1) || (flags & QEVENT_ERROR)) {
+          qevent_del(event, event->events);
+          close(fd);
+        }
       }
     }
     qassert(qlist_empty(&engine->active));

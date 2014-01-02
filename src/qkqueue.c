@@ -105,19 +105,24 @@ kqueue_del(qengine_t *engine, int fd, int flags) {
 static int
 kqueue_poll(qengine_t *engine, int timeout_ms) {
   qkqueue_t      *kqueue;
-  struct timespec timeout;
-  int             num;
+  int             num, ret;
 
   kqueue = engine->data;
   num    = 0;
 
-  timeout.tv_sec  = timeout_ms / 1000;
-  timeout.tv_nsec = (timeout_ms - 1000 * timeout.tv_sec) * 1000;
-  num = kevent(kqueue->kqfd, NULL, 0, kqueue->events,
-               engine->size, &timeout);
-
-  if (num > 0) {
+  if (timeout_ms > 0) {
+    struct timespec timeout;
+    timeout.tv_sec  = timeout_ms / 1000;
+    timeout.tv_nsec = (timeout_ms - 1000 * timeout.tv_sec) * 1000;
+    ret = kevent(kqueue->kqfd, NULL, 0, kqueue->events,
+                 engine->size, &timeout);
+  } else {
+    ret = kevent(kqueue->kqfd, NULL, 0, kqueue->events,
+                 engine->size, NULL);
+  }
+  if (ret > 0) {
     int            i;
+    num = ret;
     for (i = 0; i < num; ++i) {
       int             flags = 0;
       int             fd    = -1;
@@ -134,12 +139,6 @@ kqueue_poll(qengine_t *engine, int timeout_ms) {
       if (event->filter & EVFILT_WRITE) {
         flags |= QEVENT_WRITE;
       }
-      /*
-      if (event->events & (EPOLLERR | EPOLLHUP)) {
-        flags = QEVENT_ERROR;
-        ev->error = 1;
-      }
-      */
       ev->flags = flags;
       qlist_add_tail(&ev->active_entry, &engine->active);
     }
