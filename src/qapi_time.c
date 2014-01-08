@@ -16,6 +16,7 @@ typedef struct qltimer_t {
   /* timer id */
   qid_t       id;
 
+  qactor_t   *actor;
   qengine_t  *engine;
 
   /* callback arg table */
@@ -76,6 +77,7 @@ qlsleep(lua_State *state) {
   timer->state = state;
   timer->id = id;
   timer->engine = engine;
+  timer->actor = actor;
   qdict_set_numdata(actor->timers, id, timer, engine_free_timer);
 
   return lua_yield(state, 0);
@@ -172,6 +174,7 @@ qltimer_del(lua_State *state) {
   if (qdict_get_num(actor->timers, id) == NULL) {
     return 0;
   }
+  qdict_del_num(actor->timers, timer->id);
   qtimer_del(engine, id);
 
   return 0;
@@ -187,6 +190,7 @@ timer_handler(void *data) {
 
   /* actor just sleep? */
   if (qstring_empty(timer->mod)) {
+    qdict_del_num(timer->actor->timers, timer->id);
     lua_resume(state, 0); 
     return;
   }
