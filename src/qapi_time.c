@@ -38,12 +38,48 @@ static void timer_handler(void *data);
 
 static int qltimer_add(lua_State *state);
 static int qltimer_del(lua_State *state);
+static int qlsleep(lua_State *state);
 
 luaL_Reg timer_apis[] = {
   {"qltimer_add",   qltimer_add},
   {"qltimer_del",   qltimer_del},
+  {"qlsleep",       qlsleep},
   {NULL,            NULL},
 };
+
+static int
+qlsleep(lua_State *state) {
+  int         second;
+  qactor_t   *actor;
+  qengine_t  *engine;
+  qid_t       id;
+  qltimer_t  *timer;
+
+  second = (int)lua_tonumber(state, 1);
+  if (second <= 0) {
+    lua_pushnil(state);
+    lua_pushliteral(state, "wrong param");
+    return 2;
+  }
+
+  timer = new_timer(NULL, NULL, NULL);
+  if (timer == NULL) {
+    lua_pushnil(state);
+    lua_pushliteral(state, "create timer error");
+    return 2;
+  }
+
+  actor = qlua_get_actor(state);
+  engine = qactor_get_engine(actor->aid);
+  id = qtimer_add(engine, second * 1000, timer_handler,
+                  free_timer, 0, timer);
+  timer->state = state;
+  timer->id = id;
+  timer->engine = engine;
+  qdict_set_numdata(actor->timers, id, timer, engine_free_timer);
+
+  return lua_yield(state, 0);
+}
 
 static int
 qltimer_add(lua_State *state) {
@@ -148,6 +184,13 @@ timer_handler(void *data) {
 
   timer = (qltimer_t*)data;
   state = timer->state;
+
+  /* actor just sleep? */
+  if (qstring_empty(timer->mod)) {
+    lua_resume(state, 0); 
+    return;
+  }
+
   lua_getglobal(state, timer->mod);
   if (!lua_istable(state, -1)) {
     qerror("mod %s is not exist", timer->mod);
@@ -198,7 +241,9 @@ free_timer(void *data) {
   qltimer_t *timer;
 
   timer = (qltimer_t*)data;
-  qdict_free(timer->args);
+  if (timer->args) {
+    qdict_free(timer->args);
+  }
   qstring_destroy(timer->mod);
   qstring_destroy(timer->func);
   qfree(timer);

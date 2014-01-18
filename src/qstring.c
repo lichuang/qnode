@@ -39,6 +39,15 @@ qstring_new(const char *data) {
   return header->data;
 }
 
+int
+qstring_empty(qstring_t str) {
+  qstr_header_t *header;
+
+  header = str_to_header(str);
+
+  return (header->len == 0);
+}
+
 void
 qstring_destroy(qstring_t str) {
   qstr_header_t *header;
