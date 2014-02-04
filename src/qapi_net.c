@@ -55,6 +55,16 @@ init_tcp_listen_params(qactor_t *actor) {
 }
 
 static int
+getsockerr(int fd) {
+  int err = 0;
+  socklen_t len = sizeof(err);
+  if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &err, &len) == -1) {
+    err = errno;
+  }
+  return err;
+}
+
+static int
 qltcp_listen(lua_State *state) {
   const char  *addr;
   qactor_t    *actor;
@@ -103,6 +113,26 @@ qltcp_listen(lua_State *state) {
   return 1;
 }
 
+static void
+init_socket_peer(qsocket_t *socket, struct sockaddr_in *remote) {
+  memcpy(&(socket->remote), remote, sizeof(*remote));
+  inet_ntop(AF_INET, &remote->sin_addr,
+            socket->addr, sizeof(socket->addr));
+  socket->port = ntohs(remote->sin_port);
+  snprintf(socket->peer, sizeof(socket->peer),
+           "%s:%d:%d", socket->addr, socket->port, socket->fd);
+}
+
+static void
+socket_connected(qsocket_t *socket) {
+  socket->state = QINET_STATE_CONNECTED;
+
+  struct sockaddr_in remote;
+  socklen_t addrlen = sizeof(remote);
+  getpeername(socket->fd, (struct sockaddr*)&remote, &addrlen);
+  init_socket_peer(socket, &remote);
+}
+
 static qsocket_t*
 new_tcp_socket(int fd, lua_State *state, qactor_t *actor,
                struct sockaddr_in *remote) {
@@ -114,12 +144,7 @@ new_tcp_socket(int fd, lua_State *state, qactor_t *actor,
   }
 
   socket->state = QINET_STATE_CONNECTED;
-  memcpy(&(socket->remote), remote, sizeof(*remote));
-  inet_ntop(AF_INET, &remote->sin_addr,
-            socket->addr, sizeof(socket->addr));
-  socket->port = ntohs(remote->sin_port);
-  snprintf(socket->peer, sizeof(socket->peer),
-           "%s:%d:%d", socket->addr, socket->port, fd);
+  init_socket_peer(socket, remote);
   qinfo("accept connection from %s", socket->peer);
 
   return socket;
@@ -242,41 +267,35 @@ qltcp_accept(lua_State *state) {
 static void
 socket_connect(int fd, int flags, void *data) {
   int                 error;
-  socklen_t           len;
-  struct sockaddr_in  remote;
   qsocket_t          *socket;
   lua_State          *state;
   qengine_t          *engine;
   qactor_t           *actor;
 
   UNUSED(flags);
-  UNUSED(data);
 
-  actor = (qactor_t*)data;
+  socket = (qsocket_t*)data;
+  qevent_del(&socket->event, QEVENT_WRITE);
+  qassert(socket->state == QINET_STATE_CONNECTING);
+
+  actor = qactor_get(socket->aid);
+  if (actor == NULL) {
+    return;
+  }
   actor->waiting_netio = 0;
   state = actor->state;
   engine = qactor_get_engine(actor->aid);
 
-  socket = new_tcp_socket(fd, state, actor, &remote);
-  if (!socket) {
-    qnet_close(fd);
+  error = getsockerr(fd);
+  if (error != 0) {
+    qsocket_free(socket);
     lua_pushnil(state);
-    lua_pushliteral(state, "create socket error");
+    lua_pushstring(state, strerror(error));
     qlua_resume(state, 2);
     return;
   }
-  socket->state = QINET_STATE_CONNECTED;
 
-  error = 0;
-  len = sizeof(error);
-  getsockopt(fd, SOL_SOCKET, SO_ERROR, (char*)&error, &len);
-  if (error == -1) {
-    qevent_del(&socket->event, socket->event.events);
-    qnet_close(socket->event.fd);
-  } else if (error == 0) {
-    qevent_del(&socket->event, QEVENT_WRITE);
-  }   
-  
+  socket_connected(socket);
   lua_pushlightuserdata(state, socket);
   qlua_resume(state, 1);
   return;
@@ -322,18 +341,18 @@ qltcp_connect(lua_State *state) {
     lua_pushfstring(state, "create socket on %s:%d error", addr, port);
     return 2;
   }
-  socket->state = QINET_STATE_CONNECTED;
 
   if (ret == QNONBLOCKING) {
     engine = qactor_get_engine(actor->aid);
+    socket->state = QINET_STATE_CONNECTING;
     socket->event.write = socket_connect;
     qevent_add(engine, &socket->event, QEVENT_WRITE);
     actor->waiting_netio = 1;
     return lua_yield(state, 0); 
   }
 
+  socket_connected(socket);
   lua_pushlightuserdata(state, socket);
-
   return 1;
 }
 

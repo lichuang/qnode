@@ -112,8 +112,6 @@ qworker_new(qid_t tid, qthread_start_pt done) {
 
 #ifdef DEBUG
   worker->ldb = ldb_new(worker->state, reload);
-#else
-  worker->ldb = NULL;
 #endif
   /*
   while (!worker->running) {

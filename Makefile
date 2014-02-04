@@ -36,33 +36,33 @@ none:
 	@echo "See INSTALL for complete instructions."
 
 linux:
-	$(MAKE) all MYCFLAGS=-DUSE_LINUX
+	$(MAKE) all MYCFLAGS=-DUSE_LINUX PLAT=linux
 
 macosx:
-	$(MAKE) all MYCFLAGS=-DUSE_MACOSX
+	$(MAKE) all MYCFLAGS=-DUSE_MACOSX PLAT=macosx
 
 all:$(LUA) $(LDB) $(OBJS)
 	$(CC) -o $(PROGRAM) $(OBJS) $(LDFLAGS) 
 
 $(LUA):
-	cd $(LUA_DIR) && make linux
+	cd $(LUA_DIR) && $(MAKE) $(PLAT)
 	cp $(LUA_DIR)/src/lua ./bin/
 	cp $(LUA_DIR)/src/luac ./bin
 	cp $(LUA_DIR)/src/liblua.a $(LIB_DIR)/
 
 $(LDB):
-	cd $(LDB_DIR) && make
+	cd $(LDB_DIR) && $(MAKE)
 	cp $(LDB_DIR)/lib/libldb.a $(LIB_DIR)/
 
 $(OBJ_DIR)/%.o:$(SRC_DIR)/%.$(EXTENSION) 
 	$(CC) $< -o $@ -c $(CFLAGS) $(INCLUDE) 
 
 test:all
-	cd $(TEST_DIR) && make all
+	cd $(TEST_DIR) && $(MAKE) all
 
 rebuild:
-	make clean
-	make
+	$(MAKE) clean
+	$(MAKE) $(PLAT)
 
 clean:
 	rm -rf  $(OBJ_DIR)/* $(BIN_DIR)/*
