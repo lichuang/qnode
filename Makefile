@@ -36,16 +36,17 @@ none:
 	@echo "See INSTALL for complete instructions."
 
 linux:
+	cd $(LUA_DIR) && make linux
 	$(MAKE) all MYCFLAGS=-DUSE_LINUX
 
 macosx:
+	cd $(LUA_DIR) && make macosx
 	$(MAKE) all MYCFLAGS=-DUSE_MACOSX
 
 all:$(LUA) $(LDB) $(OBJS)
 	$(CC) -o $(PROGRAM) $(OBJS) $(LDFLAGS) 
 
 $(LUA):
-	cd $(LUA_DIR) && make linux
 	cp $(LUA_DIR)/src/lua ./bin/
 	cp $(LUA_DIR)/src/luac ./bin
 	cp $(LUA_DIR)/src/liblua.a $(LIB_DIR)/

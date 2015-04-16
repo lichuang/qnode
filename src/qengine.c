@@ -12,8 +12,6 @@
 #include "qengine.h"
 #include "qlog.h"
 
-static const int QRETIRED_FD = -1;
-
 #ifdef USE_LINUX
   extern const qdispatcher_t epoll_dispatcher;
 #elif defined USE_MACOSX

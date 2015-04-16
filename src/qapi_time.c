@@ -174,7 +174,7 @@ qltimer_del(lua_State *state) {
   if (qdict_get_num(actor->timers, id) == NULL) {
     return 0;
   }
-  qdict_del_num(actor->timers, timer->id);
+  qdict_del_num(actor->timers, id);
   qtimer_del(engine, id);
 
   return 0;
