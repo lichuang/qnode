@@ -1,4 +1,0 @@
-version 0.1(2013/6/30, commit 2e871cb968):
-  multi worker threads and message passing model
-  use Lua coroutine to implement actor model
-  a simple memcache server support get/set command
