@@ -10,7 +10,7 @@
 #include "base/base.h"
 #include "base/object_pool.h"
 
-class Buffer : public Object {
+class Buffer {
 public:
   Buffer() {
     Reset();
