@@ -15,7 +15,7 @@ public :
   bool wrlock();
   bool unlock();
 private:
-  pthread_rwlock_t rwrw_lock__;
+  pthread_rwlock_t rw_lock_;
 };
 
 class SafeReadLockGuard {

@@ -6,96 +6,171 @@
 #include "core/epoll.h"
 #include "core/event.h"
 
-Epoll::Epoll(int size) 
-  : Dispatcher("epoll", size),
-    size_(size),
-    fd_(-1) {
+Epoll::Epoll() 
+  : size_(0),
+    epoll_fd_(-1),
+    load_(0) {
 }
 
 Epoll::~Epoll() {
-  if (events_ != NULL) {
-    free(events_);
+  if (epoll_fd_ != -1) {
+    close(epoll_fd_);
   }
-  if (fd_ != -1) {
-    close(fd);
-  }
+  processRetired();
 }
 
 int 
-Epoll::Init() {
-  events_ = calloc(sizeof(struct epoll_event) * size_);
-  if (events_ == NULL) {
-    return kError;
-  }
+Epoll::Init(int size) {
+  size_ = size;
+  ep_events_.reserve(size_);
 
-  fd_ = epoll_create(1024);
-  if (fd_ == -1) {
-    return kError;
-  }
-
-  return kOK;
-}
-
-int
-Epoll::Add(Event *event, int flags) {
-  int events = 0, op;
-  struct epoll_event  event;
-
-  memset(&event, 0, sizeof(struct epoll_event));
-
-  if (events_[fd] == NULL) {
-    op = EPOLL_CTL_ADD;
-  } else {
-    op = EPOLL_CTL_MOD;
-  }
-
-  if (flags & kEventRead) {
-    events |= EPOLLIN;
-  }
-  if (flags & kEventWrite) {
-    events |= EPOLLOUT;
-  }
-
-  event.events = events;
-  event.data.fd = fd;
-  if (epoll_ctl(epoll->fd, op, fd, &event) == -1) {
-    qerror("epoll_ctl error: %s", strerror(errno));
+  // in man 2 epoll:
+  // epoll_create() creates an epoll(7) instance.  Since Linux 2.6.8, the size argument is ignored, but must be greater than zero
+  epoll_fd_ = epoll_create(1);
+  if (epoll_fd_ == -1) {
     return kError;
   }
 
   return kOK;
 }
 
-int
-Epoll::Del(Event *event, int flags) {
+Handle
+Epoll::Add(fd_t fd, Event *event) {
+  CheckThread();
+
+  EpollEntry *ee = new(std::nothrow)EpollEntry;
+  alloc_assert(ee);
+  memset(ee, 0, sizeof(EpollEntry));
+
+  ee->fd = fd;
+  ee->ev.events = events;
+  ee->ev.data.ptr = ee;
+  int ret = epoll_ctl(fd_, EPOLL_CTL_ADD, fd, &ee->ev);
+  if (ret != 0) {
+    delete ee;
+    return NULL;
+  }
+
+  // change size to the max fd
+  if (fd > size_) {
+    size_ = fd;
+    ep_events_.resize(size_);
+  }
+  ++load_;
+  return ee;
 }
 
 int
-Epoll::Poll(int timeout, list<Event*> active) {
-  int num, i, flags, fd;
+Epoll::Del(Handle handle) {
+  CheckThread();
+
+  EpollEntry *ee = static_cast<EpollEntry *>(handle);
+  int rc = epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, ee->fd, &ee->ev);
+  ee->fd = kInvalidFd;
+  retired_list_.push_back(ee);
+  --load_;
+  return rc;
+}
+
+int
+Epoll::ResetIn(handle_t *handle) {
+  CheckThread();
+
+  EpollEntry *ee = static_cast<EpollEntry *>(handle);
+  ee->ev.evnts &= ~EPOLLIN;
+  int rc = epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, ee->fd, &ee->ev);
+  return rc;
+}
+
+int
+Epoll::SetIn(handle_t *handle) {
+  CheckThread();
+
+  EpollEntry *ee = static_cast<EpollEntry *>(handle);
+  ee->ev.evnts |= EPOLLIN;
+  int rc = epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, ee->fd, &ee->ev);
+  return rc;
+}
+
+int
+Epoll::ResetOut(handle_t *handle) {
+  CheckThread();
+
+  EpollEntry *ee = static_cast<EpollEntry *>(handle);
+  ee->ev.evnts &= ~EPOLLOUT;
+  int rc = epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, ee->fd, &ee->ev);
+  return rc;
+}
+
+int
+Epoll::SetOut(handle_t *handle) {
+  CheckThread();
+
+  EpollEntry *ee = static_cast<EpollEntry *>(handle);
+  ee->ev.evnts |= EPOLLOUT;
+  int rc = epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, ee->fd, &ee->ev);
+  return rc;
+}
+
+int
+Epoll::Poll(int timeout) {
+  int num;
   struct epoll_event *epev;
+  EpollEntry *ee;
   Event* event;
 
-  num = epoll_wait(fd_, &(ep_events_[0]), size_, timeout);
+  if (load_ == 0) {
+    if (timeout == 0) {
+      return 0;
+    }
+  }
+
+  num = epoll_wait(epoll_fd_, ep_events_.data(), size_, timeout);
   if (num <= 0) {
     return num;
   }
 
   for (i = 0; i < num; ++i) {
-    flags = 0;
-    epev = ep_events_ + i;
-    fd = epev->data.fd;
+    epev = &(ep_events_[i]);
+    ee = static_cast<EpollEntry *> epev->data.ptr;
+    event = ee->event;
 
-    event = events_[fd];
+    // is something error happen?
+    if (ee->fd == kInvalidFd) {
+      continue;
+    }
+    if (epev->events & (EPOLLERR | EPOLLHUP)) {
+      event->In();
+    }
+
+    // is something in happen?
+    if (ee->fd == kInvalidFd) {
+      continue;
+    }
     if (epev->events & EPOLLIN) {
-      flags |= kEventRead;
+      event->In();
+    }
+
+    // is something out happen?
+    if (ee->fd == kInvalidFd) {
+      continue;
     }
     if (epev->events & EPOLLOUT) {
-      flags |= kEventWrite;
+      event->Out();
     }
-    event->SetFlags(flags);
-    active->push_back(event);
   }
 
-  return active->size();
+  processRetired();
+
+  return num;
+}
+
+void
+Epoll::processRetired() {
+  // destroy retired events
+  for (EntryListIter iter = retired_list_.begin();
+       iter != retired_list_.end(); ++iter) {
+    delete(*iter)
+  }
+  retired_list_.clear();
 }

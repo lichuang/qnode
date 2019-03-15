@@ -14,16 +14,20 @@ class Thread {
 public:
   Thread(const string& name);
 
-  int Start(Runnable *r, void *arg);
+  virtual ~Thread();
+
+  int Start();
 
   void Join();
+
+protected:
+  virtual void Run();
 
 private:
   static void* main(void *arg);
 
 protected:
   pthread_t tid_;
-  Runnable *runnable_;
   string name_;
   void *arg_;
 };

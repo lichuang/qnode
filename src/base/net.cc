@@ -2,6 +2,7 @@
  * Copyright (C) codedump
  */
 
+#include <sys/eventfd.h>
 #include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -114,4 +115,16 @@ Accept(int listen_fd,  struct sockaddr *addr,
 int
 Recv(int fd, BufferList *buffer, int *error) {
   
+}
+
+int
+MakeFdPair(int *w, int *r) {
+  int fd = eventfd(0, 0);
+  if (fd == -1) {
+    *w = *r = -1;
+    return kError;
+  }
+
+  *w = *r = fd;
+  return kOK;
 }
