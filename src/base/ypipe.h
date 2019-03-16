@@ -170,7 +170,6 @@ template <typename T, int N> class ypipe_t
     inline bool probe (bool (*fn_) (const T &))
     {
         bool rc = check_read ();
-        zmq_assert (rc);
 
         return (*fn_) (_queue.front ());
     }

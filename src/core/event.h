@@ -16,7 +16,7 @@ public:
 
   virtual void Out() = 0;
 
-  virtual void Timeout(id_t id) = 0;
+  virtual void Timeout(qid_t id) = 0;
 };
 
 #endif  // __QNODE_CORE_EVENT_H__

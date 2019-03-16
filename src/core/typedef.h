@@ -4,8 +4,10 @@
 #ifndef __QNODE_CORE_TYPEDEF_H__
 #define __QNODE_CORE_TYPEDEF_H__
 
-typedef uint64_t id_t;
+#include <stdint.h>
+#include "base/typedef.h"
 
-typedef int fd_t;
+typedef uint64_t qid_t;
+
 
 #endif // __QNODE_CORE_TYPEDEF_H__

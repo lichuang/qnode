@@ -6,6 +6,7 @@
 
 #include <string>
 #include <pthread.h>
+#include "base/typedef.h"
 
 using namespace std;
 
@@ -19,6 +20,9 @@ public:
 
   void Join();
 
+  tid_t Tid() const {
+    return tid_;
+  }
 protected:
   virtual void Run(void* arg) = 0;
 
@@ -26,7 +30,7 @@ private:
   static void* main(void *arg);
 
 protected:
-  pthread_t tid_;
+  tid_t tid_;
   string name_;
   void *arg_;
 };

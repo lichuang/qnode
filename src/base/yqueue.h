@@ -63,7 +63,6 @@ template <typename T, int N> class yqueue_t
     inline yqueue_t ()
     {
         _begin_chunk = allocate_chunk ();
-        alloc_assert (_begin_chunk);
         _begin_pos = 0;
         _back_chunk = NULL;
         _back_pos = 0;
@@ -111,7 +110,6 @@ template <typename T, int N> class yqueue_t
             sc->prev = _end_chunk;
         } else {
             _end_chunk->next = allocate_chunk ();
-            alloc_assert (_end_chunk->next);
             _end_chunk->next->prev = _end_chunk;
         }
         _end_chunk = _end_chunk->next;

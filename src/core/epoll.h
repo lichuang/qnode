@@ -14,25 +14,24 @@
 using namespace std;
 
 struct EpollEntry {
-  Fd fd;
+  fd_t fd;
   epoll_event ev;
   Event *event;
-  int flags;
 };
 
-class Epoll {
+class Epoll : public Poller {
 public:
   Epoll();
 
   virtual ~Epoll();
 
   virtual int    Init(int size);
-  virtual Handle Add(fd_t fd, Event *event);
-  virtual int    Del(Handle);
-  virtual int    ResetIn(Handle); 
-  virtual int    SetIn(Handle); 
-  virtual int    ResetOut(Handle); 
-  virtual int    SetOut(Handle); 
+  virtual handle_t Add(fd_t fd, Event *event);
+  virtual int    Del(handle_t);
+  virtual int    ResetIn(handle_t); 
+  virtual int    SetIn(handle_t); 
+  virtual int    ResetOut(handle_t); 
+  virtual int    SetOut(handle_t); 
   virtual int    Poll(int timeout);
 
 private:  

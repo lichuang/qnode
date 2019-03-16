@@ -20,6 +20,7 @@ public:
   int Wait(int timeout);
   void Recv();
 
+  int RecvFailable();
 private:
   fd_t wfd_;
   fd_t rfd_;

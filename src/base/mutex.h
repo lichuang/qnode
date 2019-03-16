@@ -6,6 +6,7 @@
 #define __QNODE_BASE_MUTEX_H__
 
 #include <pthread.h>
+#include <errno.h>
 #include "base/base.h"
 
 class Mutex {

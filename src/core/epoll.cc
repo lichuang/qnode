@@ -2,19 +2,22 @@
  * Copyright (C) codedump
  */
 
-#include "base/error.h"
+#include <string.h>
+#include "base/errcode.h"
+#include "base/net.h"
+#include "core/config.h"
+#include "core/const.h"
 #include "core/epoll.h"
 #include "core/event.h"
 
 Epoll::Epoll() 
   : size_(0),
-    epoll_fd_(-1),
-    load_(0) {
+    epoll_fd_(kInvalidFd) {
 }
 
 Epoll::~Epoll() {
-  if (epoll_fd_ != -1) {
-    close(epoll_fd_);
+  if (epoll_fd_ != kInvalidFd) {
+    Close(epoll_fd_);
   }
   processRetired();
 }
@@ -25,7 +28,8 @@ Epoll::Init(int size) {
   ep_events_.reserve(size_);
 
   // in man 2 epoll:
-  // epoll_create() creates an epoll(7) instance.  Since Linux 2.6.8, the size argument is ignored, but must be greater than zero
+  // epoll_create() creates an epoll(7) instance.  
+  // Since Linux 2.6.8, the size argument is ignored, but must be greater than zero
   epoll_fd_ = epoll_create(1);
   if (epoll_fd_ == -1) {
     return kError;
@@ -34,18 +38,17 @@ Epoll::Init(int size) {
   return kOK;
 }
 
-Handle
+handle_t
 Epoll::Add(fd_t fd, Event *event) {
   checkThread();
 
   EpollEntry *ee = new(std::nothrow)EpollEntry;
-  alloc_assert(ee);
   memset(ee, 0, sizeof(EpollEntry));
 
   ee->fd = fd;
-  ee->ev.events = events;
+  ee->event = event;
   ee->ev.data.ptr = ee;
-  int ret = epoll_ctl(fd_, EPOLL_CTL_ADD, fd, &ee->ev);
+  int ret = epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, fd, &ee->ev);
   if (ret != 0) {
     delete ee;
     return NULL;
@@ -53,7 +56,7 @@ Epoll::Add(fd_t fd, Event *event) {
 
   // change size to the max fd
   if (fd > size_) {
-    size_ = fd;
+    size_ = fd + kIncrPollSize;
     ep_events_.resize(size_);
   }
   load_.add(1);
@@ -61,7 +64,7 @@ Epoll::Add(fd_t fd, Event *event) {
 }
 
 int
-Epoll::Del(Handle handle) {
+Epoll::Del(handle_t handle) {
   checkThread();
 
   EpollEntry *ee = static_cast<EpollEntry *>(handle);
@@ -73,57 +76,51 @@ Epoll::Del(Handle handle) {
 }
 
 int
-Epoll::ResetIn(handle_t *handle) {
+Epoll::ResetIn(handle_t handle) {
   checkThread();
 
   EpollEntry *ee = static_cast<EpollEntry *>(handle);
-  ee->ev.evnts &= ~EPOLLIN;
+  ee->ev.events &= ~EPOLLIN;
   int rc = epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, ee->fd, &ee->ev);
   return rc;
 }
 
 int
-Epoll::SetIn(handle_t *handle) {
+Epoll::SetIn(handle_t handle) {
   checkThread();
 
   EpollEntry *ee = static_cast<EpollEntry *>(handle);
-  ee->ev.evnts |= EPOLLIN;
+  ee->ev.events |= EPOLLIN;
   int rc = epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, ee->fd, &ee->ev);
   return rc;
 }
 
 int
-Epoll::ResetOut(handle_t *handle) {
+Epoll::ResetOut(handle_t handle) {
   checkThread();
 
   EpollEntry *ee = static_cast<EpollEntry *>(handle);
-  ee->ev.evnts &= ~EPOLLOUT;
+  ee->ev.events &= ~EPOLLOUT;
   int rc = epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, ee->fd, &ee->ev);
   return rc;
 }
 
 int
-Epoll::SetOut(handle_t *handle) {
+Epoll::SetOut(handle_t handle) {
   checkThread();
 
   EpollEntry *ee = static_cast<EpollEntry *>(handle);
-  ee->ev.evnts |= EPOLLOUT;
+  ee->ev.events |= EPOLLOUT;
   int rc = epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, ee->fd, &ee->ev);
   return rc;
 }
 
 int
 Epoll::Poll(int timeout) {
-  int num;
+  int num, i;
   struct epoll_event *epev;
   EpollEntry *ee;
   Event* event;
-
-  if (load_ == 0) {
-    if (timeout == 0) {
-      return 0;
-    }
-  }
 
   num = epoll_wait(epoll_fd_, ep_events_.data(), size_, timeout);
   if (num <= 0) {
@@ -132,7 +129,7 @@ Epoll::Poll(int timeout) {
 
   for (i = 0; i < num; ++i) {
     epev = &(ep_events_[i]);
-    ee = static_cast<EpollEntry *> epev->data.ptr;
+    ee = static_cast<EpollEntry *>(epev->data.ptr);
     event = ee->event;
 
     // is something error happen?
@@ -170,7 +167,7 @@ Epoll::processRetired() {
   // destroy retired events
   for (EntryListIter iter = retired_list_.begin();
        iter != retired_list_.end(); ++iter) {
-    delete(*iter)
+    delete(*iter);
   }
   retired_list_.clear();
 }

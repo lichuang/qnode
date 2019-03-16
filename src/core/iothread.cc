@@ -2,11 +2,13 @@
  * Copyright (C) codedump
  */
 
+#include "base/errcode.h"
 #include "core/iothread.h"
 #include "core/epoll.h"
 
-IOThread::IOThread()
-  : poller_(new Epoll()) {
+IOThread::IOThread(const string &name)
+  : Thread(name),
+    poller_(new Epoll()) {
   int rc = poller_->Init(1024);
   if (rc != kOK) {
     return;
@@ -25,7 +27,15 @@ IOThread::~IOThread() {
 void
 IOThread::In() {
   Message* msg;
+  int rc = mailbox_.Recv(&msg, 0);
 
+  while (rc == 0 || errno == EINTR) {
+    if (rc == 0)  {
+      msg->Process();
+      delete msg;
+    }
+    rc = mailbox_.Recv(&msg, 0);
+  }
 }
 
 void
@@ -39,7 +49,12 @@ IOThread::Timeout() {
 }
 
 void
-IOThread::Run(void *arg) {
-  void(arg);
+IOThread::Process(Message *msg) {
+}
 
+void
+IOThread::Run(void *arg) {
+  arg = NULL;
+
+  poller_->Loop();
 }

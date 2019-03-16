@@ -7,6 +7,7 @@
 
 #include "base/base.h"
 #include "base/ypipe.h"
+#include "base/mutex.h"
 #include "core/signaler.h"
 
 class Message;
@@ -23,11 +24,21 @@ public:
   int  Recv(Message **, int timeout);
 
 private:
-  typedef ypipe_t<Message*, command_pipe_granularity> cpipe_t;
+  // The pipe to store actual commands.
+  typedef ypipe_t<Message*, 16> cpipe_t;
   cpipe_t pipe_;
 
+  // Signaler to pass signals from writer thread to reader thread.
   Signaler signaler_;
 
+  //  There's only one thread receiving from the mailbox, but there
+  //  is arbitrary number of threads sending. Given that ypipe requires
+  //  synchronised access on both of its endpoints, we have to synchronise
+  //  the sending side.
+  Mutex sync_;
+
+  //  True if the underlying pipe is active, ie. when we are allowed to
+  //  read commands from it.
   bool active_;
 
   DISALLOW_COPY_AND_ASSIGN(Mailbox);

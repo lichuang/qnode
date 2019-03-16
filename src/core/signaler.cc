@@ -5,6 +5,7 @@
 #include <poll.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <errno.h>
 #include "base/net.h"
 #include "core/const.h"
 #include "core/signaler.h"
@@ -48,4 +49,10 @@ void
 Signaler::Recv() {
   char dummy;
   ::recv(rfd_, &dummy, sizeof(dummy), 0);
+}
+
+int
+Signaler::RecvFailable() {
+  char dummy;
+  return ::recv(rfd_, &dummy, sizeof(dummy), 0);
 }

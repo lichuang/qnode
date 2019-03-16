@@ -11,7 +11,7 @@ Poller::Poller()
 Poller::~Poller() {
 }
 
-id_t
+qid_t
 Poller::AddTimer(int timeout, Event *event) {
   uint64_t expire = clock_.NowMs() + timeout;
   TimerEntry *entry = new TimerEntry(expire, event, ++max_id_);
@@ -21,8 +21,8 @@ Poller::AddTimer(int timeout, Event *event) {
 } 
 
 void
-Poller::CancelTimer(id_t id) {
-  TimerIdMap::iterator iter = timer_ids_[id];
+Poller::CancelTimer(qid_t id) {
+  TimerIdMap::iterator iter = timer_ids_.find(id);
   if (iter == timer_ids_.end()) {
     return;
   }
@@ -50,9 +50,9 @@ Poller::executeTimers() {
   TimerIdMap::iterator iter = timers_.begin();
   TimerIdMap::iterator begin = timers_.begin();
   TimerIdMap::iterator end = timers_.end();
-  for (; iter < end; ++iter) {
+  for (; iter != end; ++iter) {
     if (iter->first > current) {
-      res = it->first - current;
+      res = iter->first - current;
       break;
     }
 
@@ -66,6 +66,22 @@ Poller::executeTimers() {
 void
 Poller::updateTime() {
   clock_.Update();
+}
+
+void
+Poller::Loop() {
+  int timeout;
+
+  while (true) {
+    timeout = executeTimers();
+    if (timeout) {
+      if (getLoad() == 0) {
+        continue;
+      }
+    }
+
+    Poll(timeout);
+  }
 }
 
 void

@@ -10,19 +10,25 @@ Thread::Thread(const string& name)
     name_(name) {
 }
 
-int Thread::Start(void* arg) {
+Thread::~Thread() {
+}
+
+int
+Thread::Start(void* arg) {
   arg_ = arg;
   return pthread_create(&tid_, NULL, Thread::main, this);
 }
 
-void Thread::Join() {
+void
+Thread::Join() {
   if (tid_ != 0) {
     pthread_join(tid_, NULL);
     tid_ = 0;
   }
 }
 
-void* Thread::main(void* arg) {
+void*
+Thread::main(void* arg) {
   Thread *thread = (Thread*)arg;
 
   ::prctl(PR_SET_NAME, thread->name_.c_str());
