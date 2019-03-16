@@ -5,8 +5,13 @@
 #define __QNODE_CORE_POLLER_H__
 
 #include <map>
+#include "base/atomic.h"
 #include "base/clock.h"
 #include "core/event.h"
+
+// epoll
+class EpollEntry;
+typedef EpollEntry* Handle;
 
 class Poller {
 public:
@@ -32,8 +37,9 @@ public:
 protected:
   void updateTime();
   uint64_t executeTimers();
+  void checkThread();
 
-private:
+protected:  
   Clock clock_;
   struct TimerEntry {
     uint64_t expire;
@@ -48,6 +54,7 @@ private:
   typedef std::map<id_t, TimerEntry*> TimerIdMap;
   TimerIdMap timer_ids_;
   id_t max_id_;
+  atomic_counter_t load_;
 };
 
 #endif // __QNODE_CORE_POLLER_H__

@@ -20,7 +20,7 @@ public:
     return signaler_.Fd();
   }
   void Send(Message *);
-  int  Recv(Message *, int timeout);
+  int  Recv(Message **, int timeout);
 
 private:
   typedef ypipe_t<Message*, command_pipe_granularity> cpipe_t;

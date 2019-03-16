@@ -36,7 +36,7 @@ Epoll::Init(int size) {
 
 Handle
 Epoll::Add(fd_t fd, Event *event) {
-  CheckThread();
+  checkThread();
 
   EpollEntry *ee = new(std::nothrow)EpollEntry;
   alloc_assert(ee);
@@ -56,25 +56,25 @@ Epoll::Add(fd_t fd, Event *event) {
     size_ = fd;
     ep_events_.resize(size_);
   }
-  ++load_;
+  load_.add(1);
   return ee;
 }
 
 int
 Epoll::Del(Handle handle) {
-  CheckThread();
+  checkThread();
 
   EpollEntry *ee = static_cast<EpollEntry *>(handle);
   int rc = epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, ee->fd, &ee->ev);
   ee->fd = kInvalidFd;
   retired_list_.push_back(ee);
-  --load_;
+  load_.add(-1);
   return rc;
 }
 
 int
 Epoll::ResetIn(handle_t *handle) {
-  CheckThread();
+  checkThread();
 
   EpollEntry *ee = static_cast<EpollEntry *>(handle);
   ee->ev.evnts &= ~EPOLLIN;
@@ -84,7 +84,7 @@ Epoll::ResetIn(handle_t *handle) {
 
 int
 Epoll::SetIn(handle_t *handle) {
-  CheckThread();
+  checkThread();
 
   EpollEntry *ee = static_cast<EpollEntry *>(handle);
   ee->ev.evnts |= EPOLLIN;
@@ -94,7 +94,7 @@ Epoll::SetIn(handle_t *handle) {
 
 int
 Epoll::ResetOut(handle_t *handle) {
-  CheckThread();
+  checkThread();
 
   EpollEntry *ee = static_cast<EpollEntry *>(handle);
   ee->ev.evnts &= ~EPOLLOUT;
@@ -104,7 +104,7 @@ Epoll::ResetOut(handle_t *handle) {
 
 int
 Epoll::SetOut(handle_t *handle) {
-  CheckThread();
+  checkThread();
 
   EpollEntry *ee = static_cast<EpollEntry *>(handle);
   ee->ev.evnts |= EPOLLOUT;

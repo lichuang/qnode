@@ -6,8 +6,9 @@
 
 #include "base/thread.h"
 #include "core/event.h"
+#include "core/mailbox.h"
 
-class Dispatcher;
+class Poller;
 
 class IOThread : public Thread, public Event {
 public:
@@ -21,10 +22,12 @@ public:
   virtual void Timeout();
 
 protected:
-  virtual void Run();
+  virtual void Run(void *arg);
 
 private:
-  Dispatcher* dispatcher_;
+  Poller *poller_;
+  Mailbox mailbox_;
+  Handle  handle_;
 };
 
 #endif  // __QNODE_CORE_IOTHREAD_H__

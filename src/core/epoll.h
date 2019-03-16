@@ -9,7 +9,7 @@
 #include <vector>
 #include <sys/epoll.h>
 #include "core/event.h"
-#include "core/dispatcher.h"
+#include "core/poller.h"
 
 using namespace std;
 
@@ -41,7 +41,6 @@ private:
 private:
   int    size_;
   int    epoll_fd_;
-  int    load_;
   vector<epoll_event> ep_events_;
 
   typedef list<EpollEntry*> EntryList;

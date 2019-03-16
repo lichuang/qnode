@@ -67,3 +67,7 @@ void
 Poller::updateTime() {
   clock_.Update();
 }
+
+void
+Poller::checkThread() {
+}
