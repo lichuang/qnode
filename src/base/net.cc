@@ -13,7 +13,7 @@
 #include <sys/socket.h>
 
 #include "base/buffer.h"
-#include "base/error.h"
+#include "base/errcode.h"
 #include "base/net.h"
 
 static int createListenSocket();
@@ -114,7 +114,84 @@ Accept(int listen_fd,  struct sockaddr *addr,
 
 int
 Recv(int fd, BufferList *buffer, int *error) {
-  
+  ssize_t nbytes;
+  int ret;
+
+	/*
+	 * recv data from tcp socket until:
+	 *  1) some error occur or
+	 *  2) received data less then required size
+	 *    (means there is no data in the tcp stack buffer)
+	 */
+  nbytes = 0;
+  ret = 0;
+  while(true) {
+    nbytes = ::read(fd, buffer->WritePoint(), buffer->WriteableSize());
+    if (nbytes > 0) {
+      buffer->WriteAdvance(n);
+      ret += nbytes;
+    } else if (nbytes < 0) {
+      if (errno == EAGAIN || errno == EWOULDBLOCK) {
+        // there is nothing in the tcp stack,return and wait for the next in event
+        break;        
+      } else if (errno == EINTR) {
+        continue;
+      } else {
+        // something wrong has occoured
+        *error = errno;
+        return kError;
+      }
+    } else {
+      // socket has been closed
+      *error = errno;
+      return kError;
+    }
+  };
+
+  return ret;
+}
+
+int
+Send(int fd, BufferList *buffer, int *error) {
+  ssize_t nbytes;
+  int ret;
+  int err;
+
+  nbytes = 0;
+  ret = 0;
+  while (true) {
+    if (buffer->TotalSize() == 0)  {
+      // there is nothing in user-space stack to send
+      break;
+    }
+    nbytes = ::write(fd, buffer->ReadPoint(), buffer->ReadableSize());
+    err = errno;
+
+    if (nbytes > 0) {
+      buffer->ReadAdvance(nbytes);
+      ret += nbytes;
+    } else if (nbytes < 0) {
+      if (err == EINTR) {
+        continue;
+      } else if (err == EAGAIN || errno == EWOULDBLOCK) {
+        *error = err;
+        break;
+      } else {
+        *error = err;
+        return kError;
+      }
+    } else {
+      *error = err;
+      return kError;
+    }
+  }
+
+  return ret;
+}
+
+void
+Close(int fd) {
+  close(fd);
 }
 
 int

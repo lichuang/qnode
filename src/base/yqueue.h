@@ -33,8 +33,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 
-#include "err.hpp"
-#include "atomic_ptr.hpp"
+#include "base/atomic.h"
 
 //  yqueue is an efficient queue implementation. The main goal is
 //  to minimise number of allocations/deallocations needed. Thus yqueue

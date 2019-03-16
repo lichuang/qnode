@@ -30,8 +30,8 @@
 #ifndef __ZMQ_YPIPE_HPP_INCLUDED__
 #define __ZMQ_YPIPE_HPP_INCLUDED__
 
-#include "atomic_ptr.hpp"
-#include "yqueue.hpp"
+#include "base/atomic.h"
+#include "base/yqueue.h"
 
 //  Lock-free queue implementation.
 //  Only a single thread can read from the pipe at any specific moment.

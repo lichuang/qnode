@@ -11,20 +11,20 @@ public :
   RWLock();
   ~RWLock();
 
-  bool rdlock();
-  bool wrlock();
-  bool unlock();
+  bool LockRead();
+  bool LockWrite();
+  bool UnLock();
 private:
   pthread_rwlock_t rw_lock_;
 };
 
-class SafeReadLockGuard {
+class ReadLockGuard {
 public:
-  SafeReadLockGuard (RWLock& lock) : rw_lock_(lock) {
-    rw_lock_.rdlock();
+  ReadLockGuard (RWLock& lock) : rw_lock_(lock) {
+    rw_lock_.LockRead();
   }
-  ~SafeReadLockGuard () {
-    rw_lock_.unlock();
+  ~ReadLockGuard () {
+    rw_lock_.UnLock();
   }
 private:
   RWLock& rw_lock_;
@@ -33,12 +33,12 @@ private:
 class SafeWriteLockGuard {
 public:
   SafeWriteLockGuard (RWLock &lock) : rw_lock_(lock) {
-    rw_lock_.wrlock();
+    rw_lock_.LockWrite();
   }
   ~SafeWriteLockGuard() {
-    rw_lock_.unlock();
+    rw_lock_.UnLock();
   }
-protected:
+private:
   RWLock& rw_lock_;
 };
 

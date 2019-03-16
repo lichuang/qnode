@@ -47,26 +47,25 @@ public:
   // write n bytes into buffer list
   void Write(const char* from, size_t n);
 
-private:
-  void readAdvance(size_t n);
-
-  void writeAdvance(size_t n);
-
-  size_t totalSize() const {
-    return (buffer_list_.size() - 1) * kBufferSize
-      + write_inx_ - read_inx_;
-  }
-
-  char* readPoint() {
+  char* ReadPoint() {
     return buffer_list_.front().data() + read_inx_;
   }
 
-  char* writePoint() {
+  char* WritePoint() {
     return buffer_list_.back().data() + write_inx_;
   }
 
-  size_t readableSize() const;
-  size_t writeableSize() const;
+  size_t ReadableSize() const;
+  size_t WriteableSize() const;
+
+  void ReadAdvance(size_t n);
+
+  void WriteAdvance(size_t n);
+
+  inline size_t TotalSize() const {
+    return (buffer_list_.size() - 1) * kBufferSize
+      + write_inx_ - read_inx_;
+  }
 
 private:
   size_t read_inx_;

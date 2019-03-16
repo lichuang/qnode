@@ -6,6 +6,7 @@
 #define __QNODE_BASE_OBJECT_POOL_H__
 
 #include <list>
+#include "base/base.h"
 
 // non-thread safe object pool
 
@@ -14,7 +15,7 @@ class ObjectPool {
 public:
   ObjectPool();
 
-  virtual ~ObjectPool();
+  ~ObjectPool();
 
   T* Get();
   void Free(T *obj);

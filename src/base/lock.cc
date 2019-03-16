@@ -12,14 +12,14 @@ RWLock::~RWLock() {
   pthread_rwlock_destroy(&rw_lock_);
 }
 
-bool RWLock::rdlock() {
+bool RWLock::LockRead() {
   return pthread_rwlock_rdlock(&rw_lock_) == 0;
 }
 
-bool RWLock::wrlock() {
+bool RWLock::LockWrite() {
   return pthread_rwlock_wrlock(&rw_lock_) == 0;
 }
 
-bool RWLock::unlock() {
+bool RWLock::UnLock() {
   return pthread_rwlock_unlock(&rw_lock_) == 0;
 }

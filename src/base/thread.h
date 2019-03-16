@@ -6,7 +6,6 @@
 
 #include <string>
 #include <pthread.h>
-#include "base/runnable.h"
 
 using namespace std;
 
@@ -21,7 +20,7 @@ public:
   void Join();
 
 protected:
-  virtual void Run();
+  virtual void Run(void* arg) = 0;
 
 private:
   static void* main(void *arg);

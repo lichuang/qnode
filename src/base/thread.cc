@@ -12,7 +12,7 @@ Thread::Thread(const string& name)
 int Thread::Start(Runnable *r, void* arg) {
   runnable_ = r;
   arg_ = arg;
-  return pthread_create(&tid_, NULL, CThread::hook, this);
+  return pthread_create(&tid_, NULL, Thread::main, this);
 }
 
 void Thread::Join() {
@@ -27,7 +27,7 @@ void* Thread::main(void* arg) {
 
   prctl(PR_SET_NAME, thread->name_.c_str());
 
-  thread->runnable_->Run(thread, thread->arg_);
+  thread->Run(thread->arg_);
 
   return NULL;
 }
