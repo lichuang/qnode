@@ -2,6 +2,7 @@
  * Copyright (C) codedump
  */
 
+#include <sys/prctl.h>
 #include "base/thread.h"
 
 Thread::Thread(const string& name)
@@ -9,15 +10,14 @@ Thread::Thread(const string& name)
     name_(name) {
 }
 
-int Thread::Start(Runnable *r, void* arg) {
-  runnable_ = r;
+int Thread::Start(void* arg) {
   arg_ = arg;
   return pthread_create(&tid_, NULL, Thread::main, this);
 }
 
 void Thread::Join() {
   if (tid_ != 0) {
-    pthread_join(tid, NULL);
+    pthread_join(tid_, NULL);
     tid_ = 0;
   }
 }
@@ -25,7 +25,7 @@ void Thread::Join() {
 void* Thread::main(void* arg) {
   Thread *thread = (Thread*)arg;
 
-  prctl(PR_SET_NAME, thread->name_.c_str());
+  ::prctl(PR_SET_NAME, thread->name_.c_str());
 
   thread->Run(thread->arg_);
 

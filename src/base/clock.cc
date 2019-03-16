@@ -2,6 +2,7 @@
  * Copyright (C) codedump
  */
 
+#include <stdio.h>
 #include <sys/time.h>
 #include "base/clock.h"
 
@@ -10,10 +11,6 @@ static const uint64_t kUsecsPerSec  = 1000000;
 
 Clock::Clock() {
   Update();
-}
-
-uint64_t Clock::NowMs() {
-  return last_us_ / kUsecsPerMsec;
 }
 
 void

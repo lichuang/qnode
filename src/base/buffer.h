@@ -18,7 +18,7 @@ public:
 
   ~Buffer() {}
 
-  char* data() {
+  char* Data() {
     return &(data_[0]);
   }
 
@@ -34,11 +34,11 @@ private:
 
 class BufferList {
 public:
-  BufferList(ObjectList<Buffer>* obj_list)
+  BufferList(ObjectPool<Buffer>* obj_pool)
     : read_inx_(0)
     , write_inx_(0)
-    , obj_list_(obj_list) {
-    buffer_list_.push_back(obj_list->Get());
+    , obj_pool_(obj_pool) {
+    buffer_list_.push_back(obj_pool->Get());
   }
 
   // read at most n bytes into to, return bytes actual read
@@ -48,11 +48,11 @@ public:
   void Write(const char* from, size_t n);
 
   char* ReadPoint() {
-    return buffer_list_.front().data() + read_inx_;
+    return buffer_list_.front()->Data() + read_inx_;
   }
 
   char* WritePoint() {
-    return buffer_list_.back().data() + write_inx_;
+    return buffer_list_.back()->Data() + write_inx_;
   }
 
   size_t ReadableSize() const;
@@ -72,7 +72,7 @@ private:
   size_t write_inx_;
 
   std::list<Buffer*> buffer_list_;
-  ObjectList<Buffer> *obj_list_;
+  ObjectPool<Buffer> *obj_pool_;
 
   DISALLOW_COPY_AND_ASSIGN(BufferList);
 };

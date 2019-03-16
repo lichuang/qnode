@@ -67,7 +67,7 @@ Listen(const string& addr, int port, int backlog, int *error) {
   sa.sin_family = AF_INET;
   sa.sin_port = htons(port);
   *error = 0;
-  if (inet_aton(addr, &sa.sin_addr) == 0) {
+  if (inet_aton(addr.c_str(), &sa.sin_addr) == 0) {
     *error = errno;
     close(fd);
     return kError;
@@ -93,7 +93,7 @@ Accept(int listen_fd,  struct sockaddr *addr,
        socklen_t *addrlen, int *error) {
   int fd;
 
-  while (True) {
+  while (true) {
     fd = accept(listen_fd, addr, addrlen);
     if (fd == -1) {
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
@@ -128,7 +128,7 @@ Recv(int fd, BufferList *buffer, int *error) {
   while(true) {
     nbytes = ::read(fd, buffer->WritePoint(), buffer->WriteableSize());
     if (nbytes > 0) {
-      buffer->WriteAdvance(n);
+      buffer->WriteAdvance(nbytes);
       ret += nbytes;
     } else if (nbytes < 0) {
       if (errno == EAGAIN || errno == EWOULDBLOCK) {

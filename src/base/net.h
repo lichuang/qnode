@@ -2,7 +2,7 @@
  * Copyright (C) codedump
  */
 
-#ifdef  __QNODE_BASE_NET_H__
+#ifndef  __QNODE_BASE_NET_H__
 #define __QNODE_BASE_NET_H__
 
 #include <sys/types.h>
@@ -23,5 +23,6 @@ int   Recv(int fd, BufferList *buffer, int *error);
 int   Send(int fd, BufferList *buffer, int *error);
 void  Close(int fd);
 
-int MakeFdPair(int *w, int *r);
+int   MakeFdPair(int *w, int *r);
+
 #endif  // __QNODE_BASE_NET_H__

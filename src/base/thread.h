@@ -15,7 +15,7 @@ public:
 
   virtual ~Thread();
 
-  int Start();
+  int Start(void *arg);
 
   void Join();
 
