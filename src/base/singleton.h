@@ -21,7 +21,7 @@ public:
   }
 
 private:
-  DISALLOW_COPY_AND_ASSIGN(T);
+  DISALLOW_COPY_AND_ASSIGN(Singleton<T>);
   static pthread_once_t ponce_;
   static T* value_;
 };

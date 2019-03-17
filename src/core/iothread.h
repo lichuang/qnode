@@ -33,6 +33,7 @@ public:
     return poller_;
   }
 
+  void Send(Message *msg);
 protected:
   virtual void Run(void *arg);
 

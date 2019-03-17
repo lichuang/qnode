@@ -53,6 +53,11 @@ IOThread::Process(Message *msg) {
 }
 
 void
+IOThread::Send(Message *msg) {
+  mailbox_.Send(msg);
+}
+
+void
 IOThread::Run(void *arg) {
   arg = NULL;
 
