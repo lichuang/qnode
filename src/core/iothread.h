@@ -25,7 +25,7 @@ public:
 
   virtual void Out();
 
-  virtual void Timeout();
+  virtual void Timeout(tid_t);
 
   virtual void Process(Message*);
 

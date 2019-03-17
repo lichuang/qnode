@@ -44,7 +44,7 @@ IOThread::Out() {
 }
 
 void
-IOThread::Timeout() {
+IOThread::Timeout(tid_t tid) {
   // nothing to do
 }
 

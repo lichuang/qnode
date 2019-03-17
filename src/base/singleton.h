@@ -11,9 +11,9 @@
 template <typename T>
 class Singleton {
 public:
-  static T& instance() {
+  static T* instance() {
     pthread_once(&ponce_, &Singleton::init);
-    return *value_;
+    return value_;
   }
 
   static void init() {

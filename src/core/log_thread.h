@@ -12,15 +12,14 @@
 class Message;
 
 class LogThread : public IOThread {
-                  //public Singleton<LogThread> {
 public:                    
+  LogThread();
   virtual ~LogThread();
 
   virtual void Process(Message*);
 
-  virtual void Timeout();
+  virtual void Timeout(tid_t tid);
 private:
-  LogThread();
 
 private:
   string path_;
