@@ -8,7 +8,9 @@
 #include <string.h>
 #include <list>
 #include "base/base.h"
+#include "base/global.h"
 #include "base/object_pool.h"
+#include "base/thread_local_storage.h"
 
 class Buffer {
 public:
@@ -34,11 +36,11 @@ private:
 
 class BufferList {
 public:
-  BufferList(ObjectPool<Buffer>* obj_pool)
-    : read_inx_(0)
-    , write_inx_(0)
-    , obj_pool_(obj_pool) {
-    buffer_list_.push_back(obj_pool->Get());
+  BufferList()
+    : read_inx_(0),
+      write_inx_(0),
+      obj_pool_(static_cast<ObjectPool<Buffer>*>(GetTLS(gBufferPoolKey))) {
+    buffer_list_.push_back(obj_pool_->Get());
   }
 
   // read at most n bytes into to, return bytes actual read
@@ -46,6 +48,10 @@ public:
 
   // write n bytes into buffer list
   void Write(const char* from, size_t n);
+
+  bool Empty() const {
+    return TotalSize() == 0;
+  }
 
   char* ReadPoint() {
     return buffer_list_.front()->Data() + read_inx_;

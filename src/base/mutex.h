@@ -9,7 +9,10 @@
 #include <errno.h>
 #include "base/base.h"
 
+class Condition;
+
 class Mutex {
+  friend class Condition;
 public:
   Mutex() {
     pthread_mutexattr_init(&attr_);
@@ -38,6 +41,20 @@ private:
   pthread_mutexattr_t attr_;
 
   DISALLOW_COPY_AND_ASSIGN(Mutex);
+};
+
+class MutexGuard {
+public:
+  MutexGuard(Mutex *mutex)
+    : mutex_(mutex) {
+    mutex_->Lock();      
+  }
+
+  ~MutexGuard() {
+    mutex_->UnLock();
+  }
+private:
+  Mutex* const mutex_;
 };
 
 #endif // __QNODE_BASE_MUTEX_H__

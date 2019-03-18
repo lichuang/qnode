@@ -6,7 +6,7 @@
 #include "core/log_thread.h"
 
 int main() {
-  gLogThread = Singleton<LogThread>::instance();
+  gLogThread = Singleton<LogThread>::Instance();
 
   return 0;
 }

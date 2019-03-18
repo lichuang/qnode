@@ -2,26 +2,30 @@
  * Copyright (C) codedump
  */
 
+#include "core/event.h"
 #include "core/poller.h"
 
 Poller::Poller()
-  : max_id_(0) {
+  : max_timer_id_(0) {
 }
 
 Poller::~Poller() {
 }
 
-qid_t
+timer_id_t
 Poller::AddTimer(int timeout, Event *event) {
   uint64_t expire = clock_.NowMs() + timeout;
-  TimerEntry *entry = new TimerEntry(expire, event, ++max_id_);
+  ++max_timer_id_;
+  timer_id_t id = max_timer_id_;
+  TimerEntry *entry = new TimerEntry(expire, event, id);
   timers_.insert(TimerMap::value_type(expire, entry));
-  timer_ids_[entry->id] = entry;
-  return entry->id;
+  timer_ids_[id] = entry;
+  event->SetTimerId(id);
+  return id;
 } 
 
 void
-Poller::CancelTimer(qid_t id) {
+Poller::CancelTimer(timer_id_t id) {
   TimerIdMap::iterator iter = timer_ids_.find(id);
   if (iter == timer_ids_.end()) {
     return;
@@ -56,7 +60,7 @@ Poller::executeTimers() {
       break;
     }
 
-    iter->second->event->Timeout(iter->second->id);
+    iter->second->event->Timeout();
   }
   timers_.erase(begin, iter);
 

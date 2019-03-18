@@ -5,13 +5,17 @@
 #define __QNODE_CORE_POLLER_H__
 
 #include <map>
+#include <stdio.h>
 #include "base/atomic.h"
 #include "base/clock.h"
-#include "core/event.h"
+#include "core/typedef.h"
 
 // epoll
 class EpollEntry;
 typedef EpollEntry* handle_t;
+static const handle_t kInvalidHandle = NULL;
+
+class Event;
 
 class Poller {
 public:
@@ -27,8 +31,8 @@ public:
   virtual int    ResetOut(handle_t) = 0; 
   virtual int    SetOut(handle_t) = 0; 
 
-  qid_t AddTimer(int timeout, Event *);
-  void CancelTimer(qid_t);
+  timer_id_t AddTimer(int timeout, Event *);
+  void CancelTimer(timer_id_t);
   uint64_t NowMs() const {
     return clock_.NowMs();
   }
@@ -60,16 +64,16 @@ protected:
   struct TimerEntry {
     uint64_t expire;
     Event *event;
-    qid_t id;
+    timer_id_t id;
 
-    TimerEntry(uint64_t ex, Event *e, qid_t i)
+    TimerEntry(uint64_t ex, Event *e, timer_id_t i)
       : expire(ex),event(e), id(i) {}
   };
   typedef std::multimap<uint64_t, TimerEntry*> TimerMap;
   TimerMap timers_;
-  typedef std::map<qid_t, TimerEntry*> TimerIdMap;
+  typedef std::map<timer_id_t, TimerEntry*> TimerIdMap;
   TimerIdMap timer_ids_;
-  qid_t max_id_;
+  timer_id_t max_timer_id_;
   atomic_counter_t load_;
 };
 

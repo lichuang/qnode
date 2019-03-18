@@ -25,5 +25,5 @@ LogThread::Process(Message *msg) {
 }
 
 void
-LogThread::Timeout(tid_t tid) {
+LogThread::Timeout() {
 }

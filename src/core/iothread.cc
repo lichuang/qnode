@@ -2,9 +2,21 @@
  * Copyright (C) codedump
  */
 
+#include "base/buffer.h"
 #include "base/errcode.h"
+#include "base/global.h"
+#include "base/object_pool.h"
+#include "base/thread_local_storage.h"
 #include "core/iothread.h"
 #include "core/epoll.h"
+
+tls_key_t gBufferPoolKey;
+
+static void
+destroyBufferPool(void *arg) {
+  ObjectPool<Buffer> *pool = static_cast<ObjectPool<Buffer>*>(arg);
+  delete pool;
+}
 
 IOThread::IOThread(const string &name)
   : Thread(name),
@@ -44,7 +56,7 @@ IOThread::Out() {
 }
 
 void
-IOThread::Timeout(tid_t tid) {
+IOThread::Timeout() {
   // nothing to do
 }
 
@@ -60,6 +72,10 @@ IOThread::Send(Message *msg) {
 void
 IOThread::Run(void *arg) {
   arg = NULL;
+
+  // create buffer list object pool
+  ObjectPool<Buffer> *buf_list = new ObjectPool<Buffer>();
+  CreateTLS(&gBufferPoolKey, buf_list, destroyBufferPool);
 
   poller_->Loop();
 }

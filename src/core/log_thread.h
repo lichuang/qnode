@@ -18,7 +18,7 @@ public:
 
   virtual void Process(Message*);
 
-  virtual void Timeout(tid_t tid);
+  virtual void Timeout();
 private:
 
 private:

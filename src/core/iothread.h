@@ -25,7 +25,7 @@ public:
 
   virtual void Out();
 
-  virtual void Timeout(tid_t);
+  virtual void Timeout();
 
   virtual void Process(Message*);
 
@@ -40,7 +40,6 @@ protected:
 private:
   Poller *poller_;
   Mailbox mailbox_;
-  handle_t  handle_;
 };
 
 #endif  // __QNODE_CORE_IOTHREAD_H__

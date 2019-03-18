@@ -13,7 +13,6 @@
 #include <sys/socket.h>
 
 #include "base/buffer.h"
-#include "base/errcode.h"
 #include "base/net.h"
 
 static int createListenSocket();
@@ -97,7 +96,7 @@ Accept(int listen_fd,  struct sockaddr *addr,
     fd = accept(listen_fd, addr, addrlen);
     if (fd == -1) {
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
-        *error = errno;
+        *error = kAgain;
         return kOK;
       }
       if (errno == EINTR) {
@@ -133,6 +132,7 @@ Recv(int fd, BufferList *buffer, int *error) {
     } else if (nbytes < 0) {
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
         // there is nothing in the tcp stack,return and wait for the next in event
+        *error = kAgain;
         break;        
       } else if (errno == EINTR) {
         continue;
@@ -143,7 +143,7 @@ Recv(int fd, BufferList *buffer, int *error) {
       }
     } else {
       // socket has been closed
-      *error = errno;
+      *error = kClosed;
       return kError;
     }
   };
@@ -160,7 +160,7 @@ Send(int fd, BufferList *buffer, int *error) {
   nbytes = 0;
   ret = 0;
   while (true) {
-    if (buffer->TotalSize() == 0)  {
+    if (buffer->Empty())  {
       // there is nothing in user-space stack to send
       break;
     }
@@ -174,14 +174,15 @@ Send(int fd, BufferList *buffer, int *error) {
       if (err == EINTR) {
         continue;
       } else if (err == EAGAIN || errno == EWOULDBLOCK) {
-        *error = err;
+        *error = kAgain;
         break;
       } else {
         *error = err;
         return kError;
       }
     } else {
-      *error = err;
+      // connection has been closed
+      *error = kClosed;
       return kError;
     }
   }

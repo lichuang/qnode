@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <string>
+#include "base/errcode.h"
 
 using namespace std;
 

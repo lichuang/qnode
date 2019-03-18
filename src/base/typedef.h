@@ -13,4 +13,6 @@ typedef int fd_t;
 // invalid fd const
 static const fd_t kInvalidFd     = -1;
 
+typedef pthread_key_t tls_key_t;
+
 #endif  // __QNODE_BASE_TYPEDEF_H__

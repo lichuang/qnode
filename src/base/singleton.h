@@ -11,12 +11,13 @@
 template <typename T>
 class Singleton {
 public:
-  static T* instance() {
-    pthread_once(&ponce_, &Singleton::init);
+  static T* Instance() {
+    pthread_once(&ponce_, &Singleton::Init);
     return value_;
   }
 
-  static void init() {
+private:  
+  static void Init() {
     value_ = new T();
   }
 
