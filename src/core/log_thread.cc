@@ -7,11 +7,9 @@
 #include "core/log_thread.h"
 
 static const string kLoggerThreadName = "LogThread";
-LogThread* gLogThread;
 
 LogThread::LogThread()
   : IOThread(kLoggerThreadName) {
-  gLogThread = this;    
 }
 
 LogThread::~LogThread() {

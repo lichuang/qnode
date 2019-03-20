@@ -1,8 +1,8 @@
 /*
  * Copyright (C) codedump
  */
-#ifndef __QNODE_CORE_IOTHREAD_H__
-#define __QNODE_CORE_IOTHREAD_H__
+#ifndef __QNODE_CORE_IO_THREAD_H__
+#define __QNODE_CORE_IO_THREAD_H__
 
 #include <string>
 #include "base/thread.h"
@@ -42,4 +42,4 @@ private:
   Mailbox mailbox_;
 };
 
-#endif  // __QNODE_CORE_IOTHREAD_H__
+#endif  // __QNODE_CORE_IO_THREAD_H__

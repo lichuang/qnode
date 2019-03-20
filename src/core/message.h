@@ -9,6 +9,12 @@
 
 class Message;
 
+// add message types here
+enum {
+  kLogMessage     = 1,
+  kAcceptMessage,
+};
+
 // virtual interface for Mailbox message handler
 class MessageHandler {
 public:
@@ -20,8 +26,8 @@ public:
 // virtual interface for Mailbox message
 class Message {
 public:
-  Message(tid_t tid, MessageHandler *handler)
-    : tid_(tid), handler_(handler) {
+  Message(int type, tid_t tid, MessageHandler *handler)
+    : type_(type), tid_(tid), handler_(handler) {
   }
 
   virtual ~Message() {}
@@ -30,7 +36,12 @@ public:
     handler_->Process(this);
   }
 
+  int Type() const {
+    return type_;
+  }
+
 protected:
+  int type_;
   tid_t tid_;
   MessageHandler *handler_;
 };

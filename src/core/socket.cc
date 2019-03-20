@@ -3,19 +3,26 @@
  */
 
 #include "base/net.h"
+#include "core/data_handler.h"
 #include "core/log.h"
 #include "core/socket.h"
 
-Socket::Socket(int fd, Poller *poller)
+Socket::Socket(int fd, DataHandler* h)
   : fd_(fd),
-    poller_(poller),
+    handler_(h),
+    poller_(NULL),
     is_writable_(false) {
-  handle_ = poller->Add(fd, this);      
-  poller->SetIn(handle_);
 }
 
 Socket::~Socket() {
   CloseSocket();
+}
+
+void
+Socket::SetPoller(Poller *poller) {
+  poller_ = poller;
+  handle_ = poller->Add(fd_, this);
+  poller->SetIn(handle_);
 }
 
 void
@@ -29,6 +36,9 @@ Socket::In() {
   while (true) {
     int n = Recv(fd_, &read_list_, &error_);
     if (n < 0) {
+      if (handler_) {
+        handler_->OnError(error_);
+      }
       CloseSocket();
       break;
     } else {
@@ -37,6 +47,10 @@ Socket::In() {
         break;
       }
     }
+  }
+
+  if (handler_) {
+    handler_->OnRead();
   }
 }
 
@@ -51,6 +65,9 @@ Socket::Out() {
     int n = Send(fd_, &write_list_, &error_);
     if (n < 0) {
       CloseSocket();
+      if (handler_) {
+        handler_->OnError(error_);
+      }
       break;
     } else {
       write_list_.ReadAdvance(n);
@@ -59,6 +76,10 @@ Socket::Out() {
         break;
       }
     }
+  }
+
+  if (handler_) {
+    handler_->OnWrite();
   }
 }
 

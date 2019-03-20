@@ -8,13 +8,16 @@
 #include "base/buffer.h"
 #include "core/event.h"
 
+class DataHandler;
 class Poller;
 
 class Socket : public Event {
 public:
-  Socket(int fd, Poller*);
+  Socket(int fd, DataHandler*);
 
   virtual ~Socket();
+
+  void SetPoller(Poller *);
 
   size_t ReadBufferSize() const {
     return read_list_.TotalSize();
@@ -39,6 +42,7 @@ private:
 private:  
   int fd_;
   int error_;
+  DataHandler *handler_;
   Poller* poller_;
   bool is_writable_;
   BufferList read_list_;

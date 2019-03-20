@@ -6,7 +6,7 @@
 #define __QNODE_CORE_LOGTHREAD_H__
 
 #include "base/singleton.h"
-#include "core/iothread.h"
+#include "core/io_thread.h"
 #include "core/message.h"
 
 class Message;
@@ -25,6 +25,7 @@ private:
   string path_;
 };
 
-extern LogThread* gLogThread;
+#define gLogThread Singleton<LogThread>::Instance()
+#define InitLogThread Singleton<LogThread>::Instance
 
 #endif  // __QNODE_CORE_LOGTHREAD_H__

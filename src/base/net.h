@@ -2,7 +2,7 @@
  * Copyright (C) codedump
  */
 
-#ifndef  __QNODE_BASE_NET_H__
+#ifndef __QNODE_BASE_NET_H__
 #define __QNODE_BASE_NET_H__
 
 #include <sys/types.h>
@@ -17,8 +17,7 @@ class BufferList;
 int   Listen(const string& addr, int port, int backlog, int *error);
 int   Connect(const string& addr, int port, int *error, int *fd);
 
-int   Accept(int listen_fd,  struct sockaddr *addr,
-           socklen_t *addrlen, int *error);
+int   Accept(int listen_fd, int *error);
 
 int   Recv(int fd, BufferList *buffer, int *error);
 int   Send(int fd, BufferList *buffer, int *error);

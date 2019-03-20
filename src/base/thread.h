@@ -20,7 +20,7 @@ public:
 
   void Join();
 
-  tid_t Tid() const {
+  tid_t GetTid() const {
     return tid_;
   }
 protected:

@@ -88,12 +88,13 @@ Listen(const string& addr, int port, int backlog, int *error) {
 }
 
 int
-Accept(int listen_fd,  struct sockaddr *addr,
-       socklen_t *addrlen, int *error) {
+Accept(int listen_fd, int *error) {
+  struct sockaddr addr;
+  socklen_t addrlen = sizeof(addr);
   int fd;
 
   while (true) {
-    fd = accept(listen_fd, addr, addrlen);
+    fd = accept(listen_fd, &addr, &addrlen);
     if (fd == -1) {
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
         *error = kAgain;

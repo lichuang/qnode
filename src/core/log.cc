@@ -14,9 +14,6 @@ SetLogLevel(int level) {
 
 void
 Log(int level, const char* file, int line, const char *format, ...) {
-  if (gLogThread == NULL) {
-    return;
-  }
   // TODO: use object pool to cache log message?
   LogMessage *msg = new LogMessage(level, file, line, format);
   gLogThread->Send(msg);
