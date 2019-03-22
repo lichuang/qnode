@@ -15,6 +15,9 @@ class EpollEntry;
 typedef EpollEntry* handle_t;
 static const handle_t kInvalidHandle = NULL;
 
+static const int kEventRead  = 1 << 1;
+static const int kEventWrite = 1 << 2;
+
 class Event;
 
 class Poller {
@@ -24,7 +27,7 @@ public:
   virtual ~Poller();
 
   virtual int    Init(int size) = 0;
-  virtual handle_t Add(fd_t fd, Event *event) = 0;
+  virtual handle_t Add(fd_t fd, Event *event, int) = 0;
   virtual int    Del(handle_t) = 0;
   virtual int    ResetIn(handle_t) = 0; 
   virtual int    SetIn(handle_t) = 0; 
@@ -37,6 +40,9 @@ public:
     return clock_.NowMs();
   }
 
+  void SetUpdateGlobalTime() {
+    update_global_time_ = true;
+  }
   void Loop();
 
 protected:
@@ -60,6 +66,7 @@ protected:
   }
 
 protected:  
+  bool update_global_time_;
   Clock clock_;
   struct TimerEntry {
     uint64_t expire;

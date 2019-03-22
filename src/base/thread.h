@@ -29,6 +29,7 @@ protected:
 private:
   static void* main(void *arg);
 
+  DISALLOW_COPY_AND_ASSIGN(Thread);
 protected:
   tid_t tid_;
   string name_;

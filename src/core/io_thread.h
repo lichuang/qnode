@@ -40,6 +40,11 @@ protected:
 private:
   Poller *poller_;
   Mailbox mailbox_;
+
+  static pthread_once_t once_;
+  static void initIothreadOnceResource();
+  DISALLOW_COPY_AND_ASSIGN(IOThread);
 };
+
 
 #endif  // __QNODE_CORE_IO_THREAD_H__

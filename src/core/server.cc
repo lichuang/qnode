@@ -3,6 +3,7 @@
  */
 
 #include "base/assert.h"
+#include "base/time.h"
 #include "core/accept_message.h"
 #include "core/listener.h"
 #include "core/io_thread.h"
@@ -10,11 +11,25 @@
 #include "core/poller.h"
 #include "core/epoll.h"
 
+volatile uint64_t gCurrentMs;
+string   gCurrentMsString;
+
+void
+UpdateGlobalTime() {
+  gCurrentMs = NowMs();
+  string ret;
+  NowMsString(&ret);
+  gCurrentMsString = ret;
+}
+
 Server::Server(int worker)
-  : index_(0) {
-  poller_ = new Epoll();
+  : index_(0),
+    poller_(new Epoll()) {
   Assert(poller_ != NULL);
   Assert(worker > 0);
+  poller_->Init(1024);
+  poller_->SetUpdateGlobalTime();
+
   int n;
   char buf[10];
   for (n = 0; n < worker; ++n) {
@@ -48,7 +63,8 @@ Server::OnError(int err) {
 
 void
 Server::Listen(const string& addr, int port, SessionFactory* f) {
-  Listener *listener = new Listener(addr, port, this, f);
+  Listener *listener = new Listener(addr, port, poller_, this, f);
+  Assert(listener != NULL);
   listeners_[listener->String()] = listener;
 }
 

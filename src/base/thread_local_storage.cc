@@ -5,9 +5,14 @@
 #include "base/thread_local_storage.h"
 
 void
-CreateTLS(tls_key_t* key, void* value, void (*destructor)(void*)) {
+CreateTLSKey(tls_key_t *key, void (*destructor)(void*)) {
+  *key = PTHREAD_ONCE_INIT;
   ::pthread_key_create(key, destructor);
-  ::pthread_setspecific(*key, value);
+}
+
+void
+CreateTLS(tls_key_t key, void* value) {
+  ::pthread_setspecific(key, value);
 }
 
 void*

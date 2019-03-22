@@ -6,7 +6,8 @@
 
 #include "base/typedef.h"
 
-extern void  CreateTLS(tls_key_t*, void*, void (*destructor)(void*));
+extern void  CreateTLSKey(tls_key_t *, void (*destructor)(void*));
+extern void  CreateTLS(tls_key_t, void*);
 extern void* GetTLS(tls_key_t);
 
 #endif  // __QNODE_BASE_THREAD_LOCAL_STORAGE_H__

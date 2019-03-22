@@ -19,9 +19,13 @@ enum {
 extern int gLogLevel;
 
 extern void Log(int level, const char* file, int line, const char *format, ...);
+
+extern void InitLog();
 extern void SetLogLevel(int level);
 
 #define Errorf(args...) if (gLogLevel >= LOG_ERR)   Log(LOG_ERR, __FILE__, __LINE__, args)
+#define Warnf(args...)  if (gLogLevel >= LOG_WARN)  Log(LOG_ERR, __FILE__, __LINE__, args)
+#define Infof(args...)  if (gLogLevel >= LOG_INFO)  Log(LOG_ERR, __FILE__, __LINE__, args)
 #define Debug(args...)  if (gLogLevel >= LOG_DEBUG) Log(LOG_ERR, __FILE__, __LINE__, args)
 
 #endif  // __QNODE_CORE_LOG_H__

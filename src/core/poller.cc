@@ -1,12 +1,16 @@
 /*
  * Copyright (C) codedump
  */
-
+#include "base/time.h"
 #include "core/event.h"
+#include "core/global.h"
 #include "core/poller.h"
 
+extern void UpdateGlobalTime();
+
 Poller::Poller()
-  : max_timer_id_(0) {
+  : update_global_time_(false),
+    max_timer_id_(0) {
 }
 
 Poller::~Poller() {
@@ -70,6 +74,9 @@ Poller::executeTimers() {
 void
 Poller::updateTime() {
   clock_.Update();
+  if (update_global_time_) {
+    UpdateGlobalTime();
+  }
 }
 
 void

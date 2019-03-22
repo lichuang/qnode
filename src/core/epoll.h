@@ -17,6 +17,7 @@ struct EpollEntry {
   fd_t fd;
   epoll_event ev;
   Event *event;
+  int flags;
 };
 
 class Epoll : public Poller {
@@ -26,7 +27,7 @@ public:
   virtual ~Epoll();
 
   virtual int    Init(int size);
-  virtual handle_t Add(fd_t fd, Event *event);
+  virtual handle_t Add(fd_t fd, Event *event, int);
   virtual int    Del(handle_t);
   virtual int    ResetIn(handle_t); 
   virtual int    SetIn(handle_t); 

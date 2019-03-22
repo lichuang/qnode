@@ -21,8 +21,7 @@ Socket::~Socket() {
 void
 Socket::SetPoller(Poller *poller) {
   poller_ = poller;
-  handle_ = poller->Add(fd_, this);
-  poller->SetIn(handle_);
+  handle_ = poller->Add(fd_, this, kEventRead);
 }
 
 void

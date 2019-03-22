@@ -11,11 +11,13 @@
 using namespace std;
 
 class AcceptorHandler;
+class Poller;
 class SessionFactory;
 
 class Listener : public Event {
 public:
-  Listener(const string& addr, int port, AcceptorHandler*, SessionFactory*);
+  Listener(const string& addr, int port, Poller *poller,
+           AcceptorHandler*, SessionFactory*);
   ~Listener();
 
   virtual void In();
@@ -30,6 +32,7 @@ private:
   string addr_;
   int port_;
   int fd_;
+  Poller *poller_;
   AcceptorHandler *handler_;
   SessionFactory *factory_;
 };

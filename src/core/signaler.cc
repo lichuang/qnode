@@ -2,10 +2,11 @@
  * Copyright (C) codedump
  */
 
+#include <errno.h>
 #include <poll.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <errno.h>
 #include "base/net.h"
 #include "core/const.h"
 #include "core/signaler.h"
@@ -27,9 +28,9 @@ Signaler::~Signaler() {
 
 void
 Signaler::Send() {
-  char dummy;
+  uint64_t dummy;
   while (true) {
-    ssize_t nbytes = ::send(wfd_, &dummy, sizeof(dummy), 0);
+    ssize_t nbytes = ::write(wfd_, &dummy, sizeof(dummy));
     if (nbytes == -1 && errno == EINTR) {
       continue;
     }
@@ -47,12 +48,12 @@ Signaler::Wait(int timeout) {
 
 void
 Signaler::Recv() {
-  char dummy;
-  ::recv(rfd_, &dummy, sizeof(dummy), 0);
+  uint64_t dummy;
+  ::read(rfd_, &dummy, sizeof(dummy));
 }
 
 int
 Signaler::RecvFailable() {
-  char dummy;
-  return ::recv(rfd_, &dummy, sizeof(dummy), 0);
+  uint64_t dummy;
+  return ::read(rfd_, &dummy, sizeof(dummy));
 }

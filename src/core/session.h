@@ -25,7 +25,7 @@ public:
   Socket* GetSocket() {
     return socket_;
   }
-private:
+protected:
   Socket *socket_;
 };
 

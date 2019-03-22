@@ -23,8 +23,22 @@ MakeTimespec(int64_t ms, struct timespec *ts) {
   return ts;
 }
 
-uint64_t NowMs() {
+uint64_t
+NowMs() {
   struct timeval tv;
   gettimeofday (&tv, NULL);
   return tv.tv_sec * kMsecsPerSec + tv.tv_usec;
+}
+
+void
+NowMsString(string *ret) {
+  char buf[512];
+  struct timeval t;
+  gettimeofday(&t, NULL);
+  struct tm tim;
+  ::localtime_r(&t.tv_sec, &tim);
+  snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d.%03d",
+    tim.tm_year + 1900, tim.tm_mon + 1, tim.tm_mday,
+    tim.tm_hour, tim.tm_min, tim.tm_sec, (int)t.tv_usec / 1000);
+  *ret = buf;
 }

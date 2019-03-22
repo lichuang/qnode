@@ -7,9 +7,13 @@
 #include "base/global.h"
 #include "base/object_pool.h"
 #include "base/thread_local_storage.h"
-#include "core/io_thread.h"
+#include "core/accept_message.h"
 #include "core/epoll.h"
+#include "core/io_thread.h"
+#include "core/session.h"
+#include "core/socket.h"
 
+pthread_once_t IOThread::once_ = PTHREAD_ONCE_INIT;
 tls_key_t gBufferPoolKey;
 
 static void
@@ -18,9 +22,19 @@ destroyBufferPool(void *arg) {
   delete pool;
 }
 
+void IOThread::initIothreadOnceResource() {
+  CreateTLSKey(&gBufferPoolKey, &destroyBufferPool);
+}
+
 IOThread::IOThread(const string &name)
   : Thread(name),
     poller_(new Epoll()) {
+  pthread_once(&once_, &IOThread::initIothreadOnceResource);
+
+  // create buffer list object pool
+  ObjectPool<Buffer> *buf_list = new ObjectPool<Buffer>();
+  CreateTLS(gBufferPoolKey, buf_list);
+
   int rc = poller_->Init(1024);
   if (rc != kOK) {
     return;
@@ -28,8 +42,9 @@ IOThread::IOThread(const string &name)
 
   // add mailbox signal fd into poller
   fd_t fd = mailbox_.Fd();
-  handle_ = poller_->Add(fd, this);
-  poller_->SetIn(handle_);
+  handle_ = poller_->Add(fd, this, kEventRead);
+
+  Start(NULL);
 }
 
 IOThread::~IOThread() {
@@ -62,7 +77,14 @@ IOThread::Timeout() {
 
 void
 IOThread::Process(Message *msg) {
+  int type = msg->Type();
 
+  if (type == kAcceptMessage) {
+    AcceptMessage* am = static_cast<AcceptMessage*>(msg);
+    Session* session = am->GetSession();
+    Socket* socket = session->GetSocket();
+    socket->SetPoller(poller_);
+  }
 }
 
 void
@@ -73,10 +95,6 @@ IOThread::Send(Message *msg) {
 void
 IOThread::Run(void *arg) {
   arg = NULL;
-
-  // create buffer list object pool
-  ObjectPool<Buffer> *buf_list = new ObjectPool<Buffer>();
-  CreateTLS(&gBufferPoolKey, buf_list, destroyBufferPool);
 
   poller_->Loop();
 }

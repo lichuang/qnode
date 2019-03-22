@@ -18,7 +18,9 @@ public:
 
   virtual ~AcceptMessage() {
   }
-
+  Session* GetSession() {
+    return session_;
+  }
 private:
   Session *session_;
 };

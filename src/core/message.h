@@ -11,8 +11,7 @@ class Message;
 
 // add message types here
 enum {
-  kLogMessage     = 1,
-  kAcceptMessage,
+  kAcceptMessage = 1,
 };
 
 // virtual interface for Mailbox message handler
