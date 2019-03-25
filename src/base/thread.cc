@@ -6,15 +6,25 @@
 #include "base/condition.h"
 #include "base/mutex.h"
 #include "base/thread.h"
+#include "base/thread_local_storage.h"
+
+tls_key_t gThreadInfo;
 
 struct threadStartEntry {
   Condition *cond;
   Thread *thread;
 };
 
+static void
+destroyThreadInfo(void *arg) {
+  threadInfo *i = static_cast<threadInfo*>(arg);
+  delete i;
+}
+
 Thread::Thread(const string& name)
   : tid_(0),
     name_(name) {
+  CreateTLSKey(&gThreadInfo, &destroyThreadInfo);
 }
 
 Thread::~Thread() {
@@ -59,4 +69,24 @@ Thread::main(void* arg) {
   thread->Run(thread->arg_);
 
   return NULL;
+}
+
+const char*
+CurrentThreadName() {
+  return CurrentThreadInfo()->name.c_str();
+}
+
+threadInfo* CurrentThreadInfo() {
+  threadInfo *info = static_cast<threadInfo*>(GetTLS(gThreadInfo));
+  if (info == NULL) {
+    info = new threadInfo;
+
+    char buffer[100];
+    pthread_getname_np(pthread_self(), buffer, sizeof(buffer));
+    info->name = buffer;
+
+    CreateTLS(gThreadInfo, info);
+  }
+
+  return info;
 }

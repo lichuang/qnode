@@ -26,7 +26,9 @@ public:
 
   virtual void Timeout();
 
-  string String();
+  const char* String() const {
+    return string_.c_str();
+  }
 
 private:
   string addr_;
@@ -35,6 +37,7 @@ private:
   Poller *poller_;
   AcceptorHandler *handler_;
   SessionFactory *factory_;
+  string string_;
 };
 
 #endif  // __QNODE_CORE_LISTENER_H__

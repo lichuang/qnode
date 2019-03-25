@@ -7,11 +7,13 @@
 #include "core/log.h"
 #include "core/socket.h"
 
-Socket::Socket(int fd, DataHandler* h)
+Socket::Socket(int fd, const string& addr, DataHandler* h)
   : fd_(fd),
     handler_(h),
     poller_(NULL),
-    is_writable_(false) {
+    is_writable_(false),
+    addr_(addr) {
+  Infof("addr: %s, fd: %d", addr.c_str(), fd);      
 }
 
 Socket::~Socket() {
@@ -58,6 +60,7 @@ Socket::Out() {
   while (true) {
     if (write_list_.Empty()) {
       is_writable_ = true;
+      poller_->ResetOut(handle_);
       break;
     }
 
@@ -67,7 +70,7 @@ Socket::Out() {
       if (handler_) {
         handler_->OnError(error_);
       }
-      break;
+      return;
     } else {
       write_list_.ReadAdvance(n);
       if (error_ == kAgain) {
@@ -89,12 +92,32 @@ Socket::Timeout() {
 void
 Socket::Write(const char* from, size_t n) {
   write_list_.Write(from, n);
-  if (is_writable_) {
+  if (!IsHandleWrite(handle_)) {
     poller_->SetOut(handle_);
   }
 }
 
-void
+size_t
 Socket::Read(char* to, size_t n) {
-  read_list_.Read(to, n);
+  return read_list_.Read(to, n);
+}
+
+int
+Socket::ResetIn() {
+  return poller_->ResetIn(handle_);
+}
+
+int
+Socket::SetIn() {
+  return poller_->SetIn(handle_);
+}
+
+int
+Socket::ResetOut() {
+  return poller_->ResetOut(handle_);
+}
+
+int
+Socket::SetOut() {
+  return poller_->SetOut(handle_);
 }

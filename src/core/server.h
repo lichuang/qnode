@@ -6,6 +6,7 @@
 #define __QNODE_CORE_SERVER_H__
 
 #include <map>
+#include <string>
 #include <vector>
 #include "base/base.h"
 #include "core/acceptor_handler.h"
@@ -28,6 +29,7 @@ public:
 
   void Listen(const string& addr, int port, SessionFactory*);
   void Run();
+
 private:
   int index_;
   vector<IOThread*> workers_;

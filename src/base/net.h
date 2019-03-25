@@ -17,7 +17,7 @@ class BufferList;
 int   Listen(const string& addr, int port, int backlog, int *error);
 int   Connect(const string& addr, int port, int *error, int *fd);
 
-int   Accept(int listen_fd, int *error);
+int   Accept(int listen_fd, string *addr, int *error);
 
 int   Recv(int fd, BufferList *buffer, int *error);
 int   Send(int fd, BufferList *buffer, int *error);

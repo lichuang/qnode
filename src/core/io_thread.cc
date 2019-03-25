@@ -9,6 +9,7 @@
 #include "base/thread_local_storage.h"
 #include "core/accept_message.h"
 #include "core/epoll.h"
+#include "core/log.h"
 #include "core/io_thread.h"
 #include "core/session.h"
 #include "core/socket.h"
@@ -82,8 +83,8 @@ IOThread::Process(Message *msg) {
   if (type == kAcceptMessage) {
     AcceptMessage* am = static_cast<AcceptMessage*>(msg);
     Session* session = am->GetSession();
-    Socket* socket = session->GetSocket();
-    socket->SetPoller(poller_);
+    session->SetPoller(poller_);
+    Infof("process connection from %s", session->String().c_str());
   }
 }
 

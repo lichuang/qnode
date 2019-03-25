@@ -5,8 +5,9 @@
 #include "base/assert.h"
 #include "base/time.h"
 #include "core/accept_message.h"
-#include "core/listener.h"
 #include "core/io_thread.h"
+#include "core/listener.h"
+#include "core/log.h"
 #include "core/server.h"
 #include "core/poller.h"
 #include "core/epoll.h"
@@ -66,6 +67,7 @@ Server::Listen(const string& addr, int port, SessionFactory* f) {
   Listener *listener = new Listener(addr, port, poller_, this, f);
   Assert(listener != NULL);
   listeners_[listener->String()] = listener;
+  Infof("listen at %s", listener->String());
 }
 
 void

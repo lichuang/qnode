@@ -39,6 +39,7 @@ void BufferList::Write(const char* from, size_t n) {
       n    -= write_size;
     } else {
       memcpy(WritePoint(), from, n);
+      WriteAdvance(n);
       break;
     }
   }

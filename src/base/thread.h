@@ -6,6 +6,7 @@
 
 #include <string>
 #include <pthread.h>
+#include "base/const.h"
 #include "base/typedef.h"
 
 using namespace std;
@@ -29,11 +30,20 @@ protected:
 private:
   static void* main(void *arg);
 
-  DISALLOW_COPY_AND_ASSIGN(Thread);
 protected:
   tid_t tid_;
   string name_;
   void *arg_;
 };
+
+extern tls_key_t gThreadInfo;
+// per thread info
+struct threadInfo {
+  char buffer[kLogBufferSize];
+  string name;
+};
+
+const char* CurrentThreadName();
+threadInfo* CurrentThreadInfo();
 
 #endif  // __QNODE_BASE_THREAD__

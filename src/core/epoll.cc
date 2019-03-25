@@ -9,6 +9,7 @@
 #include "core/const.h"
 #include "core/epoll.h"
 #include "core/event.h"
+#include "core/log.h"
 
 Epoll::Epoll() 
   : size_(0),
@@ -184,4 +185,10 @@ Epoll::processRetired() {
     delete(*iter);
   }
   retired_list_.clear();
+}
+
+bool
+IsHandleWrite(handle_t handle) {
+  EpollEntry *ee = static_cast<EpollEntry *>(handle);
+  return ee->flags & kEventWrite;
 }

@@ -6,14 +6,16 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <netinet/in.h>
+#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <netinet/in.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 
 #include "base/buffer.h"
 #include "base/net.h"
+#include "base/string.h"
 
 static int createListenSocket();
 static int setNonBlocking(int fd);
@@ -88,16 +90,16 @@ Listen(const string& addr, int port, int backlog, int *error) {
 }
 
 int
-Accept(int listen_fd, int *error) {
-  struct sockaddr addr;
+Accept(int listen_fd, string *ret, int *error) {
+  struct sockaddr_in addr;
   socklen_t addrlen = sizeof(addr);
   int fd;
 
   while (true) {
-    fd = accept(listen_fd, &addr, &addrlen);
+    fd = accept(listen_fd, (struct sockaddr *)&addr, &addrlen);
     if (fd == -1) {
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
-        *error = errno;
+        *error = kAgain;
         return kOK;
       }
       if (errno == EINTR) {
@@ -106,6 +108,7 @@ Accept(int listen_fd, int *error) {
       *error = errno;
       return kError;
     }
+    Stringf(ret, "%s:%d", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
     setNonBlocking(fd);
     break;
   }

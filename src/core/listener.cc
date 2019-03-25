@@ -6,7 +6,9 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include "base/assert.h"
+#include "base/errcode.h"
 #include "base/net.h"
+#include "base/string.h"
 #include "core/acceptor_handler.h"
 #include "core/config.h"
 #include "core/listener.h"
@@ -24,6 +26,7 @@ Listener::Listener(const string& addr, int port, Poller* poller,
   fd_ = Listen(addr, port, kBacklog, &error);
   Assert(fd > 0);
   handle_ = poller_->Add(fd_, this, kEventRead);
+  Stringf(&string_, "%s:%d", addr.c_str(), port);
 }
 
 Listener::~Listener() {
@@ -33,13 +36,14 @@ Listener::~Listener() {
 void
 Listener::In() {
   int error;
+  string addr;
 
   while (true) {
-    int fd = Accept(fd_, &error);
+    int fd = Accept(fd_, &addr, &error);
     if (fd > 0) {
-      Session *s = factory_->Create(fd);
+      Session *s = factory_->Create(fd, addr);
       handler_->OnAccept(s);
-    } else if (fd == 0) {
+    } else if (fd == kOK) {
       break;
     } else {
       handler_->OnError(error);
@@ -50,16 +54,10 @@ Listener::In() {
 
 void
 Listener::Out() {
+  Assert(false);
 }
 
 void
 Listener::Timeout() {
-}
-
-string
-Listener::String() {
-  char buf[100];
-  snprintf(buf, sizeof(buf), "%s-%d", addr_.c_str(), port_);
-
-  return string(buf);
+  Assert(false);
 }
