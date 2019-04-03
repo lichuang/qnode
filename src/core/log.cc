@@ -14,7 +14,7 @@ extern void UpdateGlobalTime();
 int gLogLevel = LOG_DEBUG;
 
 static const char* kLogLevelString[] = {
-  "C",
+  "F",
   "E",
   "W",
   "I",

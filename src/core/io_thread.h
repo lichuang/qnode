@@ -37,7 +37,7 @@ public:
 protected:
   virtual void Run(void *arg);
 
-private:
+protected:
   Poller *poller_;
   Mailbox mailbox_;
 

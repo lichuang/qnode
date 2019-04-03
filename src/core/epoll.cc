@@ -91,6 +91,9 @@ Epoll::ResetIn(handle_t handle) {
   checkThread();
 
   EpollEntry *ee = static_cast<EpollEntry *>(handle);
+  if (!(ee->flags | kEventRead)) {
+    return kOK;
+  }
   ee->ev.events &= ~EPOLLIN;
   ee->flags &= ~kEventRead;
   int rc = epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, ee->fd, &ee->ev);
@@ -102,6 +105,9 @@ Epoll::SetIn(handle_t handle) {
   checkThread();
 
   EpollEntry *ee = static_cast<EpollEntry *>(handle);
+  if (ee->flags | kEventRead) {
+    return kOK;
+  }
   ee->ev.events |= EPOLLIN;
   ee->flags |= kEventRead;
   int rc = epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, ee->fd, &ee->ev);
@@ -113,6 +119,9 @@ Epoll::ResetOut(handle_t handle) {
   checkThread();
 
   EpollEntry *ee = static_cast<EpollEntry *>(handle);
+  if (!(ee->flags | kEventWrite)) {
+    return kOK;
+  }
   ee->ev.events &= ~EPOLLOUT;
   ee->flags &= ~kEventWrite;
   int rc = epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, ee->fd, &ee->ev);
@@ -124,6 +133,9 @@ Epoll::SetOut(handle_t handle) {
   checkThread();
 
   EpollEntry *ee = static_cast<EpollEntry *>(handle);
+  if (ee->flags | kEventWrite) {
+    return kOK;
+  }
   ee->ev.events |= EPOLLOUT;
   ee->flags |= kEventWrite;
   int rc = epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, ee->fd, &ee->ev);
@@ -185,10 +197,4 @@ Epoll::processRetired() {
     delete(*iter);
   }
   retired_list_.clear();
-}
-
-bool
-IsHandleWrite(handle_t handle) {
-  EpollEntry *ee = static_cast<EpollEntry *>(handle);
-  return ee->flags & kEventWrite;
 }

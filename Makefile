@@ -102,7 +102,7 @@ MY_CFLAGS = -g -O0 -Wall -DLINUX
 
 # The linker options.
 # MY_LIBS   = -lGLEW -lglut -lGLU -lGL -lX11 -lXmu -lXi -lm -L/usr/X11R6/lib -lgomp -lOpenThreads -lpthread
-MY_LIBS   = -lm -pthread
+MY_LIBS   = -lm -lpthread ./lib/install/lua/lib/liblua.a -ldl
 
 # The pre-processor options used by the cpp (man cpp for more).
 CPPFLAGS  = 
@@ -112,12 +112,13 @@ LDFLAGS   =
 
 ## The C/C++ header file directories. --ken
 # Include options, only need directories, do not need "-I".
-INCDIRS = ./src/
+INCDIRS = ./src/ ./lib/install/lua/include
 
 # The directories in which source files reside.
 # If not specified, only the current directory will be serached.
 SRCDIRS   = ./src/base\
             ./src/core\
+            ./src/script\
             ./src
 
 # The executable file name.

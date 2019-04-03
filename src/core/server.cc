@@ -4,6 +4,7 @@
 
 #include "base/assert.h"
 #include "base/time.h"
+#include "base/string.h"
 #include "core/accept_message.h"
 #include "core/io_thread.h"
 #include "core/listener.h"
@@ -11,6 +12,7 @@
 #include "core/server.h"
 #include "core/poller.h"
 #include "core/epoll.h"
+#include "script/script_io_thread.h"
 
 volatile uint64_t gCurrentMs;
 string   gCurrentMsString;
@@ -32,10 +34,10 @@ Server::Server(int worker)
   poller_->SetUpdateGlobalTime();
 
   int n;
-  char buf[10];
   for (n = 0; n < worker; ++n) {
-    snprintf(buf, sizeof(buf), "worker-%d", n + 1);
-    IOThread *worker = new IOThread(buf);
+    string name;
+    Stringf(&name, "lua-worker-%d", n + 1);
+    ScriptIOThread *worker = new ScriptIOThread(name);
     Assert(worker != NULL);
     workers_.push_back(worker);
   }

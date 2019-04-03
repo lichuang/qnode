@@ -84,6 +84,4 @@ protected:
   atomic_counter_t load_;
 };
 
-extern bool IsHandleWrite(handle_t);
-
 #endif // __QNODE_CORE_POLLER_H__

@@ -49,6 +49,7 @@ public:
   const char* CString() const {
     return socket_->String().c_str();
   }
+
 protected:
   Socket *socket_;
   uint64_t last_read_time_;

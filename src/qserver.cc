@@ -9,6 +9,7 @@
 using namespace std;
 
 #include "core/session.h"
+#include "script/actor.h"
 
 class EchoSession : public Session {
 public:
@@ -48,15 +49,13 @@ class EchoSessionFactory : public SessionFactory {
   }
 };
 
-#include "base/string.h"
-
 int main() {
   InitLog();
 
   Infof("run server");
 
   Server *server = new Server(1);
-  server->Listen("0.0.0.0", 11321, new EchoSessionFactory());
+  server->Listen("0.0.0.0", 11321, new ActorFactory());
   server->Run();
 
   return 0;

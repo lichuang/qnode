@@ -92,9 +92,7 @@ Socket::Timeout() {
 void
 Socket::Write(const char* from, size_t n) {
   write_list_.Write(from, n);
-  if (!IsHandleWrite(handle_)) {
-    poller_->SetOut(handle_);
-  }
+  poller_->SetOut(handle_);
 }
 
 size_t
