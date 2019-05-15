@@ -12,10 +12,13 @@ class LuaVM;
 
 class LuaThread {
 public:
-  LuaThread(LuaVM*);
+  LuaThread(LuaVM*, Actor*);
   ~LuaThread();
 
   int Resume(int nret);
+  lua_State* Thread() {
+    return thread_;
+  }
 
 private:
   lua_State* thread_;

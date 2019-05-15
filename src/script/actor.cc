@@ -8,6 +8,5 @@
 
 void
 Actor::OnRead() {
-  Infof("in actor");
   thread_->Resume(0);
 }

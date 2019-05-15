@@ -3,6 +3,7 @@
  */
 
 #include "core/log.h"
+#include "script/key.h"
 #include "script/lua_api.h"
 #include "script/lua_util.h"
 
@@ -57,4 +58,19 @@ GetGlobalTable(lua_State* L) {
 void
 SetGlobalTable(lua_State* L) {
   lua_replace(L, LUA_GLOBALSINDEX);
+}
+
+Actor*
+GetActor(lua_State *L) {
+  lua_getglobal(L, ACTOR_KEY);
+  Actor *actor = (Actor*)lua_touserdata(L, -1);
+  lua_pop(L, 1);
+
+  return actor;
+}
+
+void
+SetActor(lua_State *L, Actor* actor) {
+  lua_pushlightuserdata(L, actor);
+  lua_setglobal(L, ACTOR_KEY);
 }

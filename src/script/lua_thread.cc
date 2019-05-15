@@ -21,9 +21,7 @@ LuaThread::LuaThread(LuaVM *vm, Actor* actor)
   GetGlobalTable(thread_);
   lua_setfenv(thread_, -2);
 
-  // save actor in coroutine global table
-  lua_pushlightuserdata(thread_, actor);
-  lua_setglobal(thread_, ACTOR_KEY);
+  SetActor(thread_, actor);
 }
 
 LuaThread::~LuaThread() {
@@ -31,5 +29,13 @@ LuaThread::~LuaThread() {
 
 int
 LuaThread::Resume(int nret) {
-  return lua_resume(thread_, nret);
+  int status = lua_resume(thread_, nret);
+  if (status != LUA_YIELD) {
+    if (status == LUA_ERRRUN && lua_isstring(thread_, -1)) {
+      Errorf("LUA_ERRRUN: %s", lua_tostring(thread_, -1));
+      lua_pop(thread_, -1);
+    }
+  }
+
+  return status;
 }
